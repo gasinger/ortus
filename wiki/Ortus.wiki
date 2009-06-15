@@ -3,12 +3,27 @@ Replacement UI for SageTV
 
 = Introduction =
 
-Add your content here.
+Final design specifications listed below
 
 
 = Details =
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+Top Menu Theme
+
+Main Menu:
+
+Clock is fixed location and always present, also incorporates the screen ICONS.
+
+Weather adjustable from left to right and can be enabled/disabled, also adjustable in width.
+
+A group of ICONS should be on the main menu for background import, system messages, currently recording, etc...  This can also be adjusted from left to right and enable/disable. Also adjustable in width.
+
+Text size is adjustable for title and would be the same setting for all screens.
+
+All Other screens:
+
+Clock is fixed location and always present, also incorporates the screen ICONS.
+
+Menu items can be adjusted left to right as a group, also adjustable in width.
+
+Text size is adjustable for title and would be the same setting for all screens. 
