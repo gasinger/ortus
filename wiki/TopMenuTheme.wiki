@@ -1,0 +1,26 @@
+Ortus Top Menu Theme
+
+= Introduction =
+
+Final design spec's for Ortus Top Menu Theme
+
+
+= Details =
+
+Main Menu:
+
+Clock is fixed location and always present, also incorporates the screen ICONS. 
+
+Weather adjustable from left to right and can be enabled/disabled, also adjustable in width. 
+
+A group of ICONS should be on the main menu for background import, system messages, currently recording, etc... This can also be adjusted from left to right and enable/disable. Also adjustable in width. 
+
+Text size is adjustable for title and would be the same setting for all screens. 
+
+All Other screens:
+
+Clock is fixed location and always present, also incorporates the screen ICONS. 
+
+Menu items can be adjusted left to right as a group, also adjustable in width. 
+
+Text size is adjustable for title and would be the same setting for all screens. 
