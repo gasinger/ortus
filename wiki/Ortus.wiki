@@ -2,3 +2,5 @@
 Replacement UI for SageTV.
 
 Built from the ground up utilizing the best bits from SageMC and the Ddfault SageTV UI.
+
+href="http://img188.imageshack.us/img188/2056/samplegdk.jpg"><img
