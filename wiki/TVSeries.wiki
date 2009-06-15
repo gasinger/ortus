@@ -7,4 +7,5 @@ Final Design Spec's for Ortus TV Series
 
 = Details =
 
-To be updated
+Screen to filter all shows except those selected by a user or automatically detected via a scraping tool.
+Screen will work with TV Recordings or on its own from the main menu. It'll also have 3 view styles (banner, poster and list) with filters for date added etc.
