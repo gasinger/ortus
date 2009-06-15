@@ -1,8 +1,2 @@
 #labels Featured,Phase-Requirements,Phase-Design,Phase-QA
 Replacement UI for SageTV
-
-= Introduction =
-
-
-
-= Details =
