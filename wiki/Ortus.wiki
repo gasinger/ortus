@@ -1,2 +1,4 @@
 #labels Featured,Phase-Requirements,Phase-Design,Phase-QA
-Replacement UI for SageTV
+Replacement UI for SageTV.
+
+Built from the ground up utilizing the best bits from SageMC and the Ddfault SageTV UI.
