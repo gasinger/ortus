@@ -1,10 +1,5 @@
-#summary One-sentence summary of this page.
-
-= Introduction =
-
-Add your content here.
+Movie Wall Screen for Ortus UI
 
 
-= Details =
 
 http://img26.imageshack.us/i/moviewallsmall.jpg
