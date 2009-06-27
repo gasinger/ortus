@@ -2,6 +2,4 @@ Movie Wall Screen for Ortus UI
 
 
 
-http://img26.imageshack.us/img26/664/moviewallsmall.th.jpg
-
-http://img188.imageshack.us/img188/2056/samplegdk.jpg
+http://img41.imageshack.us/img41/664/moviewallsmall.jpg
