@@ -24,7 +24,7 @@ This is the homepage for Ortus trailers which allows you to download, store and 
   * Auto download of all trailer info including poster's during startup for quicker access
 
 == Requirements ==
-  * SageTV beta version 7.0.12+
+  * SageTV beta version 7.0.12 or greater
   * Internet Connection
 
 == Providers ==
@@ -58,5 +58,6 @@ Here you can find where your current download path is for trailers, posters etc 
 == Known Issues ==
 
 1. 25 second delay loading SageTV when running on a client pc.
+2. Wont work with any other main menu STVi's which change the default layout.
 
 == Future Enhancements ==
