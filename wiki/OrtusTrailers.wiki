@@ -23,6 +23,10 @@ This is the homepage for Ortus trailers which allows you to download, store and 
   * User defined time for Auto downloading of newest trailers (not in beta version)
   * Auto download of all trailer info including poster's during startup for quicker access
 
+== Requirements ==
+  * SageTV beta version 7.0.12+
+  * Internet Connection
+
 == Providers ==
   * Apple Movie Trailers (Status: beta)
   * You Tube Trailers (Status: Not for default UI)
