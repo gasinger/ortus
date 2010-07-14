@@ -57,7 +57,7 @@ Here you can find where your current download path is for trailers, posters etc 
 
 == Known Issues ==
 
-# 1. 25 second delay loading SageTV when running on a client pc.
-# 2. Wont work with any other main menu STVi's which change the default layout.
+ # 25 second delay loading SageTV when running on a client pc.
+ # Wont work with any other main menu STVi's which change the default layout.
 
 == Future Enhancements ==
