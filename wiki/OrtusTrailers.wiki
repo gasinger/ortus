@@ -52,3 +52,5 @@ Alter where trailers, posters & the apple xml file gets downloaded too (default 
 Here you can find where your current download path is for trailers, posters etc as well as other usefull information like disc space used. If you find you have orphaned trailers or posters an option will be available to delete them.
 
 == Known Issues ==
+
+25 second delay loading SageTV when running on a client pc.
