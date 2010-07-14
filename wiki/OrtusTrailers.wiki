@@ -1,5 +1,4 @@
-= Ortus Trailers = 
-= A Movie Trailer plugin for your SageTV system =
+== A Movie Trailer plugin for your SageTV system ==
 *beta version 1.0*
 
 
