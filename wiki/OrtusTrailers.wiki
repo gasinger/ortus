@@ -54,3 +54,5 @@ Here you can find where your current download path is for trailers, posters etc 
 == Known Issues ==
 
 1. 25 second delay loading SageTV when running on a client pc.
+
+== Future Enhancements ==
