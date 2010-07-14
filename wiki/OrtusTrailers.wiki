@@ -1,0 +1,56 @@
+#A Movie Trailer plugin for your SageTV system
+
+= Ortus Trailers = 
+*beta version 1.0*
+
+
+== About ==
+
+This is the homepage for Ortus trailers which allows you to download, store and watch the latest theatrical trailers from your SageTV system.
+
+== Features ==
+
+  * Multiple view styles
+  * User defined refresh time
+  * Queue multiple downloads
+  * User defined buffering options
+  * Enable/Disable various screen items
+  * Keep Max trailers / auto delete oldest
+  * Keeps track of orphaned trailers/artwork
+  * User defined download resolutions (if available)
+   # 1080p
+   # 720p
+   # 480p
+   # Standard Definition
+  * User defined time for Auto downloading of newest trailers (not in beta version)
+  * Auto download of all trailer info including poster's during startup for quicker access
+
+== Providers ==
+  * Apple Movie Trailers (Status: beta)
+  * You Tube Trailers (Status: Not for default UI)
+
+== Screenshots ==
+
+<a target='_blank' href='http://img267.imageshack.us/img267/2702/ortustrailershome.jpg'><img src='http://img267.imageshack.us/img267/2702/ortustrailershome.th.jpg' border='0'/></a>
+<a target='_blank' href='http://img293.imageshack.us/img293/9232/ortustrailerslist.jpg'><img src='http://img293.imageshack.us/img293/9232/ortustrailerslist.th.jpg' border='0'/></a>
+<a target='_blank' href='http://img535.imageshack.us/img535/5066/ortustrailerswall.jpg'><img src='http://img535.imageshack.us/img535/5066/ortustrailerswall.th.jpg' border='0'/></a>
+<a target='_blank' href='http://img443.imageshack.us/img443/3269/ortustrailersoptions.jpg'><img src='http://img443.imageshack.us/img443/3269/ortustrailersoptions.th.jpg' border='0'/></a>
+
+== Options Explained ==
+
+==== Resolution ====
+You can change the trailer resolution to suit your broadband speed, if the selected resolution is not available the next resolution will be automatically tried.
+==== Trailer Update Interval ====
+The trailer list will be automatically updated depending on the time limit set (default 360 minutes). The list will update each time you enter the trailer screen if the set time has been exceeded.
+==== Keep Max Trailers ====
+Set this if you dont want to keep every trailer you download (default 10). Once the limit has been reached the oldest trailer will be deleted.
+==== Enable Buffered Playback ====
+If this option is enabled playback will automatically begin once the limit has been reached, this is handy if you have a slow broadband connection but still want to enjoy 1080p trailers. If this option is disabled all downloads will be queued so you can watch them at a later time.
+==== Force Trailer Update ====
+If you would prefer not to wait for the timed auto update you can manually refresh the list at anytime.
+==== Change Base Path ====
+Alter where trailers, posters & the apple xml file gets downloaded too (default is: SageTV\SageTV\STVs\Ortus\Trailers). It is currently *not* recommemed that you use shared paths located on another pc as this will slow down the currently downloading trailer statistics.
+==== Trailer Statistics ====
+Here you can find where your current download path is for trailers, posters etc as well as other usefull information like disc space used. If you find you have orphaned trailers or posters an option will be available to delete them.
+
+== Known Issues ==
