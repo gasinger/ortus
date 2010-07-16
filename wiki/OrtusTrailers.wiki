@@ -8,9 +8,9 @@ This is the homepage for Ortus trailers which allows you to download, store and 
 
 == Features ==
 
-  * Multiple view styles
   * User defined refresh time
   * Queue multiple downloads
+  * Multiple view styles (pc only)
   * User defined buffering options
   * Enable/Disable various screen items
   * Keep Max trailers / auto delete oldest
@@ -53,11 +53,18 @@ If you would prefer not to wait for the timed auto update you can manually refre
 ==== Change Base Path ====
 Alter where trailers, posters & the apple xml file gets downloaded too (default is: SageTV\SageTV\STVs\Ortus\Trailers). It is currently *not* recommemed that you use shared paths located on another pc as this will slow down the currently downloading trailer statistics.
 ==== Trailer Statistics ====
-Here you can find where your current download path is for trailers, posters etc as well as other usefull information like disc space used. If you find you have orphaned trailers or posters an option will be available to delete them.
+Here you can find where your current download path is for trailers, posters etc as well as other usefull information like disc space used. If you find you have orphaned trailers or posters an option will become available to delete them.
 
 == Known Issues ==
 
  # 25 second delay loading SageTV when running on a client pc.
  # Wont work with any other main menu STVi's which change the default layout.
+ # Network share for client pc's (slow donwload statistics).
+
+== Extender Speed Tips ==
+
+ # Basically disable all animations and screen items.
 
 == Future Enhancements ==
+
+Scheduling of trailer downloads.
