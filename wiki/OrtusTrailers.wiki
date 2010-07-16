@@ -48,9 +48,11 @@ The trailer list will be automatically updated depending on the time limit set (
 ==== Keep Max Trailers ====
 Set this if you dont want to keep every trailer you download (default 10). Once the limit has been reached the oldest trailer will be deleted.
 ==== Enable Buffered Playback ====
-If this option is enabled playback will automatically begin once the limit has been reached, this is handy if you have a slow broadband connection but still want to enjoy 1080p trailers. If this option is disabled all downloads will be queued so you can watch them at a later time.
+If this option is enabled playback will begin automatically once the limit has been reached, this is handy if you have a slow broadband connection but still want to enjoy 1080p trailers. If this option is disabled all downloads will be queued so you can watch them at a later time.
 ==== Force Trailer Update ====
 If you would prefer not to wait for the timed auto update you can manually refresh the list at anytime.
+==== Misc Options ====
+Allows you to enable or disable screen items or animations which can improve speed when running on HD extenders. You can also adjust the text size for various screen areas here.
 ==== Change Base Path ====
 Alter where trailers, posters & the apple xml file gets downloaded too (default is: SageTV\SageTV\STVs\Ortus\Trailers). It is currently *not* recommemed that you use shared paths located on another pc as this will slow down the currently downloading trailer statistics.
 ==== Trailer Statistics ====
@@ -58,7 +60,8 @@ Here you can find where your current download path is for trailers, posters etc 
 
 == Known Issues ==
 
- # 25 second delay loading SageTV when running on a client pc.
+ # 25 second delay loading SageTV when running on a client pc only and nothing on server.
+ # Main Menu Trailer Theme wont work when running on client pc only (same issue as above).
  # Wont work with any other main menu STVi's which change the default layout.
  # Network share for client pc's (slow donwload statistics).
  # Studio Logo uses incorrect layer position.
