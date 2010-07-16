@@ -51,6 +51,8 @@ Set this if you dont want to keep every trailer you download (default 10). Once 
 If this option is enabled playback will begin automatically once the limit has been reached, this is handy if you have a slow broadband connection but still want to enjoy 1080p trailers. If this option is disabled all downloads will be queued so you can watch them at a later time.
 ==== Force Trailer Update ====
 If you would prefer not to wait for the timed auto update you can manually refresh the list at anytime.
+==== Unfocused Transparency ====
+This option only becomes available when running on a client pc (as the wall view is pc only due to speed issues). Default is set to 0.4 but if you find that you prefer your unfocused posters to be a little bit more visable then increase this value.
 ==== Misc Options ====
 Allows you to enable or disable screen items or animations which can improve speed when running on HD extenders. You can also adjust the text size for various screen areas here.
 ==== Change Base Path ====
