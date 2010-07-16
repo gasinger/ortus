@@ -30,6 +30,7 @@ This is the homepage for Ortus trailers which allows you to download, store and 
 == Providers ==
   * Apple Movie Trailers (Status: beta)
   * You Tube Trailers (Status: Not for default UI)
+  * Game Trailers.com (Status: Not for default UI)
 
 == Screenshots ==
 
