@@ -1,5 +1,5 @@
 == A Movie Trailer plugin for your SageTV system ==
-*beta version 1.0*
+*Current Version: beta version 1.02*
 
 
 == About ==
