@@ -110,7 +110,7 @@ Here you can find where your current download path is for trailers, posters etc 
 
 == Orphaned Trailers & Posters ==
 
-Orphaned trailers and posters will happen when Apple update their trailer xml file, so as new trailers get added old ones drop off the list. Once these trailers are no longer available in the Apple xml we loose all the details for that trailer as there is no way to store this information....other than adding them to the videos section or the Ortus database which we wont be doing for the default UI. Once this happens you will no longer be able to view these trailers in SageTV.
+Orphaned trailers and posters will happen when Apple update their trailer xml file, so as new trailers get added old ones drop off the list. Once these trailers are no longer available we loose all the details for that trailer as there is no way to store this information....other than adding them to the Sage database\videos section or the Ortus database which we wont be doing for the default UI. Once this happens you will no longer be able to view these trailers in SageTV.
 
 == Future Enhancements ==
 
