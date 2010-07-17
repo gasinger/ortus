@@ -39,6 +39,36 @@ This is the homepage for Ortus trailers which allows you to download, store and 
 <a target='_blank' href='http://img535.imageshack.us/img535/5066/ortustrailerswall.jpg'><img src='http://img535.imageshack.us/img535/5066/ortustrailerswall.th.jpg' border='0'/></a>
 <a target='_blank' href='http://img443.imageshack.us/img443/3269/ortustrailersoptions.jpg'><img src='http://img443.imageshack.us/img443/3269/ortustrailersoptions.th.jpg' border='0'/></a>
 
+== Button Configuration ==
+All button press only work when your highlighting a trailer item either on the list or poster view. Various buttons have different actions depending on your prefered setup and if the highlighted trailer has been previously download/stored.
+
+
+*<u>Universal Buttons</u>*
+
+
+*Delete:* Deletes the currently highlighted trailer. <br>
+*Stop:* Cancels the currently highlighted trailer download. <br>
+*Info:* Opens the detailed description panel with Play, Download, Cancel Download and Delete options.
+
+
+*<u>Standard Setup</u>*
+
+
+*Play/Select/Enter/Mouse Click:* Opens the detailed description panel which may contain options to Play, Download, Cancel Download or Delete Trailer.
+
+
+*<u>Click 'n' Play</u>*
+
+
+*Play/Select/Enter/Mouse Click:* Starts playback of pre-downloaded trailers or if the trailer has not yet been downloaded will initate the download procedure with playback starting a second or two later.
+
+
+*<u>Buffered Playback</u>* 
+
+
+*Play/Select/Enter/Mouse Click:* Opens the detailed description panel which may contain options to Play, Download, Cancel Download or Delete Trailer.
+
+
 == Options Explained ==
 
 ==== Resolution ====
@@ -48,7 +78,9 @@ The trailer list will be automatically updated depending on the time limit set (
 ==== Keep Max Trailers ====
 Set this if you dont want to keep every trailer you download (default 10). Once the limit has been reached the oldest trailer will be deleted.
 ==== Enable Buffered Playback ====
-If this option is enabled playback will begin automatically once the limit has been reached, this is handy if you have a slow broadband connection but still want to enjoy 1080p trailers. If this option is disabled all downloads will be queued so you can watch them at a later time.
+If this option is enabled playback will begin automatically once the set buffered limit has been reached, this is handy if you have a slow broadband connection but still want to enjoy 1080p trailers. If this option and Click 'n' Play is disabled all downloads will be queued so you can watch them at a later time.
+==== Click 'n' Play ====
+If you would rather not see the trailer detailed descriptions or have a lazy remote pushing finger enable this option. Playback of the highlighted trailer will begin within a couple of seconds. This option is also dependant on the trailer resolution setting so if you find playback becomes too intermitant lower the download resolution. If playback is still poor you maybe better off using the Buffered Playback method. If this option and Buffered Playback is disabled all downloads will be queued so you can watch them at a later time.
 ==== Force Trailer Update ====
 If you would prefer not to wait for the timed auto update you can manually refresh the list at anytime.
 ==== Unfocused Transparency ====
