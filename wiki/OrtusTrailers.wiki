@@ -73,25 +73,25 @@ All button press only work when your highlighting a trailer item either on the l
 
 == Options Explained ==
 
-==== Resolution ====
+==== <u>Resolution</u> ====
 You can change the trailer resolution to suit your broadband speed, if the selected resolution is not available the next resolution will be automatically tried.
-==== Trailer Update Interval ====
+==== <u>Trailer Update Interval</u> ====
 The trailer list will be automatically updated depending on the time limit set (default 360 minutes). The list will update each time you enter the trailer screen if the set time has been exceeded.
-==== Keep Max Trailers ====
+==== <u>Keep Max Trailers</u> ====
 Set this if you dont want to keep every trailer you download (default 10). Once the limit has been reached the oldest trailer will be deleted automatically.
-==== Enable Buffered Playback ====
+==== <u>Enable Buffered Playback</u> ====
 If this option is enabled playback will begin automatically once the set buffered limit has been reached. This is handy if you have a slow broadband connection but still want to enjoy 1080p trailers. If this option and Click 'n' Play is disabled all downloads will be queued so you can watch them at a later time.
-==== Click 'n' Play ====
+==== <u>Click 'n' Play</u> ====
 If you would rather not see the trailer detailed descriptions or if you have a lazy remote pushing finger enable this option, playback of the highlighted trailer will begin within a couple of seconds. This option is also dependant on the trailer resolution setting so if you find playback becomes too intermitant lower the download resolution. If playback is still poor you maybe better off using the Buffered Playback method. If this option and Buffered Playback is disabled all downloads will be queued so you can watch them at a later time.
-==== Force Trailer Update ====
+==== <u>Force Trailer Update</u> ====
 If you would prefer not to wait for the timed auto update you can manually refresh the list at anytime.
-==== Unfocused Transparency ====
+==== <u>Unfocused Transparency</u> ====
 This option only becomes available when running on a client pc (as the wall view is pc only due to speed issues). Default is set to 0.4 but if you find that you prefer your unfocused posters to be a little bit more visable then increase this value.
-==== Misc Options ====
+==== <u>Misc Options</u> ====
 Allows you to enable or disable screen items or animations which can improve speed when running on HD extenders. You can also adjust the text size for various screen areas here.
-==== Change Base Path ====
+==== <u>Change Base Path</u> ====
 Alter where trailers, posters & the apple xml file gets downloaded too (default is: SageTV\SageTV\STVs\Ortus\Trailers). It is currently *not* recommemed that you use shared paths located on another pc as this will slow down the currently downloading trailer statistics.
-==== Trailer Statistics ====
+==== <u>Trailer Statistics</u> ====
 Here you can find where your current download path is for trailers, posters etc as well as other usefull information like disc space used. If you find you have orphaned trailers or posters an option will become available to delete them.
 
 == Extender Speed Tips ==
