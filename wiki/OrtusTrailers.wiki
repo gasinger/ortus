@@ -82,7 +82,7 @@ Set this if you dont want to keep every trailer you download (default 10). Once 
 ==== Enable Buffered Playback ====
 If this option is enabled playback will begin automatically once the set buffered limit has been reached. This is handy if you have a slow broadband connection but still want to enjoy 1080p trailers. If this option and Click 'n' Play is disabled all downloads will be queued so you can watch them at a later time.
 ==== Click 'n' Play ====
-If you would rather not see the trailer detailed descriptions or if you have a lazy remote pushing finger enable this option. Playback of the highlighted trailer will begin within a couple of seconds. This option is also dependant on the trailer resolution setting so if you find playback becomes too intermitant lower the download resolution. If playback is still poor you maybe better off using the Buffered Playback method. If this option and Buffered Playback is disabled all downloads will be queued so you can watch them at a later time.
+If you would rather not see the trailer detailed descriptions or if you have a lazy remote pushing finger enable this option, playback of the highlighted trailer will begin within a couple of seconds. This option is also dependant on the trailer resolution setting so if you find playback becomes too intermitant lower the download resolution. If playback is still poor you maybe better off using the Buffered Playback method. If this option and Buffered Playback is disabled all downloads will be queued so you can watch them at a later time.
 ==== Force Trailer Update ====
 If you would prefer not to wait for the timed auto update you can manually refresh the list at anytime.
 ==== Unfocused Transparency ====
@@ -94,6 +94,10 @@ Alter where trailers, posters & the apple xml file gets downloaded too (default 
 ==== Trailer Statistics ====
 Here you can find where your current download path is for trailers, posters etc as well as other usefull information like disc space used. If you find you have orphaned trailers or posters an option will become available to delete them.
 
+== Extender Speed Tips ==
+
+ # Basically disable all animations and screen items.
+
 == Known Issues ==
 
  # 25 second delay loading SageTV when running on a client pc only and nothing on server.
@@ -102,10 +106,7 @@ Here you can find where your current download path is for trailers, posters etc 
  # Network share for client pc's (slow donwload statistics).
  # Studio Logo uses incorrect layer position.
  # Main Menu description panel is beneath Sage Icons.
-
-== Extender Speed Tips ==
-
- # Basically disable all animations and screen items.
+ # Descriptions have unwanted gaps in the text where we've cleaned the file of illegal characters.
 
 == Future Enhancements ==
 
