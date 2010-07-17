@@ -105,7 +105,7 @@ Here you can find where your current download path is for trailers, posters etc 
  # Wont work with any other main menu STVi's which change the default layout.
  # Network share for client pc's (slow donwload statistics).
  # ~~Studio Logo uses incorrect layer position.~~
- # Main Menu description panel is beneath Sage Icons.
+ # ~~Main Menu description panel is beneath Sage Icons.~~
  # ~~Descriptions have unwanted gaps in the text where we've cleaned the file of illegal characters.~~
 
 == Orphaned Trailers & Posters ==
