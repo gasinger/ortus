@@ -90,7 +90,7 @@ This option only becomes available when running on a client pc (as the wall view
 ==== <u>Misc Options</u> ====
 Allows you to enable or disable screen items or animations which can improve speed when running on HD extenders. You can also adjust the text size for various screen areas here.
 ==== <u>Change Base Path</u> ====
-Alter where trailers, posters & the apple xml file gets downloaded too (default is: SageTV\SageTV\STVs\Ortus\Trailers). It is currently *not* recommemed that you use shared paths located on another pc as this will slow down the currently downloading trailer statistics.
+Alter where trailers, posters & the apple xml file gets downloaded too (default is: SageTV\SageTV\STVs\Ortus\Trailers).
 ==== <u>Trailer Statistics</u> ====
 Here you can find where your current download path is for trailers, posters etc as well as other usefull information like disc space used. If you find you have orphaned trailers or posters an option will become available to delete them.
 
