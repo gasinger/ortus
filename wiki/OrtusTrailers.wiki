@@ -108,5 +108,4 @@ Orphaned trailers and posters will happen when Apple update their trailer xml fi
 
 == Future Enhancements ==
 
-Scheduling of trailer downloads. <br>
-Change trailer dates to text format rather than numerical.
+Scheduling of trailer downloads.
