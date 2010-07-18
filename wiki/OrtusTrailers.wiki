@@ -100,8 +100,8 @@ Here you can find where your current download path is for trailers, posters etc 
 
 == Known Issues ==
 
- # 25 second delay loading SageTV when running on a client pc only and nothing on server.
- # Main Menu Trailer Theme wont work when running on client pc only (same issue as above).
+ # ~~25 second delay loading SageTV when running on a client pc only and nothing on server.~~
+ # ~~Main Menu Trailer Theme wont work when running on client pc only (same issue as above).~~
  # Wont work with any other main menu STVi's which change the default layout.
  # Network share for client pc's (slow donwload statistics).
  # ~~Studio Logo uses incorrect layer position.~~
