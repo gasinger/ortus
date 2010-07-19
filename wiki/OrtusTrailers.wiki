@@ -4,7 +4,7 @@
 
 == About ==
 
-This is the homepage for Ortus trailers which allows you to download, store and watch the latest theatrical trailers from your SageTV system.
+This is the homepage for Ortus trailers which allows you to download, store and watch the latest theatrical trailers using your SageTV system.
 
 == Features ==
 
@@ -21,7 +21,7 @@ This is the homepage for Ortus trailers which allows you to download, store and 
    # 480p
    # Standard Definition
   * User defined time for Auto downloading of newest trailers (not in beta version)
-  * Auto download of all trailer info including poster's during startup for quicker access
+  * Auto download of all trailer info including poster's during start up for quicker access
 
 == Requirements ==
   * SageTV beta version 7.0.12 or greater
@@ -41,7 +41,7 @@ This is the homepage for Ortus trailers which allows you to download, store and 
 
 
 == Button Configuration ==
-All button press only work when your highlighting a trailer item either on the list or poster view. Various buttons have different actions depending on your prefered setup and if the highlighted trailer has been previously download/stored.
+All button press only work when your highlighting a trailer item either on the list or poster view. Various buttons have different actions depending on your preferred setup and if the highlighted trailer has been previously download/stored.
 
 
 *<u>Universal Buttons</u>*
@@ -61,7 +61,7 @@ All button press only work when your highlighting a trailer item either on the l
 *<u>Click 'n' Play</u>*
 
 
-*Play/Select/Enter/Mouse Click:* Starts playback of pre-downloaded trailers or if the trailer has not yet been downloaded will initate the download procedure with playback starting a second or two later.
+*Play/Select/Enter/Mouse Click:* Starts playback of pre-downloaded trailers or if the trailer has not yet been downloaded will initiate the download procedure with playback starting a second or two later.
 
 
 *<u>Buffered Playback</u>* 
@@ -78,21 +78,23 @@ You can change the trailer resolution to suit your broadband speed, if the selec
 ==== <u>Trailer Update Interval</u> ====
 The trailer list will be automatically updated depending on the time limit set (default 360 minutes). The list will update each time you enter the trailer screen if the set time has been exceeded.
 ==== <u>Keep Max Trailers</u> ====
-Set this if you dont want to keep every trailer you download (default 10). Once the limit has been reached the oldest trailer will be deleted automatically.
+Set this if you don't want to keep every trailer you download (default 10). Once the limit has been reached the oldest trailer will be deleted automatically.
 ==== <u>Enable Buffered Playback</u> ====
 If this option is enabled playback will begin automatically once the set buffered limit has been reached. This is handy if you have a slow broadband connection but still want to enjoy 1080p trailers. If this option and Click 'n' Play is disabled all downloads will be queued so you can watch them at a later time.
 ==== <u>Click 'n' Play</u> ====
-If you would rather not see the trailer detailed descriptions or if you have a lazy remote pushing finger enable this option, playback of the highlighted trailer will begin within a couple of seconds. This option is also dependant on the trailer resolution setting so if you find playback becomes too intermitant lower the download resolution. If playback is still poor you maybe better off using the Buffered Playback method. If this option and Buffered Playback is disabled all downloads will be queued so you can watch them at a later time.
+If you would rather not see the trailer detailed descriptions or if you have a lazy remote pushing finger enable this option, playback of the highlighted trailer will begin within a couple of seconds. This option is also dependant on the trailer resolution setting so if you find playback becomes too intermittent lower the download resolution. If playback is still poor you maybe better off using the Buffered Playback method. If this option and Buffered Playback is disabled all downloads will be queued so you can watch them at a later time.
 ==== <u>Force Trailer Update</u> ====
 If you would prefer not to wait for the timed auto update you can manually refresh the list at anytime.
 ==== <u>Unfocused Transparency</u> ====
-This option only becomes available when running on a client pc (as the wall view is pc only due to speed issues). Default is set to 0.4 but if you find that you prefer your unfocused posters to be a little bit more visable then increase this value.
+This option only becomes available when running on a client pc (as the wall view is pc only due to speed issues). Default is set to 0.4 but if you find that you prefer your unfocused posters to be a little bit more visible then increase this value.
 ==== <u>Misc Options</u> ====
 Allows you to enable or disable screen items or animations which can improve speed when running on HD extenders. You can also adjust the text size for various screen areas here.
 ==== <u>Change Base Path</u> ====
 Alter where trailers, posters & the apple xml file gets downloaded too (default is: SageTV\SageTV\STVs\Ortus\Trailers).
+==== <u>Download All Trailers</u> ====
+Use this option if you would like to download all available trailers. This setting is dependant on the resolution you've set and will automatically adjust the max trailer count to allow for the additional trailers. Once you accept this setting you will be unable to cancel the downloads until all the download links have been located and added to the queue. Once the queue is complete the option will change to allow you to cancel the downloads. Current downloads will be limited to a maximum of 5 at anyone time, once one download completes another will begin.
 ==== <u>Trailer Statistics</u> ====
-Here you can find where your current download path is for trailers, posters etc as well as other usefull information like disc space used. If you find you have orphaned trailers or posters an option will become available to delete them.
+Here you can find where your current download path is for trailers, posters etc as well as other useful information like disc space used. If you find you have orphaned trailers or posters an option will become available to delete them.
 
 == Extender Speed Tips ==
 
