@@ -75,6 +75,8 @@ All button press only work when your highlighting a trailer item either on the l
 
 ==== <u>Resolution</u> ====
 You can change the trailer resolution to suit your broadband speed, if the selected resolution is not available the next resolution will be automatically tried.
+==== <u>Maximum MPAA Rating</u> ====
+Change parental controls for allowing viewing of inappropriate material, default setting is "All". Not Yet Rated (NR) trailers will be treated as MPAA rating Restricted (R), you can further enhance this setting by enabling the "Lock Setup Menu's" option found in the Sage "Parental Controls" options.
 ==== <u>Trailer Update Interval</u> ====
 The trailer list will be automatically updated depending on the time limit set (default 360 minutes). The list will update each time you enter the trailer screen if the set time has been exceeded.
 ==== <u>Keep Max Trailers</u> ====
