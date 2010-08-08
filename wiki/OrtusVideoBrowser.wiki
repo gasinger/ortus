@@ -1,4 +1,4 @@
-== A Movie/TV Seroes browser plugin for your SageTV system ==
+== A Movie/TV Series browser plugin for your SageTV system ==
 
 
 
