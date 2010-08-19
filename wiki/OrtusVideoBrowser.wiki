@@ -5,3 +5,7 @@
 == About ==
 
 This is the homepage for Ortus Video Browser which will allow you to manage your media files within SageTV.
+
+==== Features include: ====
+
+Multiple layered filtering system including genre, user rating, mppa rating, release date, import date, title contains, description contains, directors and actors.
