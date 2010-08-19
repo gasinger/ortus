@@ -8,4 +8,6 @@ This is the homepage for Ortus Video Browser which will allow you to manage your
 
 ==== Features include: ====
 
-Multiple layered filtering system including genre, user rating, mppa rating, release date, import date, title contains, description contains, directors and actors.
+Multiple layered filtering system including genre, user rating, mppa rating, release date, import date, title contains, description contains, directors, actors, DVD and BluRay.
+
+Show missing TV episodes for your favorite TV series also see when their due to be aired. Filter missing episodes, season numbers, episode numbers etc.
