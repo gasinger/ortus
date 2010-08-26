@@ -9,4 +9,4 @@ This is the homepage for Ortus Weather Browser which will allow you to view weat
 ==== Features include: ====
 
 Fully animated weather icons.
-Dynamic weather backgrounds based on your current weather conditions.
+Dynamic backgrounds based on your current weather conditions.
