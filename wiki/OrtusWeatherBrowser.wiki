@@ -10,3 +10,8 @@ This is the homepage for Ortus Weather Browser which will allow you to view weat
 
 Fully animated weather icons.
 Dynamic backgrounds based on your current weather conditions.
+
+== Screenshots ==
+
+<a target='_blank' href='http://img821.imageshack.us/img821/6019/weatherplugina.jpg'><img src='http://img821.imageshack.us/img821/6019/weatherplugina.th.jpg' border='0'/></a>
+<a target='_blank' href='http://img178.imageshack.us/img178/2949/weatherpluginb.jpg'><img src='http://img178.imageshack.us/img178/2949/weatherpluginb.th.jpg' border='0'/></a>
