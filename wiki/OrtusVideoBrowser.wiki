@@ -11,3 +11,8 @@ This is the homepage for Ortus Video Browser which will allow you to manage your
 Multiple layered filtering system including genre, user rating, mppa rating, release date, import date, title contains, description contains, directors, actors, DVD and BluRay.
 
 Show missing TV episodes for your favorite TV series also see when their due to be aired. Filter missing episodes, season numbers, episode numbers etc.
+
+==== Current Screen Layout: ====
+
+<a target='_blank' href='http://img267.imageshack.us/img267/2702/ortustrailershome.jpg'><img src='http://img267.imageshack.us/img267/2702/ortustrailershome.th.jpg' border='0'/></a>
+<a target='_blank' 
