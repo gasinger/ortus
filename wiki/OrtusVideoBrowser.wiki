@@ -14,5 +14,6 @@ Show missing TV episodes for your favorite TV series also see when their due to 
 
 ==== Current Screen Layout: ====
 
-<a target='_blank' href='http://img267.imageshack.us/img267/2702/ortustrailershome.jpg'><img src='http://img267.imageshack.us/img267/2702/ortustrailershome.th.jpg' border='0'/></a>
-<a target='_blank' 
+<a target='_blank' href='http://img191.imageshack.us/img191/4734/ortustvseriesgroupedbys.jpg'><img src='http://img191.imageshack.us/img191/4734/ortustvseriesgroupedbys.th.jpg' border='0'/></a>
+<a target='_blank' href='http://img43.imageshack.us/img43/9232/ortustrailerslist.jpg'><img src='http://img43.imageshack.us/img43/9232/ortustrailerslist.th.jpg' border='0'/></a>
+<a target='_blank' href='http://img821.imageshack.us/img821/9899/ortusmovieslistbygenre.jpg'><img src='http://img821.imageshack.us/img821/9899/ortusmovieslistbygenre.th.jpg' border='0'/></a>
