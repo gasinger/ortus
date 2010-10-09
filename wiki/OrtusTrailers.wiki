@@ -92,7 +92,7 @@ This option only becomes available when running on a client pc (as the wall view
 ==== <u>Misc Options</u> ====
 Allows you to enable or disable screen items or animations which can improve speed when running on HD extenders. You can also adjust the text size for various screen areas here.
 ==== <u>Change Base Path</u> ====
-Alter where trailers, posters & the apple xml file gets downloaded too (default is: SageTV\SageTV\STVs\Ortus\Trailers).
+Alter where trailers, posters & the apple xml file gets downloaded too (default is: SageTV\SageTV\STVs\Ortus\Trailers). This option is handy for those running Windows Home Server.
 ==== <u>Download All Trailers</u> ====
 Use this option if you would like to download all available trailers. This setting is dependant on the resolution you've set and will automatically adjust the max trailer count to allow for the additional trailers. Once you accept this setting you will be unable to cancel the downloads until all the download links have been located and added to the queue. Once the queue is complete the option will change to allow you to cancel the downloads. Current downloads will be limited to a maximum of 5 at anyone time, once one download completes another will begin. If the trailer already exists on your system it will be skipped.
 ==== <u>Trailer Statistics</u> ====
