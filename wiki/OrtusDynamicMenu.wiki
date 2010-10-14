@@ -1,13 +1,17 @@
-#summary One-sentence summary of this page.
+#Dummy page for upcoming Dynamic Main Menu
 
-= Introduction =
+= Custom Filters =
 
-Add your content here.
+How to add a Custom filter:
 
+1. Create a Static Context for your menu item and name it "Custom", leave the Value blank by pressing the accept button.
+2. Now you'll need to edit the menu.xml located at SageTV\SageTV\STVs\Ortus\0 with the filter you require. An example filter would look like:
 
-= Details =
+filter: mediatype = 2 and mediagroup = 1; sort: mediaimporttime desc;limit:100
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+Where:
+
+mediatype = 2 is for Movies
+mediagroup = 1 is for imported media
+sort: is how you would like the sorting to occur with desc (desc or asc)
+limit is the amount of media files you want to appear in the overall list
