@@ -1,0 +1,8 @@
+2010-11-25 04:02:45,000 [ortus.logger@main] INFO: ortuslog: Logging Started Level: 6
+2010-11-25 04:02:45,013 [ortus.logger@main] INFO: Ortus: configurationManager: Starting
+2010-11-25 04:02:45,015 [ortus.logger@main] INFO: Ortus: Version: 1.0.15.000;09/02/2010;jphipps
+2010-11-25 04:02:45,030 [ortus.logger@main] INFO: Ortus: Context: background
+2010-11-25 04:02:45,033 [ortus.logger@main] INFO: Ortus: SagePath: /Users/jphipps/NetBeansProjects/sageortus
+2010-11-25 04:02:45,034 [ortus.logger@main] INFO: Ortus: BasePath: /Users/jphipps/NetBeansProjects/sageortus/STVs/Ortus
+2010-11-25 04:02:45,041 [ortus.logger@main] INFO: Ortus: Fanart Folder: \\livingroom\jukebox\Fanart
+2010-11-25 04:02:45,097 [ortus.logger@main] INFO: Ortus: configurationManager: Completed
