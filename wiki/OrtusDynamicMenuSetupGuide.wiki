@@ -1,13 +1,49 @@
-#summary One-sentence summary of this page.
+Welcom to the setup guide for Ortus dynamic menus. Please be sure to read through this page thoughly before posting questions in the SageTV forums.
 
 = Introduction =
 
-Add your content here.
+Ortus Dynamic Menus will allow you to customize your main menu for you and your familys needs. It's features include, adding/removing main/sub menu items, renaming main/submenus, attaching Sage commands to menus, creae personalised menu layouts for each SageTV user, add custom content filters to main/sub menus, attach images to each main/sub menu item and much more.
 
+== Requirements ==
 
-= Details =
+SageTV version 7.0.23 or greater
+Ortus database with internet connection (required for custom menu filter)
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+== Before We Get Started == 
+
+Before you start creating your own menus take a few moments to see how the default menus work and think about what you would like your personalised menus to look like.
+
+== Lets Start With The Basics ==
+
+Ortus dynamic menus uses two types of data feeds, SageData and OrtusData. SageData connot be fully customized but OrtusData can and will allow you to add simple or complex filtering methods to your menu items.
+
+To add a SageData item you first need to add your main or sub menu item, once you have done this open the options menu and navigate to "Static Contexts". The first entry you make must be named as "SageData" (without the quotes), the second entry you make can be anyone of the follow depending on what type of data you require:
+
+  * PluginsServerInstalled  
+  * PluginsClientInstalled
+  * PluginsInstalled
+  * PluginsAll  
+  * Recordings
+  * Settings
+  * TVMovies
+  * Schedule
+  * Weather
+  * Photos
+  * Music
+  * Guide
+
+Once you have entered your desired content type navigate away from that menu item and return to it to see the results. These SagaDate types are always sorted as newest first (most recent).
+
+== Now Let add an OrtusData type ==
+
+Create your menu item as you did above and navigate to the "Static Context" option but this time enter "OrtusData" (without the quotes", in the following text entry enter something that will standout as you will need to find this in your menu.xml file. So if you enter something like "Add Ortus Movie Code here" it will be easier to find than leaving it blank.
+
+Once you have done this you need to close you Sage client session and open the menu.xml file which can be found at "SageTV\SageTV\STVs\Ortus\0". Now locate your "Add Ortus Movie Code here" within the menu.xml file and replace the "Add Ortus Movie Code here" with a basic the basic filter:
+
+"filter: mediatype = 2 and mediagroup = 1; sort: MEDIAIMPORTTIME desc;limit:10"
+
+Your overall line will look like:
+
+<Static Title="Static Context" Name="OrtusData" Value="filter: mediatype = 2 and mediagroup = 1; sort: MEDIAIMPORTTIME desc;limit:10"/>
+
+What this basically does is look for all Media Types that are tagged as Movies, imported into Sage and sorts them via the date/time they were imported with a limit of 10 media items. For a more detailed explanation of the SQL commands and the Ortus database see >>>Add Page Here<<<
