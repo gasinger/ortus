@@ -9,7 +9,7 @@ Ortus Dynamic Menus will allow you to customize your main menu for you and your 
   * SageTV version 7.0.23 or greater
   * Ortus database with internet connection (required for custom menu filter)
 
-= Explanation Of Standard Menus =
+= A Quick Overview Of The Menus =
 
 == General TV ==
 
