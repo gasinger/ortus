@@ -27,6 +27,16 @@ Obviously this is a dynamic menu plugin so you don't have to have your menus set
 
 <a target='_blank' href='http://img263.imageshack.us/img263/1301/basicschedule.jpg'><img src='http://img263.imageshack.us/img263/1301/basicschedule.th.jpg' border='0'/></a>
 
+ * Alternative Schedule Example Screenshot
+
+<a target='_blank' href='http://img42.imageshack.us/img42/9001/alternativeschedule.jpg'><img src='http://img263.imageshack.us/img263/1301/basicschedule.th.jpg' border='0'/></a>
+
+ * TV Series Example Screenshot
+
+<a target='_blank' href='http://img808.imageshack.us/img808/3985/tvseries.jpg'><img src='http://img42.imageshack.us/img42/9001/alternativeschedule.th.jpg' border='0'/></a>
+
+
+
 
 
 
