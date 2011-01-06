@@ -35,6 +35,11 @@ Obviously this is a dynamic menu plugin so you don't have to have your menus set
 
 <a target='_blank' href='http://img808.imageshack.us/img808/3985/tvseries.jpg'><img src='http://img808.imageshack.us/img808/3985/tvseries.th.jpg' border='0'/></a>
 
+ * TV Movies On Now Example Screenshot
+
+<a target='_blank' href='http://img543.imageshack.us/img543/8409/tvmoviesonnow.jpg'><img src='http://img543.imageshack.us/img543/8409/tvmoviesonnow.th.jpg' border='0'/></a>
+
+
 
 
 
