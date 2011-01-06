@@ -16,7 +16,7 @@ Ortus Dynamic Menus will allow you to customize your main menu for you and your 
 Currently music can only be display in alphabetical order, once we have finalised the layout of the music section in the Ortus database this will be changed to display the most recently added albums. If you want fanart backgrounds to be displayed for your music you will need to manually add a folder to your fanart directory named as Music e.g Ortus\Fanart\Music. Fanart is pulled in via the albums artist name for example Ortus\Fanart\Music\U2..... the actual images can be named however you want.
 
  * Music Example Screenshot
-<a target='_blank' href='http://img826.imageshack.us/img826/3418/standardmusic.jpg'><img src='http://img826.imageshack.us/img826/3418/standardmusic.th.jpg' border='0'/></a>
+<a target='_blank' href='http://img375.imageshack.us/img375/3418/standardmusic.jpg'><img src='http://img375.imageshack.us/img375/3418/standardmusic.th.jpg' border='0'/></a>
 
 === Plugins ===
 
