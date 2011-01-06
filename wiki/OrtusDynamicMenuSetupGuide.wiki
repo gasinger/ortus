@@ -15,18 +15,17 @@ Ortus Dynamic Menus will allow you to customize your main menu for you and your 
 
 The Plugins menu can show you recently added plugins and what plugins you have installed on your server or client machine.
 
+ * Plugin Example
 <a target='_blank' href='http://img600.imageshack.us/img600/6076/standardplugins.jpg'><img src='http://img600.imageshack.us/img600/6076/standardplugins.th.jpg' border='0'/></a>
 
 ==== Photos ====
 
-The photos menu item can display a list of all your photos by import date (if you wish) and as with most Ortus menus screen items can be enabled or disabled. You may find these extra details give your custom layout a bit more punch if you were to have your layout setup like example 2.
+The photos menu item can display a list of all your photos by import date (if you wish) and as with most Ortus menus screen items can be enabled or disabled. You may find these extra details give your custom layout a bit more punch if you were to have your layout setup like Photo Detailed Example.
 
-==== Standard Photo Example====
-
+  * Photo Example
 <a target='_blank' href='http://img32.imageshack.us/img32/4262/standardphotos.jpg'><img src='http://img32.imageshack.us/img32/4262/standardphotos.th.jpg' border='0'/></a>
 
-==== Standard Photo Example 2====
-
+  * Photo Detailed Example
 <a target='_blank' href='http://img88.imageshack.us/img88/1679/standardphotos2.jpg'><img src='http://img88.imageshack.us/img88/1679/standardphotos2.th.jpg' border='0'/></a>
 
 
@@ -34,10 +33,10 @@ The photos menu item can display a list of all your photos by import date (if yo
 
 Ortus weather uses animated weather icons to display the current conditions and a four day forecast, animations can be disabled if you would prefer. You can also download a current weather background pack which will display different backgrounds depending on your current conditions. If your current condition folder contains more than one image you can also set these images to scroll through.
 
-==== Standard Weather Background Example====
+ * Standard Weather Background Example
 <a target='_blank' href='http://img141.imageshack.us/img141/6305/standardweatherbackgrou.jpg'><img src='http://img141.imageshack.us/img141/6305/standardweatherbackgrou.th.jpg' border='0'/></a>
 
-==== Current Weather Background Example====
+ * Current Weather Background Example
 <a target='_blank' href='http://img703.imageshack.us/img703/5160/currentweatherbackgroun.jpg'><img src='http://img703.imageshack.us/img703/5160/currentweatherbackgroun.th.jpg' border='0'/></a>
 
 
