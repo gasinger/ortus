@@ -11,6 +11,12 @@ Ortus Dynamic Menus will allow you to customize your main menu for you and your 
 
 == Explanation Of Standard Menus ==
 
+==== Plugins ====
+
+The Plugins menu can show you recently added plugins and what plugins you have installed on your server or client machine.
+
+<a target='_blank' href='http://img600.imageshack.us/img600/6076/standardplugins.jpg'><img src='http://img600.imageshack.us/img600/6076/standardplugins.th.jpg' border='0'/></a>
+
 ==== Weather ====
 
 Ortus weather uses animated weather icons to display the current conditions and a four day forecast, animations can be disabled if you would prefer. You can also download a current weather background pack which will display different backgrounds depending on your current conditions. If your current condition folder contains more than one image you can also set these images to scroll through.
