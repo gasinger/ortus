@@ -13,7 +13,7 @@ Ortus Dynamic Menus will allow you to customize your main menu for you and your 
 
 == General TV ==
 
-Obviously this is a dynamic menu plugin so you don't have to have your menus setup like the example screenshots below but for demonstation purposes it gives you a good idea of what can be achieved. You may also notice that Schedule is also located on the main menu bar, again this is not a requirement but the default Sage schedule has alot of default options which you may prefer in a seperate menu item.
+Obviously this is a dynamic menu plugin so you don't have to have your menus setup like the example screenshots below but for demonstration purposes it gives you a good idea of what can be achieved. You may also notice that Schedule is also located on the main menu bar, again this is not a requirement but the default Sage schedule has alot of default options which you may prefer in a seperate menu item.
 
  * Recordings Example Screenshot
 
