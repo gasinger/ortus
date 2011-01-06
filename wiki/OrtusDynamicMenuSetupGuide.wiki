@@ -23,6 +23,11 @@ Obviously this is a dynamic menu plugin so you don't have to have your menus set
 
 <a target='_blank' href='http://img401.imageshack.us/img401/7756/tvguideexample.jpg'><img src='http://img401.imageshack.us/img401/7756/tvguideexample.th.jpg' border='0'/></a>
 
+ * Basic Schedule Example Screenshot
+
+<a target='_blank' href='http://img263.imageshack.us/img263/1301/basicschedule.jpg'><img src='http://img263.imageshack.us/img263/1301/basicschedule.th.jpg' border='0'/></a>
+
+
 
 
 
