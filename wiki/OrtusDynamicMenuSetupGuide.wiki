@@ -74,7 +74,7 @@ The Plugins menu can show you recently added plugins and what plugins you have i
 
 == Photos ==
 
-The photos menu item can display a list of all your photos by import date (if you wish) and as with most Ortus menus screen items can be enabled or disabled. You may find these extra details give your custom layout a bit more punch if you were to have your layout setup like Photo Detailed Example.
+The photos menu item can display a list of all your photos by import date (if you wish) and as with most Ortus menus, screen items can be enabled or disabled. You may find these extra details give your custom layout a bit more punch if you were to have your layout setup like Photo Detailed Example.
 
   * Photo Example Screenshot
 <a target='_blank' href='http://img32.imageshack.us/img32/4262/standardphotos.jpg'><img src='http://img32.imageshack.us/img32/4262/standardphotos.th.jpg' border='0'/></a>
