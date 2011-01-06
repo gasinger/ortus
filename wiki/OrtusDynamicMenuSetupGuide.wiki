@@ -11,6 +11,18 @@ Ortus Dynamic Menus will allow you to customize your main menu for you and your 
 
 = A Quick Overview Of The Menus =
 
+== Movies ==
+
+Movies can be filtered and sorted into any grouping you like, maybe you want to create a custom menu for your children which filters out inapropriate material and use an alternative menu for the more mature memebers of your family. Also remember these menus can be asigned to individual users. A more detailed explanation of how to create your own filtered movie menus can be found below.
+
+ * Basic Movie Screensot
+
+<a target='_blank' href='http://img534.imageshack.us/img534/9198/basicmovies.jpg'><img src='http://img534.imageshack.us/img534/9198/basicmovies.th.jpg' border='0'/></a>
+
+ * Filtered Movie Screensot
+
+<a target='_blank' href='http://img705.imageshack.us/img705/1327/filteredmovies.jpg'><img src='http://img705.imageshack.us/img705/1327/filteredmovies.th.jpg' border='0'/></a>
+
 == General TV ==
 
 Obviously this is a dynamic menu plugin so you don't have to have your menus setup like the example screenshots below but for demonstration purposes it gives you a good idea of what can be achieved. You may also notice that Schedule is also located on the main menu bar, again this is not a requirement but the default Sage schedule has alot of default options which you may prefer in a seperate menu item.
