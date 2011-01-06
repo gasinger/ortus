@@ -6,8 +6,23 @@ Ortus Dynamic Menus will allow you to customize your main menu for you and your 
 
 == Requirements ==
 
-SageTV version 7.0.23 or greater
-Ortus database with internet connection (required for custom menu filter)
+  * SageTV version 7.0.23 or greater
+  * Ortus database with internet connection (required for custom menu filter)
+
+== Explanation Of Standard Menus ==
+
+==== Weather ====
+
+Ortus weather uses animated weather icons to display the current conditions and a four day forecast, animations can be disabled if you would prefer. You can also download a current weather background pack which will display different backgrounds depending on your current conditions. If your current condition folder contains more than one image you can also set these images to scroll through.
+
+==== Standard Weather Background Example====
+<a target='_blank' href='http://img141.imageshack.us/i/standardweatherbackgrou.jpg/'><img src='http://img141.imageshack.us/img141/6305/standardweatherbackgrou.th.jpg' border='0'/></a>
+
+==== Current Weather Background Example====
+<a target='_blank' href='http://img703.imageshack.us/img703/5160/currentweatherbackgroun.jpg'><img src='http://img703.imageshack.us/img703/5160/currentweatherbackgroun.th.jpg' border='0'/></a>
+
+
+
 
 == Before We Get Started == 
 
