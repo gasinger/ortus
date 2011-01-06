@@ -47,14 +47,14 @@ Ortus weather uses animated weather icons to display the current conditions and 
 <a target='_blank' href='http://img703.imageshack.us/img703/5160/currentweatherbackgroun.jpg'><img src='http://img703.imageshack.us/img703/5160/currentweatherbackgroun.th.jpg' border='0'/></a>
 
 
-== Editing The Menus ==
+= Editing The Menus =
 
 
-==== Before We Get Started ==== 
+== Before We Get Started ==
 
 Before you start creating your own menus take a few moments to see how the default menus work and think about what you would like your personalised menus to look like.
 
-==== Lets Start With The Basics ====
+== Lets Start With The Basics ==
 
 Ortus dynamic menus uses two types of data feeds, SageData and OrtusData. SageData connot be fully customized but OrtusData can and will allow you to add simple or complex filtering methods to your menu items.
 
