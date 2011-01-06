@@ -1,17 +1,27 @@
 Welcom to the setup guide for Ortus dynamic menus. Please be sure to read through this page thoughly before posting questions in the SageTV forums.
 
-= Introduction =
+== Introduction ==
 
 Ortus Dynamic Menus will allow you to customize your main menu for you and your familys needs. It's features include, adding/removing main/sub menu items, renaming main/submenus, attaching Sage commands to menus, creae personalised menu layouts for each SageTV user, add custom content filters to main/sub menus, attach images to each main/sub menu item and much more.
 
-= Requirements =
+== Requirements ==
 
   * SageTV version 7.0.23 or greater
   * Ortus database with internet connection (required for custom menu filter)
 
-= A Quick Overview Of The Menus =
+=== Before You Get Started ===
 
-== Movies ==
+Before you start creating your own menus take a few moments to see how the default menus work and think about what you would like your personalised menus to look like. Ortus dynamic menus also uses two different types of data, SageData and OrtusData. Depending on the data you require will depend on these two different data types, these are explained in the guides below.
+
+=== How To Guides ===
+
+  * <a target='_blank' href='http://code.google.com/p/ortus/wiki/OrtusUI?ts=1279066823&updated=OrtusUI'> Sage Menu Guide
+  * <a target='_blank' href='http://code.google.com/p/ortus/wiki/OrtusUI?ts=1279066823&updated=OrtusUI'> Ortus Menu Guide
+  * <a target='_blank' href='http://code.google.com/p/ortus/wiki/OrtusUI?ts=1279066823&updated=OrtusUI'> Options Guide
+
+== A Quick Overview Of The Menus ==
+
+=== Movies ===
 
 Movies can be filtered and sorted into any grouping you like, maybe you want to create a custom menu for your children which filters out inapropriate material and use an alternative menu for the more mature memebers of your family, also remember these menus can be asigned to individual users. A more detailed explanation of how to create your own filtered movie menus can be found below.
 
