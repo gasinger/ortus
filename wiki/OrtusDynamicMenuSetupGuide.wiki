@@ -16,7 +16,7 @@ Before you start creating your own menus take a few moments to see how the defau
 === How To Guides ===
 
   * <a target='_blank' href='http://code.google.com/p/ortus/wiki/OrtusUI?ts=1279066823&updated=OrtusUI'> Sage Menu Guide
-  * <a target='_blank' href='http://code.google.com/p/ortus/wiki/OrtusUI?ts=1279066823&updated=OrtusUI'> Ortus Menu Guide
+  * <a target='_blank' href='http://code.google.com/p/ortus/wiki/OrtusDynamicMenuSetupGuideOrtusData?'> Ortus Data Guide
   * <a target='_blank' href='http://code.google.com/p/ortus/wiki/OrtusUI?ts=1279066823&updated=OrtusUI'> Options Guide
 
 == A Quick Overview Of The Menus ==
