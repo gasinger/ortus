@@ -11,7 +11,7 @@ Ortus Dynamic Menus will allow you to customize your main menu for you and your 
 
 === Before You Get Started ===
 
-Before you start creating your own menus take a few moments to see how the default menus work and think about what you would like your personalised menus to look like. Ortus dynamic menus also uses two different types of data, SageData and OrtusData. Depending on the data you require will depend on these two different data types, these are explained in the guides below.
+Before you start creating your own menus take a few moments to see how the default menus work and think about what you would like your personalised menus to look like. Ortus dynamic menus uses two different types of data, SageData and OrtusData. What you want displayed on screen will depend on these two different data types, how to use these data types are explained in the guides below.
 
 === How To Guides ===
 
