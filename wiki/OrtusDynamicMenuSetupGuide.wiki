@@ -4,12 +4,12 @@ Welcom to the setup guide for Ortus dynamic menus. Please be sure to read throug
 
 Ortus Dynamic Menus will allow you to customize your main menu for you and your familys needs. It's features include, adding/removing main/sub menu items, renaming main/submenus, attaching Sage commands to menus, creae personalised menu layouts for each SageTV user, add custom content filters to main/sub menus, attach images to each main/sub menu item and much more.
 
-== Requirements ==
+= Requirements =
 
   * SageTV version 7.0.23 or greater
   * Ortus database with internet connection (required for custom menu filter)
 
-== Explanation Of Standard Menus ==
+= Explanation Of Standard Menus =
 
 === Music ===
 
