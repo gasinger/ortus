@@ -17,6 +17,19 @@ The Plugins menu can show you recently added plugins and what plugins you have i
 
 <a target='_blank' href='http://img600.imageshack.us/img600/6076/standardplugins.jpg'><img src='http://img600.imageshack.us/img600/6076/standardplugins.th.jpg' border='0'/></a>
 
+==== Photos ====
+
+The photos menu item can display a list of all your photos by import date (if you wish) and as with most Ortus menus screen items can be enabled or disabled. You may find these extra details give your custom layout a bit more punch if you were to have your layout setup like example 2.
+
+==== Standard Photo Example====
+
+<a target='_blank' href='http://img32.imageshack.us/img32/4262/standardphotos.jpg'><img src='http://img32.imageshack.us/img32/4262/standardphotos.th.jpg' border='0'/></a>
+
+==== Standard Photo Example 2====
+
+<a target='_blank' href='http://img88.imageshack.us/img88/1679/standardphotos2.jpg'><img src='http://img88.imageshack.us/img88/1679/standardphotos2.th.jpg' border='0'/></a>
+
+
 ==== Weather ====
 
 Ortus weather uses animated weather icons to display the current conditions and a four day forecast, animations can be disabled if you would prefer. You can also download a current weather background pack which will display different backgrounds depending on your current conditions. If your current condition folder contains more than one image you can also set these images to scroll through.
@@ -28,13 +41,14 @@ Ortus weather uses animated weather icons to display the current conditions and 
 <a target='_blank' href='http://img703.imageshack.us/img703/5160/currentweatherbackgroun.jpg'><img src='http://img703.imageshack.us/img703/5160/currentweatherbackgroun.th.jpg' border='0'/></a>
 
 
+== Editing The Menus ==
 
 
-== Before We Get Started == 
+==== Before We Get Started ==== 
 
 Before you start creating your own menus take a few moments to see how the default menus work and think about what you would like your personalised menus to look like.
 
-== Lets Start With The Basics ==
+==== Lets Start With The Basics ====
 
 Ortus dynamic menus uses two types of data feeds, SageData and OrtusData. SageData connot be fully customized but OrtusData can and will allow you to add simple or complex filtering methods to your menu items.
 
