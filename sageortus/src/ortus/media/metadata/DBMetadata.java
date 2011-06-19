@@ -12,13 +12,15 @@ import ortus.media.metadata.item.Episode;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.MapListHandler;
 import org.apache.commons.lang.StringEscapeUtils;
-import ortus.configurationEngine;
+import ortus.Ortus;
 import ortus.media.OrtusMedia;
 import ortus.media.metadata.item.Fanart;
 import ortus.media.metadata.item.IItem;
@@ -36,16 +38,28 @@ public class DBMetadata extends ortus.vars implements IMetadataProvider {
     private String seperator = File.separator;
     private String CentralTVFolder = GetFanartFolder() + seperator + "TV" + seperator;
 
+    public int GetMediaID(Object mediafile) {
+        return ortus.media.metadata.utils.GetMediaID(mediafile);
+    }
+
+    public int GetSeriesID(Object mediafile) {
+        return ortus.media.metadata.utils.GetSeriesID(mediafile);
+    }
+
+    public int GetEpisodeID(Object mediafile) {
+        return ortus.media.metadata.utils.GetEpisodeID(mediafile);
+    }    
+
     public ortus.media.metadata.item.Media GetMetadataMedia(Object mediafile) {
         int mediaid = GetMediaID(mediafile);
 
         List<List> result = ortus.api.executeSQLQueryArray("select mediaid, showtitle, episodetitle, mediapath, description, mediaencoding, mediatype, mediagroup, airingstarttime, userrating, mpaarated, releasedate, mediaduration, seriesid, seasonno, episodeid, episodeno, mediasize, TimestampToEpoch(mediaimporttime) from allmedia where mediaid = " + mediaid);
         if (result.size() > 0) {
             try {
-                float workRating = 5;
+                int  workRating = 5;
                 if (result.get(0).get(9) != null) {
                     try {
-                        workRating = Float.parseFloat(((String) result.get(0).get(9)).trim());
+                        workRating = Integer.parseInt(((String) result.get(0).get(9)).trim());
                     } catch (Exception e) {
                         ortus.api.DebugLog(5, "Couldn't convert: " + result.get(0).get(9));
                     }
@@ -67,22 +81,37 @@ public class DBMetadata extends ortus.vars implements IMetadataProvider {
 //                                                    ((cacheItemMedia)ci).addCast(new cacheItemCast(Integer.parseInt((String)castitem.get(0)), Integer.parseInt((String)castitem.get(1)), (String)castitem.get(2),(String)castitem.get(3), (String)castitem.get(4)));
 //                                                }
                 } else {
-                    List<List> misc = ortus.api.executeSQLQueryArray("select trailer from sage.movies where mediaid = " + mediaid);
+                    List<List> misc = ortus.api.executeSQLQueryArray("select trailer from sage.metadata where mediaid = " + mediaid);
                     if ( misc.size()>0)
                         ci.setTrailer((String)misc.get(0).get(0));
-                    geresult = ortus.api.executeSQLQueryArray("select g.name from sage.genre as g, sage.movies as v where g.metadataid = v.metadataid and v.mediaid = " + Integer.parseInt((String) result.get(0).get(0)));
-//                                                List<List> cast = ortus.api.executeSQLQueryArray("select 0, ec.personid, ec.name, ec.job, ec.character from sage.movie as m, sage.cast as ec where m.metadataid = ec.metadataid and m.mediaid = " + Integer.parseInt((String)result.get(0).get(0)));
-//                                                for ( List castitem : cast) {
-//                                                    ((cacheItemMedia)ci).addCast(new cacheItemCast(Integer.parseInt((String)castitem.get(0)), Integer.parseInt((String)castitem.get(1)), (String)castitem.get(2),(String)castitem.get(3), (String)castitem.get(4)));
-//                                                }
+                    geresult = ortus.api.executeSQLQueryArray("select g.name from sage.genre as g where g.mediaid = " + Integer.parseInt((String) result.get(0).get(0)));
+//                    List<List> cast = ortus.api.executeSQLQueryArray("select personid, name, job, character from sage.cast where mediaid = " + Integer.parseInt((String)result.get(0).get(0)));
+//                    for ( List castitem : cast) {
+//                        ci.addCast(new Cast(Integer.parseInt((String)castitem.get(0)), (String)castitem.get(1), (String)castitem.get(2),(String)castitem.get(3)));
+//                    }
                 }
                 for (List geitem : geresult) {
                     ci.AddGenre((String) geitem.get(0));
                 }
-                List<List> faresult = ortus.api.executeSQLQueryArray("select f.metadataid, f.default, f.height, f.width, f.imagetype, f.type, f.url, f.file, f.imagetype from sage.fanart as f, sage.movies as v where f.file is not null and f.file not like '%png' and f.metadataid = v.metadataid and v.mediaid = " + Integer.parseInt((String) result.get(0).get(0)) + " order by default desc");
-                for (List faitem : faresult) {
-                    ci.AddFanart(new Fanart((String) faitem.get(0), Integer.parseInt((String) faitem.get(1)), Integer.parseInt((String) faitem.get(2)), Integer.parseInt((String) faitem.get(3)), Integer.parseInt((String) faitem.get(4)), (String) faitem.get(5), (String) faitem.get(6), (String) faitem.get(7)));
+
+                List<HashMap> faresult;
+                if ( ci.GetMediaType() == 3) {
+       //             faresult = new ArrayList();
+         //           ortus.api.DebugLog(LogLevel.Trace,"select f.* from sage.fanart as f, sage.episode as e, sage.episodemedia as em where f.idtype = 'SR' and f.mediaid = e.seriesid and em.episodeid = e.episodeid and em.mediaid = " + Integer.parseInt((String) result.get(0).get(0)) + " order by id");
+                 //   faresult = ortus.api.executeSQLQueryHash("select f.* from sage.fanart as f, sage.episode as e, sage.episodemedia as em where f.idtype = 'SR' and f.mediaid = e.seriesid and e.episodeid = em.episodeid and em.mediaid = " + Integer.parseInt((String) result.get(0).get(0)) + " order by id");
+                    faresult = ortus.api.executeSQLQueryHash("select f.* from sage.fanart as f where f.idtype = 'SR' and f.mediaid in ( select e.seriesid from  sage.episode as e, sage.episodemedia as em where  e.episodeid = em.episodeid and em.mediaid = " + Integer.parseInt(((String)result.get(0).get(0))) + ") order by id");
+                } else {
+                    faresult = ortus.api.executeSQLQueryHash("select * from sage.fanart where idtype = 'MD' and mediaid = " + Integer.parseInt((String) result.get(0).get(0)) + " order by id");
+
                 }
+                for (HashMap faitem : faresult) {
+//                    ortus.api.DebugLogTrace("faitem: " + faitem.toString());
+                    ci.AddFanart(new Fanart(Integer.parseInt((String)faitem.get("ID")),(String) faitem.get("METADATAID"), Integer.parseInt((String) faitem.get("DEFAULT")), Integer.parseInt((String) faitem.get("LOW_HEIGHT")), Integer.parseInt((String) faitem.get("LOW_WIDTH")), "low", (String) faitem.get("TYPE"), (String) faitem.get("LOW_URL"), (String) faitem.get("LOW_FILE"),Long.parseLong((String)faitem.get("LOW_IMAGESIZE"))));
+                    ci.AddFanart(new Fanart(Integer.parseInt((String)faitem.get("ID")),(String) faitem.get("METADATAID"), Integer.parseInt((String) faitem.get("DEFAULT")), Integer.parseInt((String) faitem.get("MEDIUM_HEIGHT")), Integer.parseInt((String) faitem.get("MEDIUM_WIDTH")), "medium", (String) faitem.get("TYPE"), (String) faitem.get("MEDIUM_URL"), (String) faitem.get("MEDIUM_FILE"),Long.parseLong((String)faitem.get("MEDIUM_IMAGESIZE"))));
+                    ci.AddFanart(new Fanart(Integer.parseInt((String)faitem.get("ID")),(String) faitem.get("METADATAID"), Integer.parseInt((String) faitem.get("DEFAULT")), Integer.parseInt((String) faitem.get("HIGH_HEIGHT")), Integer.parseInt((String) faitem.get("HIGH_WIDTH")), "high", (String) faitem.get("TYPE"), (String) faitem.get("HIGH_URL"), (String) faitem.get("HIGH_FILE"),Long.parseLong((String)faitem.get("HIGH_IMAGESIZE"))));
+
+                }
+
                 return ci;
             } catch (Exception e) {
                 ortus.api.DebugLog(LogLevel.Error, "GetMetadataMedia: Exception: ", e);
@@ -100,7 +129,7 @@ public class DBMetadata extends ortus.vars implements IMetadataProvider {
         try {
             List<Map<String, Object>> records = qr.query(conn, "select * from sage.series where seriesid = ?", seriesid, new MapListHandler());
             for (Map<String, Object> rec : records) {
-                ci = new Series((Integer) rec.get("seriesid"), (String) rec.get("imdbid"), (String) rec.get("zap2itid"), (String) rec.get("title"), ((java.sql.Date) rec.get("firstair")).toString(), (String) rec.get("airday"), (String) rec.get("airtime"), (String) rec.get("status"), (String) rec.get("description"), (String) rec.get("network"), ((Double) rec.get("userrating")).floatValue(), (String) rec.get("mpaarated"), (Long) rec.get("runtime"));
+                ci = new Series((Integer) rec.get("seriesid"), (String) rec.get("imdbid"), (String) rec.get("zap2itid"), (String) rec.get("title"), ((java.sql.Date) rec.get("firstair")).toString(), (String) rec.get("airday"), (String) rec.get("airtime"), (String) rec.get("status"), (String) rec.get("description"), (String) rec.get("network"), ((Integer) rec.get("userrating")), (String) rec.get("mpaarated"), (Long) rec.get("runtime"));
                 List<Map<String, Object>> genrerecords = qr.query(conn, "select * from sage.seriesgenre where seriesid = ?", seriesid, new MapListHandler());
                 for (Map<String, Object> genrerec : genrerecords) {
                     ci.addGenre((String) genrerec.get("name"));
@@ -110,9 +139,12 @@ public class DBMetadata extends ortus.vars implements IMetadataProvider {
 //                                ((cacheItemSeries)ci).addCast(new cacheItemCast(Integer.parseInt((String)castrec.get("episodeid")), Integer.parseInt((String)castrec.get("personid")), (String)castrec.get("name"),(String)castrec.get("job"),(String)castrec.get("character")));
 //                            }
 
-                List<Map<String, Object>> fanartrecords = qr.query(conn, "select * from sage.fanart where metadataid like ?", "SR" + seriesid + "%", new MapListHandler());
-                for (Map<String, Object> fanartrec : fanartrecords) {
-                    ci.AddFanart(new Fanart((String) fanartrec.get("metadataid"), (Integer) fanartrec.get("default"), (Integer) fanartrec.get("height"), (Integer) fanartrec.get("width"), (Integer) fanartrec.get("imagetype"), (String) fanartrec.get("type"), (String) fanartrec.get("url"), (String) fanartrec.get("file")));
+                List<Map<String, Object>> fanartrecords = qr.query(conn, "select * from sage.fanart where mediaid  = ? and idtype = 'SR'", seriesid , new MapListHandler());
+                for (Map<String, Object> faitem : fanartrecords) {
+                    ci.AddFanart(new Fanart((Integer)faitem.get("id"),(String) faitem.get("metadataid"), (Integer)faitem.get("default"), (Integer)faitem.get("low_height"), (Integer)faitem.get("low_width"), "low", (String) faitem.get("type"), (String) faitem.get("low_url"), (String) faitem.get("low_file"),(Long)faitem.get("low_imagesize")));
+                    ci.AddFanart(new Fanart((Integer)faitem.get("id"),(String) faitem.get("metadataid"), (Integer)faitem.get("default"), (Integer)faitem.get("medium_height"), (Integer)faitem.get("medium_width"), "medium", (String) faitem.get("type"), (String) faitem.get("medium_url"), (String) faitem.get("medium_file"),(Long)faitem.get("medium_imagesize")));
+                    ci.AddFanart(new Fanart((Integer)faitem.get("id"),(String) faitem.get("metadataid"), (Integer)faitem.get("default"), (Integer)faitem.get("high_height"), (Integer)faitem.get("high_width"), "high", (String) faitem.get("type"), (String) faitem.get("high_url"), (String) faitem.get("high_file"),(Long)faitem.get("high_imagesize")));
+
                 }
 //                            icp.Put("SR"+seriesid, ci);
             }
@@ -165,73 +197,76 @@ public class DBMetadata extends ortus.vars implements IMetadataProvider {
         return new Episode();
     }
 
-    public int GetMediaID(Object mediafile) {
-        int mediaid = 0;
-        if (mediafile instanceof Integer) {
-            mediaid = (Integer) mediafile;
-        } else if ( mediafile instanceof String) {
-            try { mediaid = Integer.parseInt((String)mediafile); } catch ( Exception e) {}
-        } else if (mediafile instanceof OrtusMedia) {
-            if (((OrtusMedia) mediafile).IsMediaFile() || ((OrtusMedia) mediafile).IsEpisode()) {
-                mediaid = ((OrtusMedia) mediafile).GetMediaID();
+    public List<HashMap> GetMetadataCast(Object mediafile) {
+        int mediaid = GetMediaID(mediafile);
+
+        ortus.api.DebugLogTrace("GetMetadataCast: Getting cast info for id: " + mediaid);
+
+        List<HashMap> result = new ArrayList<HashMap>();
+
+        List<List> cast = ortus.api.executeSQLQueryArray("select c.personid, c.name, c.job, c.character from sage.cast as c where c.mediaid = " + mediaid);
+        
+        try {
+
+            for ( List castitem : cast) {
+                int personid = Integer.parseInt((String)castitem.get(0));
+                ortus.api.DebugLogTrace(" Personid: " + personid);
+                HashMap ci = new HashMap();
+                ci.put("personid",personid);
+                ci.put("name",(String)castitem.get(1));
+                ci.put("job",(String)castitem.get(2));
+                ci.put("character",(String)castitem.get(3));
+                List<List> rec = ortus.api.executeSQLQueryArray("select biography, nomovies, birthday, birthplace from sage.actor where id = " + personid);
+                if ( rec.size() > 0) {
+                    ci.put("biography", rec.get(0).get(0));
+                    ci.put("nomovies", rec.get(0).get(1));
+                    ci.put("birthdate",rec.get(0).get(2));
+                    ci.put("birthplace", rec.get(0).get(3));
+                }
+                
+                List<HashMap> personfanart = new ArrayList<HashMap>();
+                List<HashMap> cafa = ortus.api.executeSQLQueryHash("select * from sage.fanart where idtype = 'CA' and mediaid = " + personid);
+                for ( HashMap cafaitem : cafa) {
+                    ortus.api.DebugLogTrace(" Fanart id: " + cafaitem.get("ID"));
+                    HashMap x = new HashMap();
+                    x.put("id",cafaitem.get("ID"));
+                    HashMap q = new HashMap();
+                    q.put("file",cafaitem.get("LOW_FILE"));
+                    q.put("url",cafaitem.get("LOW_URL"));
+                    x.put("low",q);
+                    HashMap r = new HashMap();
+                    q.put("file",cafaitem.get("MEDIUM_FILE"));
+                    q.put("url",cafaitem.get("MEDIUM_URL"));
+                    x.put("medium",r);
+                    HashMap s = new HashMap();
+                    q.put("file",cafaitem.get("HIGH_FILE"));
+                    q.put("url",cafaitem.get("HIGH_URL"));
+                    x.put("high",s);
+                    personfanart.add(x);
+                }
+                ci.put("fanart",personfanart);
+
+                List<HashMap> personfilms = new ArrayList<HashMap>();
+                List<List> cafi = ortus.api.executeSQLQueryArray("select id, name, character, job from sage.actormovies where personid = " + personid);
+                for ( List cafiitem : cafi) {
+                    HashMap x = new HashMap();
+                    x.put("id",cafiitem.get(0));
+                    x.put("name",cafiitem.get(1));
+                    x.put("character",cafiitem.get(2));
+                    x.put("job",cafiitem.get(3));
+                    personfilms.add(x);
+                }
+                ci.put("films",personfilms);
+
+                result.add(ci);
             }
-        } else if (MediaFileAPI.IsMediaFileObject(mediafile)) {
-            mediaid = MediaFileAPI.GetMediaFileID(mediafile);
+        } catch ( Exception e) {
+            ortus.api.DebugLog(LogLevel.Error, "GetMetadataCast: Exception: ",e);
         }
 
-        return mediaid;
+        return result;
     }
-
-    public int GetEpisodeID(Object mediafile) {
-        int episodeid = 0;
-        int mediaid = 0;
-        if (mediafile instanceof Integer) {
-            episodeid = (Integer) mediafile;
-        } else if (mediafile instanceof OrtusMedia) {
-            if (((OrtusMedia) mediafile).IsMediaFile() || ((OrtusMedia) mediafile).IsEpisode()) {
-                mediaid = ((OrtusMedia) mediafile).GetMediaID();
-            } else if (((OrtusMedia) mediafile).IsEpisode()) {
-                episodeid = ((OrtusMedia) mediafile).GetID();
-            }
-        } else if (MediaFileAPI.IsMediaFileObject(mediafile)) {
-            mediaid = MediaFileAPI.GetMediaFileID(mediafile);
-        }
-
-        if (mediaid > 0) {
-            List qr = ortus.api.executeSQLQuery("select episodeid from sage.episode where mediaid = " + mediaid);
-            if (qr.size() > 0) {
-                episodeid = Integer.parseInt((String) qr.get(0));
-            }
-        }
-
-        return episodeid;
-    }
-
-    public int GetSeriesID(Object mediafile) {
-        int seriesid = 0;
-        int mediaid = 0;
-        if (mediafile instanceof Integer) {
-            seriesid = (Integer) mediafile;
-        } else if (mediafile instanceof OrtusMedia) {
-            if (((OrtusMedia) mediafile).IsMediaFile() || ((OrtusMedia) mediafile).IsEpisode()) {
-                mediaid = ((OrtusMedia) mediafile).GetMediaID();
-            } else if (((OrtusMedia) mediafile).IsSeries()) {
-                seriesid = ((OrtusMedia) mediafile).GetID();
-            }
-        } else if (MediaFileAPI.IsMediaFileObject(mediafile)) {
-            mediaid = MediaFileAPI.GetMediaFileID(mediafile);
-        }
-
-        if (mediaid > 0) {
-            List qr = ortus.api.executeSQLQuery("select seriesid from sage.episode where mediaid = " + mediaid);
-            if (qr.size() > 0) {
-                seriesid = Integer.parseInt((String) qr.get(0));
-            }
-        }
-
-        return seriesid;
-    }
-
+    
     public boolean IsMetadataKeyMedia(String key) {
         if ( key.startsWith("MD"))
             return true;
@@ -263,8 +298,11 @@ public class DBMetadata extends ortus.vars implements IMetadataProvider {
 
     public HashMap GetMetadata(Object mediafile) {
         HashMap dataHash = null;
-//        ortus.api.DebugLogTrace("GetMetadata: Called with " + mediafile);
-        if (mediafile instanceof OrtusMedia) {
+        ortus.api.DebugLogTrace("GetMetadata: Called with " + mediafile + " of type: " + mediafile.getClass().getName());
+        if ( mediafile instanceof Integer || mediafile instanceof String) {
+            IItem ii = (IItem)ortus.cache.cacheEngine.getInstance().GetCache("MD" + mediafile);
+            dataHash = ii.toHash();
+        } else if (mediafile instanceof OrtusMedia) {
             IItem ii = (IItem)ortus.cache.cacheEngine.getInstance().GetCache(((OrtusMedia)mediafile).GetKey());
             dataHash = ii.toHash();
         } else if (MediaFileAPI.IsMediaFileObject(mediafile)) {
@@ -289,6 +327,21 @@ public class DBMetadata extends ortus.vars implements IMetadataProvider {
                 IItem ii = (IItem)ortus.cache.cacheEngine.getInstance().GetCache("MD" + dataHash.get("mediaid"));
                 dataHash.put("mediainfo", ii.toHash());
             }
+
+            List<HashMap> results = ortus.api.executeSQLQueryHash("select * from sage.usermedia where mediaid = " + dataHash.get("mediaid"));
+            if ( results.size() > 0) {
+                List userWatched = new ArrayList();
+                for ( HashMap x : results) {
+                    HashMap y = new HashMap();
+                    y.put("userid",x.get("USERID"));
+                    y.put("watched",x.get("WATCHED"));
+                    y.put("lastwatched",x.get("LASTWATCHEDTIMESTAMP "));
+                    userWatched.add(y);
+                }
+                dataHash.put("watched", userWatched);
+            }
+
+            
 //            ortus.api.DebugLogTrace("GetMetadata: Return: " + dataHash);
         }
         return dataHash;
@@ -296,7 +349,7 @@ public class DBMetadata extends ortus.vars implements IMetadataProvider {
 
     public HashMap GetMetadataFull(Object mediafile) {
         HashMap dataHash = null;
-//        ortus.api.DebugLogTrace("GetMetadata: Called with " + mediafile);
+//        ortus.api.DebugLogTrace("GetMetadataFull: Called with " + mediafile);
         if (mediafile instanceof OrtusMedia) {
             IItem ii = (IItem)ortus.cache.cacheEngine.getInstance().GetCache(((OrtusMedia)mediafile).GetKey());
             dataHash = ii.toHashFull();
@@ -328,18 +381,54 @@ public class DBMetadata extends ortus.vars implements IMetadataProvider {
                 dataHash.put("mediainfo", ii.toHash());
             }
 
-//            ortus.api.DebugLogTraxce("GetMetadataFull: Return: " + dataHash);
+            List<HashMap> results = ortus.api.executeSQLQueryHash("select * from sage.usermedia where mediaid = " + dataHash.get("mediaid"));
+            if ( results.size() > 0) {
+                List userWatched = new ArrayList();
+                for ( HashMap x : results) {
+                    HashMap y = new HashMap();
+                    y.put("userid",x.get("USERID"));
+                    y.put("watched",x.get("WATCHED"));
+                    y.put("lastwatched",x.get("LASTWATCHEDTIMESTAMP "));
+                    userWatched.add(y);
+                }
+                dataHash.put("watched", userWatched);
+            }
+
+
+//            ortus.api.DebugLogTrace("GetMetadataFull: Return: " + dataHash);
         }
         return dataHash;
 
     }
 
+    public String GetMetadataFullXML(Object mediafile) {
+         String xml = "<MediaFile></MediaFile>";
+//        ortus.api.DebugLogTrace("GetMetadataFull: Called with " + mediafile);
+        if (mediafile instanceof OrtusMedia) {
+            IItem ii = (IItem)ortus.cache.cacheEngine.getInstance().GetCache(((OrtusMedia)mediafile).GetKey());
+            xml = ii.toXML();
+        } else if (MediaFileAPI.IsMediaFileObject(mediafile)) {
+            IItem ii = (IItem)ortus.cache.cacheEngine.getInstance().GetCache("MD" + MediaFileAPI.GetMediaFileID(mediafile));
+            if (ii.isValid()) {
+                xml = ii.toXML();
+            } 
+        }
+
+        if (xml == null) {
+            ortus.api.DebugLogError("GetMetadataFullXML: Invalid Object");
+        } 
+
+        ortus.api.DebugLogTrace("GetMetadataFullXML: XML: " + xml);
+
+        return xml;
+
+    }
 	public String GetFanartFolder() {
 
 		String fanartfolder = Configuration.GetProperty("ortus/fanart/folder", "None");
 
 		if (fanartfolder.equalsIgnoreCase("none")) {
-			fanartfolder = configurationEngine.getInstance().getBasePath() + seperator + "Fanart";
+			fanartfolder = Ortus.getInstance().getBasePath() + seperator + "STVs" + java.io.File.separator + "Ortus" + java.io.File.separator +  "Fanart";
 			File df = new File(fanartfolder);
 			if (!df.exists()) {
 				df.mkdir();
@@ -502,10 +591,14 @@ public class DBMetadata extends ortus.vars implements IMetadataProvider {
     }
     
     public void SetMediaTitle(Object mediafile,String title) {
-            int mediaid = ( mediafile instanceof OrtusMedia ? ((OrtusMedia)mediafile).GetMediaID() : MediaFileAPI.GetMediaFileID(mediafile));
+            int mediaid = GetMediaID(mediafile);
 	    title = StringEscapeUtils.escapeSql(title);
             ortus.api.executeSQL("update sage.media set mediatitle = '" + title + "' where mediaid = " + mediaid);
-	    ortus.cache.cacheEngine.getInstance().ReLoadCache(mediafile);
+            int rc = ortus.api.executeSQL("update sage.metadata set name = '" + title + "' where mediaid = " + mediaid);
+            if ( rc == 0) {
+                ortus.api.executeSQL("insert into sage.metadata (mediaid,name) values('" + title + "', " + mediaid + ")");
+            }
+	     ortus.mq.api.fireMQMessage(ortus.mq.vars.MsgPriority.High,ortus.mq.vars.EvenType.Broadcast,"ReloadMediaCache", new Object[] { "MD"+mediaid } );
     }
 
     public String GetShowTitle(Object mediafile) {
@@ -538,10 +631,11 @@ public class DBMetadata extends ortus.vars implements IMetadataProvider {
 //        }
 //    }
     public void SetEpisodeTitle(Object mediafile,String title) {
-            int mediaid = ( mediafile instanceof OrtusMedia ? ((OrtusMedia)mediafile).GetMediaID() : MediaFileAPI.GetMediaFileID(mediafile));
+            int mediaid = GetMediaID(mediafile);
 	    title = StringEscapeUtils.escapeSql(title);
             ortus.api.executeSQL("update sage.media set episodetitle = '" + title + "' where mediaid = " + mediaid);
-	    ortus.cache.cacheEngine.getInstance().ReLoadCache(mediafile);
+            
+	    ortus.mq.api.fireMQMessage(ortus.mq.vars.MsgPriority.High,ortus.mq.vars.EvenType.Broadcast,"ReloadMediaCache", new Object[] { "MD"+mediaid } );
     }
 
     public int GetSeasonNumber(Object mediafile) {
@@ -589,15 +683,62 @@ public class DBMetadata extends ortus.vars implements IMetadataProvider {
             return ((Media)ortus.cache.cacheEngine.getInstance().GetCache("MD" + MediaFileAPI.GetMediaFileID(mediafile))).GetDescription();
         }
     }
-    
+   
     public void SetDescription(Object mediafile,String description) {
-            int mediaid = ( mediafile instanceof OrtusMedia ? ((OrtusMedia)mediafile).GetMediaID() : MediaFileAPI.GetMediaFileID(mediafile));
+            int mediaid = GetMediaID(mediafile);
 	    description = StringEscapeUtils.escapeSql(description);
-            int result = ortus.api.executeSQL("update sage.mediavideos set description = '" + description + "' where mediaid = " + mediaid);
+            int result = ortus.api.executeSQL("update sage.metadata set overview = '" + description + "' where mediaid = " + mediaid);
             if ( result < 1) {
-                result = ortus.api.executeSQL("insert into sage.mediavideos (mediaid, description) values( " + mediaid + ",'" + description + "')");
+                result = ortus.api.executeSQL("insert into sage.metadata (mediaid, overview) values( " + mediaid + ",'" + description + "')");
             }
+             ortus.mq.api.fireMQMessage(ortus.mq.vars.MsgPriority.High,ortus.mq.vars.EvenType.Broadcast,"ReloadMediaCache", new Object[] { "MD"+mediaid } );
     }
+    public void SetMPAARating(Object mediafile, String newmpaarating) {
+            int mediaid = GetMediaID(mediafile);
+	     int result = ortus.api.executeSQL("update sage.metadata set certification = '" + newmpaarating + "' where mediaid = " + mediaid);
+            if ( result < 1) {
+                result = ortus.api.executeSQL("insert into sage.metadata (mediaid, certification) values( " + mediaid + ",'" + newmpaarating + "')");
+            }
+	     ortus.mq.api.fireMQMessage(ortus.mq.vars.MsgPriority.High,ortus.mq.vars.EvenType.Broadcast,"ReloadMediaCache", new Object[] { "MD"+mediaid } );
+    }
+
+   public void SetUserRating(Object mediafile, String newuserrating) {
+            int mediaid = GetMediaID(mediafile);
+	    float userrating = 5;
+	    try {
+		    userrating = Float.parseFloat(newuserrating);
+	    } catch(Exception e) {
+		    userrating = 5;
+	    }
+
+            int result = ortus.api.executeSQL("update sage.metadata set rating = '" + newuserrating + "' where mediaid = " + mediaid);
+            if ( result < 1) {
+                result = ortus.api.executeSQL("insert into sage.metadata (mediaid, rating) values( " + mediaid + ",'" + newuserrating + "')");
+            }
+	    ortus.mq.api.fireMQMessage(ortus.mq.vars.MsgPriority.High,ortus.mq.vars.EvenType.Broadcast,"ReloadMediaCache", new Object[] { "MD"+mediaid } );
+    }
+    public void SetReleaseDate(Object mediafile, String newreleasedate) {
+         int mediaid = GetMediaID(mediafile);
+         
+        int result = ortus.api.executeSQL("update sage.metadata set releasedate = '" + newreleasedate + "' where mediaid = " + mediaid);
+            if ( result < 1) {
+                result = ortus.api.executeSQL("insert into sage.metadata (mediaid, releasedate) values( " + mediaid + ",'" + newreleasedate + "')");
+        }
+	ortus.mq.api.fireMQMessage(ortus.mq.vars.MsgPriority.High,ortus.mq.vars.EvenType.Broadcast,"ReloadMediaCache", new Object[] { "MD"+mediaid } );
+    }
+
+    public void SetMediaType(Object mediafile, int mediatype) {
+        int mediaid = GetMediaID(mediafile);
+
+        int result = ortus.api.executeSQL("update sage.media set mediatype = " + mediatype + " where mediaid = " + mediaid);
+
+        if ( mediatype != 3) {
+            result = ortus.api.executeSQL("update sage.episode set mediaid = null where mediaid = " + mediaid);
+        }
+
+	 ortus.mq.api.fireMQMessage(ortus.mq.vars.MsgPriority.High,ortus.mq.vars.EvenType.Broadcast,"ReloadMediaCache", new Object[] { "MD"+mediaid } );
+    }
+
 
     public List<String> GetGenre(Object mediafile) {
        if ( mediafile instanceof OrtusMedia ) {
@@ -616,6 +757,17 @@ public class DBMetadata extends ortus.vars implements IMetadataProvider {
         } else {
             return ((Media)ortus.cache.cacheEngine.getInstance().GetCache("MD" + MediaFileAPI.GetMediaFileID(mediafile))).GetGenre();
         }
+    }
+
+    public void SetGenre(Object mediafile, List genres) {
+           int mediaid = GetMediaID(mediafile);
+
+           int result = ortus.api.executeSQL("delete from sage.genre where mediaid = " + mediaid);
+
+           for ( Object x : genres) {
+                result = ortus.api.executeSQL("insert into sage.genre (mediaid,name) values( " + mediaid + ",'" + x + "')");
+           }
+	   ortus.mq.api.fireMQMessage(ortus.mq.vars.MsgPriority.High,ortus.mq.vars.EvenType.Broadcast,"ReloadMediaCache", new Object[] { "MD"+mediaid } );
     }
     
     public boolean IsTV(Object mediafile) {
@@ -724,17 +876,6 @@ public class DBMetadata extends ortus.vars implements IMetadataProvider {
             }
     }
 
-    public void SetMediaType(Object mediafile, Object mediatype) {
-        int mediaid = ( mediafile instanceof OrtusMedia ? ((OrtusMedia)mediafile).GetMediaID() : MediaFileAPI.GetMediaFileID(mediafile));
-        int workmediatype = Integer.parseInt(mediatype.toString());
-        if ( GetMediaType(mediafile) == 3 && workmediatype != 3) {
-            int result = ortus.api.executeSQL("update sage.episode set mediaid = null where mediaid = " + mediaid);
-        }
-
-        int result = ortus.api.executeSQL("update sage.media set mediatype = " + workmediatype + " where mediaid = " + mediaid);
-	ortus.cache.cacheEngine.getInstance().ReLoadCache(mediafile);
-    }
-
     public List<Object> GetMovies() {
             return ortus.api.getMediaFilesSQL("select mediaid from allmedia where mediatype = 2");
     }
@@ -794,7 +935,7 @@ public class DBMetadata extends ortus.vars implements IMetadataProvider {
 
 //        if ( Ortus.getInstance().modules.get("db") == null  )
 //            return null;
-     
+        String outputFormat = "SM";
 	String table = "";
         String where = "";
         String sort = "";
@@ -835,7 +976,8 @@ public class DBMetadata extends ortus.vars implements IMetadataProvider {
                 where+= " " + work[1] + " ";
             }
 	    if ( work[0].trim().equalsIgnoreCase("table")) {
-		table = work[1].trim();
+                if ( ! work[1].trim().equalsIgnoreCase("allmedia"))
+		    table = work[1].trim();
 	    }
 
             if ( work[0].trim().equalsIgnoreCase("watched")) {
@@ -846,15 +988,17 @@ public class DBMetadata extends ortus.vars implements IMetadataProvider {
             }
             if ( work[0].trim().equalsIgnoreCase("userwatched")) {
                 try {
-                    user_watched = Integer.parseInt(work[1]);
+                    user_watched = Integer.parseInt(work[1].trim());
                 } catch ( Exception e) {
+                    ortus.api.DebugLogError("Error processing user; setting to 0; input: " + work[1],e);
                     user_watched = 0;
                 }
             }
             if ( work[0].trim().equalsIgnoreCase("userunwatched")) {
                 try {
-                    user_unwatched = Integer.parseInt(work[1]);
+                    user_unwatched = Integer.parseInt(work[1].trim());
                 } catch ( Exception e) {
+                    ortus.api.DebugLogError("Error processing user; setting to 0; input: " + work[1],e);
                     user_unwatched = 0;
                 }
             }
@@ -869,6 +1013,9 @@ public class DBMetadata extends ortus.vars implements IMetadataProvider {
             if ( work[0].trim().equalsIgnoreCase("postsort")) {
                 postsort = work[1].trim();
             }
+            if ( work[0].trim().equalsIgnoreCase("output")) {
+                outputFormat=work[1].trim();
+            }
 
         }
 
@@ -881,10 +1028,10 @@ public class DBMetadata extends ortus.vars implements IMetadataProvider {
             omt = OrtusMediaType.Series;
             sql.append("select seriesid, title");
         } else {
-            if ( user_watched == -999 && user_unwatched == -999)
+ //           if ( user_watched == -999 && user_unwatched == -999)
                 sql.append("select mediaid, showtitle,episodetitle");
-            else
-                sql.append("select a.mediaid, a.showtitle, a.episodetitle");
+  //          else
+   //             sql.append("select a.mediaid, a.showtitle, a.episodetitle");
         }
 
         if ( ! groupby.isEmpty()) {
@@ -910,32 +1057,58 @@ public class DBMetadata extends ortus.vars implements IMetadataProvider {
                 sql.append(table);
             else 
                 sql.append("sage." + table);
+        
+//        } else {
+//            if ( user_watched == -999 && user_unwatched == -999 )
+//                    sql.append("allmedia as a");
+//            else {
+//                if ( user_unwatched != -999) {
+//                    sql.append(" allmedia as a left join sage.usermedia as um on a.mediaid = um.mediaid");
+//                    if ( ! where.isEmpty()) {
+//                        where += " and ( um.watched is null or um.watched = false)";
+//                    } else
+//                        where = " where ( um.watched is null or um.watched = false)";
+//                    if ( user_watched > -1)
+//                        where+=" and um.userid = " + user_unwatched;
+//                } else {
+//                    sql.append("allmedia as a left join sage.usermedia as um on a.mediaid = um.mediaid");
+//                    if ( ! where.isEmpty()) {
+//                        where += " and um.watched = true";
+//                    } else
+//                        where = " where um.watched = true";
+//                    if ( user_watched > -1)
+//                        where+=" and um.userid = " + user_watched;
+//                }
+//            }
         } else {
-            if ( user_watched == -999 && user_unwatched == -999 )
-                    sql.append("allmedia as a");
-            else {
-                if ( user_unwatched != -999) {
-                    sql.append(" from allmedia as a left join sage.usermedia as um on a.mediaid = um.mediaid");
-                    if ( ! where.isEmpty()) {
-                        where += " and ( um.watched is null or um.watched = false)";
-                    } else
-                        where = " where ( um.watched is null or um.watched = false)";
-                    if ( user_watched > -1)
-                        where+=" and um.userid = " + user_unwatched;
-                } else {
-                    sql.append("allmedia as a left join sage.usermedia as um on a.mediaid = um.mediaid");
-                    if ( ! where.isEmpty()) {
-                        where += " and um.watched = true";
-                    } else
-                        where = " where um.watched = true";
-                    if ( user_watched > -1)
-                        where+=" and um.userid = " + user_watched;
-                }
+            sql.append("allmedia as a");
+        }
+
+        if ( ! where.isEmpty()) {
+            sql.append(where);
+        }
+
+        if ( user_watched != -999) {
+            if ( user_watched == -1) {
+                user_watched = ortus.api.GetCurrentUser();
+            }
+            if ( ! where.isEmpty()) {
+              sql.append("and mediaid in ( select mediaid from sage.usermedia where userid = " + user_watched + " and watched = true)");
+            } else {
+               sql.append("where mediaid in ( select mediaid from sage.usermedia where userid = " + user_watched + " and watched = true)");
             }
         }
 
-        if ( ! where.isEmpty())
-            sql.append(where);
+        if ( user_unwatched != -999) {
+            if ( user_unwatched == -1) {
+                user_unwatched = ortus.api.GetCurrentUser();
+            }
+            if ( ! where.isEmpty()) {
+              sql.append("and mediaid not in ( select mediaid from sage.usermedia where userid = " + user_unwatched + " and watched = true)");
+            } else {
+               sql.append("where mediaid not in ( select mediaid from sage.usermedia where userid = " + user_unwatched + " and watched = true)");
+            }
+        }
 
         if ( sortcnt > 0 )
             sql.append(sort);
@@ -950,15 +1123,32 @@ public class DBMetadata extends ortus.vars implements IMetadataProvider {
         Object result = null;
 
         if ( groupbysql )
-            result = new HashMap();
+            result = new LinkedHashMap();
         else
-            result = new ArrayList();
+            result = new LinkedList();
 
         Connection conn = ortus.api.GetConnection();
         QueryRunner qr = new QueryRunner();
         try {
           List<Map<String,Object>> records = qr.query(conn,sql.toString(), new MapListHandler());
           for( Map rec : records) {
+
+//              if ( user_watched != -999)
+//                  if ( user_watched == -1) {
+//                      if( ! ortus.api.IsUserWatched(rec.get("MEDIAID")))
+//                          continue;
+//                  } else {
+//                      if( ! ortus.api.IsUserWatched(rec.get("MEDIAID"),user_watched))
+//                          continue;
+//                  }
+//              if ( user_unwatched != -999)
+//                  if ( user_unwatched == -1) {
+//                      if( ortus.api.IsUserWatched(rec.get("MEDIAID")))
+//                      continue;
+//                  } else {
+//                      if( ortus.api.IsUserWatched(rec.get("MEDIAID"),user_unwatched))
+//                          continue;
+//                  }
 //              for ( Object x : rec.keySet().toArray())
 //                  ortus.api.DebugLog(LogLevel.Trace, " Key: " + x + " value: " + rec.get(x));
               int id = 0;
@@ -970,6 +1160,7 @@ public class DBMetadata extends ortus.vars implements IMetadataProvider {
                   default:  id = (Integer)rec.get("MEDIAID");
                                     break;
               }
+
               OrtusMedia om = new OrtusMedia(id,omt);
               if ( rec.get("MEDIAID") != null)
                    om.SetMediaID(rec.get("MEDIAID"));
@@ -979,24 +1170,48 @@ public class DBMetadata extends ortus.vars implements IMetadataProvider {
                   om.setTitle((String)rec.get("EPISODETITLE"));
               else if ( rec.get("TITLE") != null)
                   om.setTitle((String)rec.get("TITLE"));
-//              ortus.api.DebugLogTrace("Search Results:  ID: " + om.GetMediaID() + " Title: " + om.getTitle());
-              if ( groupbysql ) {
-                    String groupkey = "";
-                    if ( rec.get(groupby.toUpperCase()) instanceof String)
-                        groupkey = (String)rec.get(groupby.toUpperCase());
-                    else
-                        groupkey = String.valueOf(rec.get(groupby.toUpperCase()));
 
-                    if ( ((HashMap)result).get(groupkey) == null) {
-                        List x = new ArrayList();
+              if ( outputFormat.equalsIgnoreCase("web")) {
+                  HashMap show = ortus.api.GetMetadata(om);
 
-                        x.add(om);
-                        ((HashMap)result).put(groupkey, x);
-                    } else {
-                        ((List)((HashMap)result).get(groupkey)).add(om);
-                    }
+                  if ( groupbysql ) {
+                        String groupkey = "";
+                        if ( rec.get(groupby.toUpperCase()) instanceof String)
+                            groupkey = (String)rec.get(groupby.toUpperCase());
+                        else
+                            groupkey = String.valueOf(rec.get(groupby.toUpperCase()));
+
+                        if ( ((LinkedHashMap)result).get(groupkey) == null) {
+                            List x = new LinkedList();
+
+                            x.add(show);
+                            ((LinkedHashMap)result).put(groupkey, x);
+                        } else {
+                            ((LinkedList)((LinkedHashMap)result).get(groupkey)).add(show);
+                        }
+                  } else {
+                      ((LinkedList)result).add(show);
+                  }              
               } else {
-                  ((List)result).add(om);
+    //              ortus.api.DebugLogTrace("Search Results:  ID: " + om.GetMediaID() + " Title: " + om.getTitle());
+                  if ( groupbysql ) {
+                        String groupkey = "";
+                        if ( rec.get(groupby.toUpperCase()) instanceof String)
+                            groupkey = (String)rec.get(groupby.toUpperCase());
+                        else
+                            groupkey = String.valueOf(rec.get(groupby.toUpperCase()));
+
+                        if ( ((LinkedHashMap)result).get(groupkey) == null) {
+                            LinkedList x = new LinkedList();
+
+                            x.add(om);
+                            ((LinkedHashMap)result).put(groupkey, x);
+                        } else {
+                            ((LinkedList)((LinkedHashMap)result).get(groupkey)).add(om);
+                        }
+                  } else {
+                      ((LinkedList)result).add(om);
+                  }
               }
           }
         } catch(Exception e ) {
@@ -1012,23 +1227,23 @@ public class DBMetadata extends ortus.vars implements IMetadataProvider {
         if ( omt == OrtusMediaType.MediaFile) {
             if ( ! groupby.isEmpty()) {
                 if ( groupby.equalsIgnoreCase("filesystem"))
-                     returnval = ortus.api.GroupByPath((List)result, groupbyoffset);
+                     returnval = ortus.api.GroupByPath((LinkedList)result, groupbyoffset);
                 else if ( groupby.equalsIgnoreCase("genre"))
-                     returnval = ortus.api.GroupByGenre((List)result,groupbyoffset);
+                     returnval = ortus.api.GroupByGenre((LinkedList)result,groupbyoffset);
                 else {
                     if ( groupbyoffset.isEmpty())
                         returnval = result;
                     else {
-                        returnval = ((HashMap)result).get(groupbyoffset);
+                        returnval = ((LinkedHashMap)result).get(groupbyoffset);
                     }
                 }
             } else
                 returnval = result;
 
-            if ( returnval instanceof HashMap) {
-                ortus.api.DebugLogTrace("Search: Returning Type: HashMap Num Keys: " + ((HashMap)returnval).keySet().size());
-            } else if ( returnval instanceof List) {
-                ortus.api.DebugLogTrace("Search: Returning Type: List Num Values: " + ((List)returnval).size());
+            if ( returnval instanceof LinkedHashMap) {
+                ortus.api.DebugLogTrace("Search: Returning Type: HashMap Num Keys: " + ((LinkedHashMap)returnval).keySet().size());
+            } else if ( returnval instanceof LinkedList) {
+                ortus.api.DebugLogTrace("Search: Returning Type: List Num Values: " + ((LinkedList)returnval).size());
             } else
                 ortus.api.DebugLogTrace("Search: Returning Type: Unknown");
 
@@ -1491,11 +1706,7 @@ public class DBMetadata extends ortus.vars implements IMetadataProvider {
             return ((Media)ortus.cache.cacheEngine.getInstance().GetCache("MD" + MediaFileAPI.GetMediaFileID(mediafile))).GetMPAARated();
         }
     }
-    public void SetMPAARating(Object mediafile, String newmpaarating) {
-        int mediaid = ( mediafile instanceof OrtusMedia ? ((OrtusMedia)mediafile).GetMediaID() : MediaFileAPI.GetMediaFileID(mediafile));
-	    int result = ortus.api.executeSQL("update sage.mediavideos set mpaarated = '" + newmpaarating + "' where mediaid = " + mediaid);
-	    ortus.cache.cacheEngine.getInstance().ReLoadCache(mediafile);
-    }
+   
     public int GetUserRating(Object mediafile) {
        if ( mediafile instanceof OrtusMedia ) {
             if ( ((OrtusMedia)mediafile).IsMediaFile()) {
@@ -1525,22 +1736,7 @@ public class DBMetadata extends ortus.vars implements IMetadataProvider {
         }
     }
     
-    public void SetUserRating(Object mediafile, String newuserrating) {
-            int mediaid = ( mediafile instanceof OrtusMedia ? ((OrtusMedia)mediafile).GetMediaID() : MediaFileAPI.GetMediaFileID(mediafile));
-	    float userrating = 5;
-	    try {
-		    userrating = Float.parseFloat(newuserrating);
-	    } catch(Exception e) {
-		    userrating = 5;
-	    }
-
-            if ( IsSeries(mediafile)) {
-                int result = ortus.api.executeSQL("update sage.episode set userrating = " + userrating + " where mediaid = " + mediaid);
-            } else {
-               int result = ortus.api.executeSQL("update sage.mediavideos set userrating = " + userrating + " where mediaid = " + mediaid);
-            }
-	    ortus.cache.cacheEngine.getInstance().ReLoadCache(mediafile);
-    }
+ 
     public int GetDiscNumber(Object mediafile) {
         return 0;
     }
@@ -1558,16 +1754,7 @@ public class DBMetadata extends ortus.vars implements IMetadataProvider {
             return ((Media)ortus.cache.cacheEngine.getInstance().GetCache("MD" + MediaFileAPI.GetMediaFileID(mediafile))).GetReleaseDate();
         }
     }
-    public void SetReleaseDate(Object mediafile, String newreleasedate) {
 
-        int mediaid = ( mediafile instanceof OrtusMedia ? ((OrtusMedia)mediafile).GetMediaID() : MediaFileAPI.GetMediaFileID(mediafile));
-        if ( IsSeries(mediafile)) {
-            int result = ortus.api.executeSQL("update sage.episode set originalairdate = '" +  newreleasedate + "' where mediaid = " + mediaid);
-        } else {
-	    int result = ortus.api.executeSQL("update sage.mediavideos set releasedate = '" +  newreleasedate + "' where mediaid = " + mediaid);
-        }
-	ortus.cache.cacheEngine.getInstance().ReLoadCache(mediafile);
-    }
 
 	@Override
 	public List<HashMap> GetMusicByArtist(String filter) {

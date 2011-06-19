@@ -5,6 +5,7 @@
 
 package ortus.onlinescrapper.themoviedb;
 
+import java.io.File;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.util.HashMap;
@@ -19,13 +20,26 @@ import sagex.api.MediaFileAPI;
  */
 public class ImageItem extends ortus.vars implements Serializable {
 
-    private String metadataid;
+    private int id = 0;
+    private String idtype;
     private String type;
     private String url = "";
     private String size;
+    private String metadataid;
     private int width = 0;
     private int height = 0;
-    private int imagetype = 0;
+    private String urlField = "low_url";
+    private String fileField = "low_file";
+    private String heightField = "low_height";
+    private String widthField = "low_width";
+    private String imageSizeField = "low_imagesize";
+    private Boolean originalImage = false;
+
+
+    @Override
+    public String toString() {
+        return "ImageItem{" + "id=" + id + ",idtype=" + idtype + ",type=" + type + ",url=" + url + ",size=" + getSize() + ",width=" + getWidth() + ",height=" + getHeight() + '}';
+    }
 
     public ImageItem() {
     }
@@ -35,29 +49,62 @@ public class ImageItem extends ortus.vars implements Serializable {
         this.type = this.type.replace("poster","Posters");
     }
     public void SetSize(String size) {
-	    this.size=size;
+	    this.setSize(size);
     }
     public void SetUrl(String url) {
 	    this.url = url;
     }
 
-    public void setMetadataid(String metadataid) {
-        this.metadataid = metadataid;
+    public void setId(int id) {
+        this.id = id;
     }
 
-    public String getMetadataid() {
-        return metadataid;
+    public int getId() {
+        return id;
     }
 
-    public ImageItem(String metadataid, String type, String size, String url) {
-        this.metadataid = metadataid;
+    public void setIdType(String idType) {
+        this.idtype = idType;
+    }
+
+    public String getIdType() {
+        return idtype;
+    }
+
+    public ImageItem(int id, String idtype, String type, String size, String url, String metadataid, int width, int height) {
+        this.id = id;
+        this.idtype = idtype;
         this.type = type.replace("backdrop","Backgrounds");
         this.type = this.type.replace("poster","Posters");
         this.size = size;
         this.url = url;
+        this.metadataid = metadataid;
+        this.height = height;
+        this.width = width;
+        
+        if ( size.equalsIgnoreCase("original")) {
+           urlField = "high_url";
+           fileField = "high_file";
+           heightField = "high_height";
+           widthField = "high_width";
+           imageSizeField = "high_imagesize";
+           originalImage = true;
+        } else if (size.equalsIgnoreCase("mid") ||
+                   size.equalsIgnoreCase("poster") ||
+                   size.equalsIgnoreCase("profile")) {
+           urlField = "medium_url";
+           fileField = "medium_file";
+           heightField = "medium_height";
+           widthField = "medium_width";
+           imageSizeField = "medium_imagesize";
+        }
 //        ortus.api.DebugLog(LogLevel.Trace2, " ImageItem: " + type + " url: " + url);
     }
 
+    public boolean IsOriginal() {
+        return originalImage;
+    }
+    
     public boolean IsPoster() {
         if( type.equals("Posters"))
             return true;
@@ -79,12 +126,6 @@ public class ImageItem extends ortus.vars implements Serializable {
             return false;
     }
 
-    public boolean IsOriginal() {
-        if ( size.equalsIgnoreCase("original"))
-            return true;
-        else
-            return false;
-    }
     public String GetUrl() {
         return url;
     }
@@ -96,12 +137,11 @@ public class ImageItem extends ortus.vars implements Serializable {
        try {
            QueryRunner qr = new QueryRunner();
 
-//           int updatecount = qr.update(conn,"update sage.fanart set type = ?, url = ? where metadataid = ?",type, url,metadataid);
-//           if ( updatecount == 0)
-             int updatecount = qr.update(conn,"insert into sage.fanart (metadataid, type, url) values ( ?,?,?)", metadataid, type,url);
+           int updatecount = qr.update(conn,"update sage.fanart set " + heightField + " = ?, " + widthField + " = ?, " + urlField + " = ? where mediaid = ? and idtype = ? and metadataid = ? and type = ?",height, width, url, id,idtype,metadataid,type);
+           if ( updatecount == 0)
+            updatecount = qr.update(conn,"insert into sage.fanart (mediaid,idtype, type, metadataid, " + urlField + "," + heightField + "," + widthField + ") values ( ?,?,?,?,?,?,?)", id, idtype, type,metadataid, url, height, width);
        } catch ( Exception e) {
-           ortus.api.DebugLog(LogLevel.Error,"ImageItem: Exception: " + e);
-           e.printStackTrace();
+           ortus.api.DebugLog(LogLevel.Error,"ImageItem: Exception: ", e);
        } finally {
            try { DbUtils.close(conn); } catch ( Exception e) {}
        }
@@ -144,11 +184,32 @@ public class ImageItem extends ortus.vars implements Serializable {
 //	}
 
     public void getImage(String destination) {
+        getImage(destination,null);
+    }
+
+    public void getImage(String destination, String fname) {
 
         String downloaddir = ortus.api.GetFanartFolder() + java.io.File.separator + destination + java.io.File.separator + type;
-        String filename = url.substring(url.lastIndexOf("/") + 1);
+        String filename="";
+        String results = "";
 
-	filename = filename.replaceAll("'","''");
+        if ( fname == null) {
+            if ( (url.contains("themoviedb") || url.contains("imgobject")) &&
+                 url.endsWith("jpg")) {
+                int slashIndex = url.lastIndexOf('/');
+                int keyend = url.substring(0,slashIndex+1).lastIndexOf("/");
+                int keystart = url.substring(0,keyend).lastIndexOf("/") + 1;
+                String key = url.substring(keystart, keyend);
+                filename=key.substring(key.length()-4) + "_";
+            }
+            filename+= url.substring(url.lastIndexOf("/") + 1);
+
+            filename = filename.replaceAll("'","''");
+            results = ortus.onlinescrapper.tools.urldownload.fileUrl(url, filename,downloaddir );
+        } else {
+            filename = fname;
+            results = ortus.onlinescrapper.tools.urldownload.fileUrl(url, filename, downloaddir);
+        }
 //        ortus.api.DebugLog(LogLevel.Trace2, " getImage: " + filename + " dir: " + downloaddir);
 
  //       File df = new File(downloaddir);
@@ -156,63 +217,201 @@ public class ImageItem extends ortus.vars implements Serializable {
  //           df.mkdirs();
 
 //        downloaddir+= java.io.File.separator + filename;
-        if ( ortus.onlinescrapper.tools.urldownload.fileDownload(url, downloaddir ).equals("OK") ) {
+        if (results.equalsIgnoreCase("OK") ) {
             HashMap<String,String> imginfo = ortus.image.util.GetImageInfo(downloaddir + java.io.File.separator + filename);
 
             if ( imginfo != null) {
-                    width = Integer.parseInt(imginfo.get("width"));
-                    height = Integer.parseInt(imginfo.get("height"));
+                    setWidth(Integer.parseInt(imginfo.get("width")));
+                    setHeight(Integer.parseInt(imginfo.get("height")));
 
-                    if ( height < 200)
-                            imagetype = 1;
-                    if ( height < 600)
-                            imagetype = 2;
-                    if ( height > 599)
-                            imagetype = 3;
-
-                    ortus.api.DebugLog(LogLevel.Trace,"FanartImage: ImageType: " + imagetype + " Size: Width: " + width + " Height: " + height);
+//                    if ( type.equalsIgnoreCase("posters")) {
+//                        if ( getHeight() < 100)
+//                            imagetype = 1;
+//                        if ( getHeight() < 200)
+//                            imagetype = 2;
+//                        if ( getHeight() < 600)
+//                            imagetype = 3;
+//                        if ( getHeight() >= 600)
+//                            imagetype = 4;
+//                    } else if ( type.equalsIgnoreCase("backgrounds")) {
+//                         if ( getWidth() < 400)
+//                            imagetype = 1;
+//                        if ( getWidth() < 800)
+//                            imagetype = 3;
+//                        if ( getWidth() >= 800)
+//                            imagetype = 4;
+//                    } else {
+//                        if ( getHeight() < 200)
+//                            imagetype = 1;
+//                        if ( getHeight() < 600)
+//                            imagetype = 2;
+//                        if ( getHeight() > 599)
+//                            imagetype = 3;
+//                    }
             }
 
-            String SQL ="UPDATE sage.fanart SET width = " + width + ", height="+height + ",imagetype = " + imagetype + ",file = '"+ destination.replaceAll("'","''") + java.io.File.separator + type.replaceAll("'","''") + java.io.File.separator + filename + "' WHERE metadataid = '" + metadataid + "' and type = '" + type.replaceAll("'","''") + "' and url = '" + url + "'";
+//            if ( type.equalsIgnoreCase("posters")) {
+//                if ( url.contains("-thumb"))
+//                    imagetype = 1;
+//                if ( url.contains("-cover"))
+//                    imagetype = 2;
+//                if ( url.contains("-mid"))
+//                    imagetype = 3;
+//                if ( url.contains("-original"))
+//                    imagetype = 4;
+//            } else if ( type.equalsIgnoreCase("backgrounds")) {
+//                 if ( url.contains("-thumb"))
+//                    imagetype = 1;
+//                if ( url.contains("-poster"))
+//                    imagetype = 3;
+//                if ( url.contains("-original"))
+//                    imagetype = 4;
+//            }
+
+            long filesize = 0;
+            File faf = new File(downloaddir + java.io.File.separator + filename);
+            if ( faf.exists()) {
+                filesize = faf.length();
+            }
+
+            ortus.api.DebugLog(LogLevel.Trace,"FanartImage: Type: " + type + " Size: Width: " + getWidth() + " Height: " + getHeight());
+            String SQL ="UPDATE sage.fanart SET " + widthField + " = " + getWidth() + ", " + heightField + "="+getHeight() + "," + fileField + " = '"+ destination.replaceAll("'","''") + java.io.File.separator + type.replaceAll("'","''") + java.io.File.separator + filename + "', " + imageSizeField + " = " + filesize + "  WHERE mediaid = " + id + " and idtype = '" + idtype + "' and type = '" + type.replaceAll("'","''") + "' and metadataid = '" + metadataid + "'";
             int success = ortus.api.executeSQL(SQL);
         }
 
         return ;
     }
-    public void getImageFanart(Object mediafile, String destination) {
+//    public void getImageFanart(Object mediafile, String destination) {
+//
+//        String downloaddir = ortus.api.GetFanartFolder() + java.io.File.separator + destination;
+//        String filename = url.substring(url.lastIndexOf("/") + 1);
+//
+//	filename = filename.replaceAll("'","''");
+////        ortus.api.DebugLog(LogLevel.Trace2, " getImage: " + filename + " dir: " + downloaddir);
+//
+// //       File df = new File(downloaddir);
+// //       if ( ! df.exists())
+// //           df.mkdirs();
+//
+////        downloaddir+= java.io.File.separator + filename;
+//        if ( ortus.onlinescrapper.tools.urldownload.fileDownload(url, downloaddir ).equals("OK")) {
+//            HashMap<String,String> imginfo = ortus.image.util.GetImageInfo(downloaddir + java.io.File.separator + filename);
+//
+//            if ( imginfo != null) {
+//                    setWidth(Integer.parseInt(imginfo.get("width")));
+//                    setHeight(Integer.parseInt(imginfo.get("height")));
+//
+//                    if ( type.equalsIgnoreCase("posters")) {
+//                        if ( getHeight() < 100)
+//                            imagetype = 1;
+//                        if ( getHeight() < 200)
+//                            imagetype = 2;
+//                        if ( getHeight() < 600)
+//                            imagetype = 3;
+//                        if ( getHeight() >= 600)
+//                            imagetype = 4;
+//                    } else if ( type.equalsIgnoreCase("backgrounds")) {
+//                         if ( getWidth() < 400)
+//                            imagetype = 1;
+//                        if ( getWidth() < 800)
+//                            imagetype = 3;
+//                        if ( getWidth() >= 800)
+//                            imagetype = 4;
+//                    } else {
+//                        if ( getHeight() < 200)
+//                            imagetype = 1;
+//                        if ( getHeight() < 600)
+//                            imagetype = 2;
+//                        if ( getHeight() > 599)
+//                            imagetype = 3;
+//                    }
+//            }
+//
+//            if ( type.equalsIgnoreCase("posters")) {
+//                if ( url.contains("-thumb"))
+//                    imagetype = 1;
+//                if ( url.contains("-cover"))
+//                    imagetype = 2;
+//                if ( url.contains("-mid"))
+//                    imagetype = 3;
+//                if ( url.contains("-original"))
+//                    imagetype = 4;
+//            } else if ( type.equalsIgnoreCase("backgrounds")) {
+//                 if ( url.contains("-thumb"))
+//                    imagetype = 1;
+//                if ( url.contains("-poster"))
+//                    imagetype = 3;
+//                if ( url.contains("-original"))
+//                    imagetype = 4;
+//            }
+//
+//            long filesize = 0;
+//            File faf = new File(downloaddir + java.io.File.separator + filename);
+//            if ( faf.exists()) {
+//                filesize = faf.length();
+//            }
+//
+//            ortus.api.DebugLog(LogLevel.Trace,"FanartImage: Type: " + type + " ImageType: " + imagetype + " Size: Width: " + getWidth() + " Height: " + getHeight());
+//            String SQL ="UPDATE sage.fanart SET width = " + getWidth() + ", height="+getHeight() + ",imagetype = " + imagetype + ",file = '"+ destination.replaceAll("'","''") + java.io.File.separator + type.replaceAll("'","''") + java.io.File.separator + filename + "', imagesize = " + filesize + "  WHERE mediaid = " + id + " and idtype = '" + idtype + "' and type = '" + type.replaceAll("'","''") + "' and url = '" + url + "'";
+//            int success = ortus.api.executeSQL(SQL);
+//        }
+//
+//        return ;
+//    }
 
-        String downloaddir = ortus.api.GetFanartFolder() + java.io.File.separator + destination;
-        String filename = url.substring(url.lastIndexOf("/") + 1);
+    /**
+     * @return the size
+     */
+    public String getSize() {
+        return size;
+    }
 
-	filename = filename.replaceAll("'","''");
-//        ortus.api.DebugLog(LogLevel.Trace2, " getImage: " + filename + " dir: " + downloaddir);
+    /**
+     * @param size the size to set
+     */
+    public void setSize(String size) {
+        this.size = size;
+    }
 
- //       File df = new File(downloaddir);
- //       if ( ! df.exists())
- //           df.mkdirs();
+    /**
+     * @return the width
+     */
+    public int getWidth() {
+        return width;
+    }
 
-//        downloaddir+= java.io.File.separator + filename;
-        if ( ortus.onlinescrapper.tools.urldownload.fileDownload(url, downloaddir ).equals("OK")) {
-            HashMap<String,String> imginfo = ortus.image.util.GetImageInfo(downloaddir + java.io.File.separator + filename);
+    /**
+     * @param width the width to set
+     */
+    public void setWidth(int width) {
+        this.width = width;
+    }
 
-            if ( imginfo != null) {
-                    width = Integer.parseInt(imginfo.get("width"));
-                    height = Integer.parseInt(imginfo.get("height"));
+    /**
+     * @return the height
+     */
+    public int getHeight() {
+        return height;
+    }
 
-                    if ( height < 200)
-                            imagetype = 1;
-                    if ( height < 600)
-                            imagetype = 2;
-                    if ( height > 599)
-                            imagetype = 3;
+    /**
+     * @param height the height to set
+     */
+    public void setHeight(int height) {
+        this.height = height;
+    }
 
-                    ortus.api.DebugLog(LogLevel.Trace,"FanartImage: ImageType: " + imagetype + " Size: Width: " + width + " Height: " + height);
-            }
+    /**
+     * @return the metadataid
+     */
+    public String getMetadataid() {
+        return metadataid;
+    }
 
-            String SQL ="UPDATE sage.fanart SET width = " + width + ", height="+height + ",imagetype = " + imagetype + ",file = '"+ destination.replaceAll("'","''") + java.io.File.separator + filename + "' WHERE mediaid = 0 and type = '" + type.replaceAll("'","''") + "' and url = '" + url + "'";
-            int success = ortus.api.executeSQL(SQL);
-        }
-
-        return ;
+    /**
+     * @param metadataid the metadataid to set
+     */
+    public void setMetadataid(String metadataid) {
+        this.metadataid = metadataid;
     }
 }

@@ -33,11 +33,11 @@ public class IMDBProvider extends ortus.vars {
         return ProviderName;
     }
 
-    public HashMap<String,SearchResult> Search(String title, int limit) {
+    public List<Movie> Search(String title, String year, int limit) {
         int search_count = 0;
         long t0 = System.currentTimeMillis();
         ortus.api.DebugLog(LogLevel.Info, ProviderName + " : Search for title: " + CleanName(title));
-        HashMap<String,SearchResult> resultTitles = new HashMap<String,SearchResult>();
+        List<Movie> resultTitles = new ArrayList<Movie>();
 
         StringBuffer sb = new StringBuffer();
          try {
@@ -85,9 +85,12 @@ public class IMDBProvider extends ortus.vars {
                         jx = ortus.util.string.decodeString(jx);
                         String[] filttl = ttl.split("/");
                         if ( filttl.length == 3 && ! jx.startsWith("<img")) {
-			    SearchResult sr = new SearchResult(jx,"imdb:" + filttl[filttl.length-1]);
-                            ortus.api.DebugLog(LogLevel.Info, ProviderName + " :   Found: " + sr.toString());
-                            resultTitles.put(jx, sr );
+                            if (! filttl[filttl.length-1].isEmpty() ) {
+                                Movie movie = new Movie(jx);
+                                movie.setImdbid(filttl[filttl.length-1]);
+                                ortus.api.DebugLog(LogLevel.Info, ProviderName + " :   Found: " + movie.getName());
+                                resultTitles.add(movie);
+                            }
                         }
                     }
                     if ( search_count > limit)
@@ -114,9 +117,12 @@ public class IMDBProvider extends ortus.vars {
                         jx = ortus.util.string.decodeString(jx);
                         String[] filttl = ttl.split("/");
                         if ( filttl.length == 3 && ! jx.startsWith("<img")) {
-			    SearchResult sr = new SearchResult(jx,"imdb:" + filttl[filttl.length-1]);
-                            ortus.api.DebugLog(LogLevel.Info, ProviderName + " :   Found: " + sr.toString());
-                            resultTitles.put(jx,sr );
+                            if (! filttl[filttl.length-1].isEmpty() ) {
+                                Movie movie = new Movie(jx);
+                                movie.setImdbid(filttl[filttl.length-1]);
+                                ortus.api.DebugLog(LogLevel.Info, ProviderName + " :   Found: " + movie.getName());
+                                resultTitles.add(movie);
+                            }
                         }
                     }
                     if ( search_count > limit)
@@ -144,9 +150,12 @@ public class IMDBProvider extends ortus.vars {
                         jx = ortus.util.string.decodeString(jx);
                         String[] filttl = ttl.split("/");
                         if ( filttl.length == 3&& ! jx.startsWith("<img")) {
-				SearchResult sr = new SearchResult(jx,"imdb:" + filttl[filttl.length-1]);
-                            ortus.api.DebugLog(LogLevel.Info, ProviderName + " :   Found: " + sr.toString());
-                            resultTitles.put(jx, sr);
+                            if (! filttl[filttl.length-1].isEmpty() ) {
+                                Movie movie = new Movie(jx);
+                                movie.setImdbid(filttl[filttl.length-1]);
+                                ortus.api.DebugLog(LogLevel.Info, ProviderName + " :   Found: " + movie.getName());
+                                resultTitles.add(movie);
+                            }
                         }
                     }
                     if ( search_count > limit)
@@ -231,14 +240,14 @@ public class IMDBProvider extends ortus.vars {
               ret = getTag(TAG.AHREF, "Director:", matcher.group(x));
               if ( ret.size() > 0) {
                   for ( int xx = 0; xx < ret.size(); xx++) {
-                      movie.AddCast("",ortus.util.string.decodeString(ret.get(xx)), "Director", "");
+                      movie.AddCast(0,ortus.util.string.decodeString(ret.get(xx)), "Director", "");
                   }
               }
 
               ret = getTag(TAG.AHREF, "Writers", matcher.group(x));
               if ( ret.size() > 0) {
                   for ( int xx = 0; xx < ret.size(); xx++) {
-                      movie.AddCast("",ortus.util.string.decodeString(ret.get(xx)), "Writer", "");
+                      movie.AddCast(0,ortus.util.string.decodeString(ret.get(xx)), "Writer", "");
                   }
               }
 
@@ -307,7 +316,7 @@ public class IMDBProvider extends ortus.vars {
                       if ( actor != null && role != null) {
 			  role.replaceAll("</td>","");
 			  role.replaceAll("<td class=\"char\">","");
-                          movie.AddCast("",ortus.util.string.decodeString(actor), "Actor", role);
+                          movie.AddCast(0,ortus.util.string.decodeString(actor), "Actor", role);
                           actor = null;
                           role = null;
                       }

@@ -343,22 +343,7 @@ public class scrubString extends vars
 //		return s1;
 //	}
 
-        public static String ScrubFileName(String filename) {
-//            String s1 = filename.replaceAll("\\", " ");
-//            s1 = s1.replaceAll("/"," ");
-            String s1 = filename.replaceAll(":"," ");
-            s1 = s1.replaceAll("\\*"," ");
-            s1 = s1.replaceAll("\\?"," ");
-//            s1 = s1.replaceAll("\""," ");
-            s1 = s1.replaceAll("<"," ");
-            s1 = s1.replaceAll(">"," ");
-            s1 = s1.replaceAll("'","");
-	    s1 = s1.replaceAll("\"","");
-//	    s1 = s1.replaceAll(java.io.File.separator,"");
-	    s1 = s1.replaceAll("/","");
 
-            return s1.trim();
-        }
         
 	private static String StringCategory(String s2)
 	{

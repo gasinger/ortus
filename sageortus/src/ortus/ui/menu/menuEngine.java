@@ -1,15 +1,13 @@
 package ortus.ui.menu;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
-import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -17,10 +15,7 @@ import javax.xml.stream.XMLStreamWriter;
 import javax.xml.stream.events.Attribute;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
-import org.apache.log4j.Logger;
-import ortus.configurationEngine;
 import ortus.onlinescrapper.tools.XMLHelper;
-import sagex.UIContext;
 
 
 /**
@@ -39,46 +34,97 @@ public class menuEngine extends ortus.vars  {
 	 * Contructor builds default menu xmlfile or load existing menu xmlfile
 	 * @param Path for configuration xml file
 	 */
-	public menuEngine(String MenuPath) {
+//	public menuEngine(String MenuPath) {
+//                ortus.api.DebugLog(LogLevel.Debug,"Menu: Loading Class");
+//                this.MenuPath = MenuPath;
+//   		InitMenu(MenuPath);
+//                ortus.api.DebugLog(LogLevel.Debug,"Menu: Loading Completed");
+//	}
+
+        public menuEngine(int userid) {
                 ortus.api.DebugLog(LogLevel.Debug,"Menu: Loading Class");
-                this.MenuPath = MenuPath;
-   		InitMenu(MenuPath);
+//                this.MenuPath = MenuPath;
+   		InitMenu(userid);
                 ortus.api.DebugLog(LogLevel.Debug,"Menu: Loading Completed");
 	}
 
-	public void InitMenu(String MenuPath) {
-                this.MenuPath = MenuPath;
-                this.MenuFile = MenuPath + java.io.File.separator + "ortus_menu.xml";
+	public void InitMenu(int userid) {
+//                this.MenuPath = MenuPath;
+//                this.MenuFile = MenuPath + java.io.File.separator + "ortus_menu.xml";
 
-		File xmlfile = null;
-
-		File cp = new File(MenuPath);
-		if ( ! cp.exists())
-			cp.mkdirs();
-		
-		try {
-                     xmlfile = new File(MenuFile);
-			 
-                     if ( ! xmlfile.isFile() ) {
-                             defaultMenu();
-                     }
-                } catch(Exception e) {
-                        e.printStackTrace();
-                }
-		LoadMenu();
+                ortus.api.DebugLogTrace("InitMenu: Loading new menu for user: " + userid);
+//		File xmlfile = null;
+//
+//		File cp = new File(MenuPath);
+//		if ( ! cp.exists())
+//			cp.mkdirs();
+//
+//		try {
+//                     xmlfile = new File(MenuFile);
+//
+//                     if ( ! xmlfile.exists() ) {
+//                             defaultMenu();
+//                     }
+//                } catch(Exception e) {
+//                        e.printStackTrace();
+//                }
+		loadMenuDB(userid);
 	}
 
 	public void Shutdown() {
 		return;
 	}
-	
-	private void LoadMenu() {
-                ortus.api.DebugLog(LogLevel.Trace, "LoadMenu: Staring");
 
+        public void loadMenuDB() {
+            loadMenuDB(ortus.api.GetCurrentUser());
+        }
+        
+        public void loadMenuDB(int userid) {
+            Connection conn = ortus.api.GetConnection();
+            PreparedStatement ps = null;
+            ResultSet rs = null;
+            String SQL = "select menu from sage.menu where userid = ?";
+            menu.clear();
+
+            try {
+                ps = conn.prepareStatement(SQL);
+                ps.setInt(1, userid);
+                rs = ps.executeQuery();
+
+                if ( rs.next())
+                    menu = (HashMap)rs.getObject(1);
+                else
+                    defaultMenu(userid);
+            } catch (Exception e) {
+                ortus.api.DebugLog(LogLevel.Error,"writeDB: Exception:", e);
+            } finally {
+                if ( rs != null) try { rs.close(); } catch(Exception ex) {}
+                if ( ps != null) try { ps.close(); } catch(Exception ex) {}
+                if ( conn != null) try { conn.close(); } catch(Exception ex) {}
+            }
+        }
+        
+	private void LoadMenuXML(String path) {
+                String menuType = null;
+                String menuPath = null;
+                String[] x = path.split(":");
+                if ( x.length != 2)
+                    return;
+
+                menuType = x[0];
+                menuPath = x[1];
+
+                ortus.api.DebugLog(LogLevel.Trace, "LoadMenuXML: Starting from: " + menuType + " File: " + menuPath);
+
+                menu.clear();
+                
                 try {
                     XMLEventReader xmlReader = null;
 
-                    xmlReader = XMLHelper.getEventReaderFile(MenuFile);
+                    if ( menuType.equalsIgnoreCase("jar"))
+                        xmlReader = XMLHelper.getEventReaderJar(menuPath);
+                    else
+                        xmlReader = XMLHelper.getEventReaderFile(menuPath);
                     MenuItem mi = null;
 
                     while((mi = parseNextMenuItem(xmlReader)) != null) {
@@ -325,55 +371,55 @@ public class menuEngine extends ortus.vars  {
 	 */
         public void addMenuItemStatic(String m,String Title, String var, String val) {
             menu.get(m).addMenuItemStatic(Title,var,val);
-            writexml();
-            LoadMenu();
+            writeDB();
+            loadMenuDB();
 
         }
         public void addMenuItemGlobal(String m,String Title, String var, String val) {
             menu.get(m).addMenuItemGlobal(Title,var,val);
-            writexml();
-            LoadMenu();
+            writeDB();
+            loadMenuDB();
         }
         public void addMenuItemImage(String m,String Title, String var, String val) {
             menu.get(m).addMenuItemImage(Title, var, val);
-            writexml();
-            LoadMenu();
+            writeDB();
+            loadMenuDB();
         }
         public void addMenuItemSageCommand(String m,String Title, String var, String val) {
             menu.get(m).addMenuItemSageCommand(Title, var, val);
-            writexml();
-            LoadMenu();
+            writeDB();
+            loadMenuDB();
         }
         public void addMenuItemProperty(String m,String Title, String var, String val) {
             menu.get(m).addMenuItemProperty(Title, var, val);
-            writexml();
-            LoadMenu();
+            writeDB();
+            loadMenuDB();
         }
 
         public void delMenuItemStatic(String m,String var) {
             menu.get(m).delMenuItemStatic(var);
-            writexml();
-            LoadMenu();
+            writeDB();
+            loadMenuDB();
         }
         public void delMenuItemGlobal(String m,String var) {
             menu.get(m).delMenuItemGlobal(var);
-            writexml();
-            LoadMenu();
+            writeDB();
+            loadMenuDB();
         }
         public void delMenuItemImage(String m,String var) {
             menu.get(m).delMenuItemImage(var);
-            writexml();
-            LoadMenu();
+            writeDB();
+            loadMenuDB();
         }
         public void delMenuItemSageCommand(String m,String var) {
             menu.get(m).delMenuItemSageCommand(var);
-            writexml();
-            LoadMenu();
+            writeDB();
+            loadMenuDB();
         }
         public void delMenuItemProperty(String m,String var) {
             menu.get(m).delMenuItemProperty(var);
-            writexml();
-            LoadMenu();
+            writeDB();
+            loadMenuDB();
         }
 
         public Object getMenuItemStatic(String m,String var) {
@@ -525,9 +571,9 @@ public class menuEngine extends ortus.vars  {
 		menu.remove(m);
                 maxMenuPosition--;
 		
-		writexml(); 
+		writeDB();
 		
-		LoadMenu();
+		loadMenuDB();
 		
 		return 0;		
 	}
@@ -549,9 +595,9 @@ public class menuEngine extends ortus.vars  {
 		
 		menu.put(mt, new MenuItem(mt,ma,wPos));
 		
-		writexml();
+		writeDB();
 		
-		LoadMenu();
+		loadMenuDB();
 		
 		return;
 	}
@@ -568,8 +614,8 @@ public class menuEngine extends ortus.vars  {
 			menu.get(mt).setTitle(nmt);
                         menu.put(nmt, menu.get(mt));
                         menu.remove(mt);
-			writexml();
-			LoadMenu();
+			writeDB();
+			loadMenuDB();
 		}
 		
 		return;
@@ -585,8 +631,8 @@ public class menuEngine extends ortus.vars  {
 		
 		if( menu.get(mt)!= null ) {
 			menu.get(mt).setAction(nma);
-			writexml();
-			LoadMenu();
+			writeDB();
+			loadMenuDB();
 		}
 		
 		return 1;
@@ -628,8 +674,8 @@ public class menuEngine extends ortus.vars  {
 				}
 			}
 			menu.get(mt).incPosition();
-			writexml();
-			LoadMenu();
+			writeDB();
+			loadMenuDB();
 		}
 		
 		return;
@@ -664,8 +710,8 @@ public class menuEngine extends ortus.vars  {
 				}
 			}
 			menu.get(mt).decPosition();
-			writexml();
-			LoadMenu();
+			writeDB();
+			loadMenuDB();
 		}
 		
 		return;
@@ -690,9 +736,9 @@ public int addSubMenu(String mt, String smt, String sma) {
 	
 	menu.get(mt).addSubMenu(smt, sma, wPos);
 	
-	writexml();
+	writeDB();
 	
-	LoadMenu();
+	loadMenuDB();
 			 
 	return 1;    
 	}
@@ -708,8 +754,8 @@ public int updateSubMenuTitle(String mt, String smt, String nsmt) {
 	
 	if ( menu.get(mt) != null ) {
 		menu.get(mt).setSubMenuTitle(smt, nsmt);
-		writexml();
-		LoadMenu();
+		writeDB();
+		loadMenuDB();
 	}
 		 
 	return 1;    
@@ -725,8 +771,8 @@ public int updateSubMenuTitle(String mt, String smt, String nsmt) {
 public int updateSubMenuAction(String mt, String smt, String nsma) {
 	if ( menu.get(mt) != null ) {
 		menu.get(mt).setSubMenuAction(smt, nsma);
-		writexml();
-		LoadMenu();
+		writeDB();
+		loadMenuDB();
 	}
 	return 1;    
 }
@@ -741,8 +787,8 @@ public int deleteSubMenu(String mt, String smt) {
 	
 	if ( menu.get(mt) != null ) {
 		menu.get(mt).delSubMenu(smt);
-		writexml();
-		LoadMenu();
+		writeDB();
+		loadMenuDB();
 	}
 		 
    return 1;
@@ -754,8 +800,8 @@ public int deleteSubMenu(String mt, String smt) {
                 return;
             }
             menu.get(m).addSubMenuItemStatic(sm,Title,var,val);
-            writexml();
-            LoadMenu();
+            writeDB();
+            loadMenuDB();
         }
         public void addSubMenuItemGlobal(String m,String sm,String Title, String var, String val) {
             if ( menu.get(m) == null) {
@@ -763,8 +809,8 @@ public int deleteSubMenu(String mt, String smt) {
                 return;
             }
             menu.get(m).addSubMenuItemGlobal(sm,Title,var,val);
-            writexml();
-            LoadMenu();
+            writeDB();
+            loadMenuDB();
         }
         public void addSubMenuItemImage(String m,String sm,String Title, String var, String val) {
             if ( menu.get(m) == null) {
@@ -772,8 +818,8 @@ public int deleteSubMenu(String mt, String smt) {
                 return;
             }
             menu.get(m).addSubMenuItemImage(sm,Title, var, val);
-            writexml();
-            LoadMenu();
+            writeDB();
+            loadMenuDB();
         }
         public void addSubMenuItemSageCommand(String m, String sm,String Title, String var, String val) {
             if ( menu.get(m) == null) {
@@ -781,8 +827,8 @@ public int deleteSubMenu(String mt, String smt) {
                 return;
             }
             menu.get(m).addSubMenuItemSageCommand(sm,Title, var, val);
-            writexml();
-            LoadMenu();
+            writeDB();
+            loadMenuDB();
         }
         public void addSubMenuItemProperty(String m, String sm,String Title, String var, String val) {
             if ( menu.get(m) == null) {
@@ -790,34 +836,34 @@ public int deleteSubMenu(String mt, String smt) {
                 return;
             }
             menu.get(m).addSubMenuItemProperty(sm,Title, var, val);
-            writexml();
-            LoadMenu();
+            writeDB();
+            loadMenuDB();
         }
 
         public void delSubMenuItemStatic(String m, String sm,String var) {
             menu.get(m).delSubMenuItemStatic(sm,var);
-            writexml();
-            LoadMenu();
+            writeDB();
+            loadMenuDB();
         }
         public void delSubMenuItemGlobal(String m, String sm,String var) {
             menu.get(m).delSubMenuItemGlobal(sm,var);
-            writexml();
-            LoadMenu();
+            writeDB();
+            loadMenuDB();
         }
         public void delSubMenuItemImage(String m, String sm,String var) {
             menu.get(m).delSubMenuItemImage(sm,var);
-            writexml();
-            LoadMenu();
+            writeDB();
+            loadMenuDB();
         }
         public void delSubMenuItemSageCommand(String m, String sm,String var) {
             menu.get(m).delSubMenuItemSageCommand(sm,var);
-            writexml();
-            LoadMenu();
+            writeDB();
+            loadMenuDB();
         }
         public void delSubMenuItemProperty(String m, String sm,String var) {
             menu.get(m).delSubMenuItemProperty(sm,var);
-            writexml();
-            LoadMenu();
+            writeDB();
+            loadMenuDB();
         }
 
         public Object getSubMenuItemStatic(String m, String sm,String var) {
@@ -863,8 +909,8 @@ public int deleteSubMenu(String mt, String smt) {
 public void incSubMenuPosition(String mt, String smt) {
 	if ( menu.get(mt) != null ) {
 		menu.get(mt).incSubMenuPosition(smt);
-		writexml();
-		LoadMenu();
+		writeDB();
+		loadMenuDB();
 	}
 	
 	return;
@@ -873,15 +919,43 @@ public void incSubMenuPosition(String mt, String smt) {
 public void decSubMenuPosition(String mt, String smt) {
 	if ( menu.get(mt) != null ) {
 		menu.get(mt).decSubMenuPosition(smt);
-		writexml();
-		LoadMenu();
+		writeDB();
+		loadMenuDB();
 	}
 	
 	return;
 }
 
-    @SuppressWarnings("unchecked")
-    private void writexml() {
+public void writeDB() {
+    writeDB(ortus.api.GetCurrentUser());
+}
+
+public void writeDB(int userid) {
+    Connection conn = ortus.api.GetConnection();
+    PreparedStatement ps = null;
+    String DeleteSQL = "delete from sage.menu where userid = ?";
+    String SQL = "insert into sage.menu (userid, menu) values(?,?)";
+
+    try {
+        ps = conn.prepareStatement(DeleteSQL);
+        ps.setInt(1, userid);
+        ps.execute();
+
+        ps.close();
+        ps = conn.prepareStatement(SQL);
+        ps.setInt(1, userid);
+        ps.setObject(2, menu);
+        ps.execute();
+        ortus.mq.api.fireMQMessage(ortus.mq.vars.EvenType.Broadcast, "UserMenuReload", new Object[] { userid });
+    } catch (Exception e) {
+        ortus.api.DebugLog(LogLevel.Error,"writeDB: Exception:", e);
+    } finally {
+        if ( ps != null) try { ps.close(); } catch(Exception ex) {}
+        if ( conn != null) try { conn.close(); } catch(Exception ex) {}
+    }
+}
+    
+    private void writeXML() {
 
 
         XMLOutputFactory xof = XMLOutputFactory.newInstance();
@@ -952,21 +1026,25 @@ public void decSubMenuPosition(String mt, String smt) {
         System.out.println("WriteXML: Completed Successfully");
     }
 
-        private void defaultMenu() {
+        private void defaultMenu(int userid) {
+            ortus.api.DebugLogTrace("DefaultMenu: Loading default menu");
             FileWriter fw = null;
-            List<String> menuXML = configurationEngine.getInstance().LoadJarFile("/ortus/resources/ortus_menu.xml");
 
-            try {
-                fw = new FileWriter(MenuFile);
-                for( String x : menuXML) {
-                    fw.write(x);
-                }
-            } catch ( Exception e) {
-                ortus.api.DebugLogError("defaultMenu: Exception",e);
-            } finally {
-                if ( fw != null)
-                    try { fw.close(); } catch ( Exception ex) {}
-            }         
+            LoadMenuXML("jar:/ortus/resources/ortus_menu.xml");
+            writeDB(userid);
+//            List<String> menuXML = Ortus.getInstance().LoadJarFile("/ortus/resources/ortus_menu.xml");
+
+//            try {
+//                fw = new FileWriter(MenuFile);
+//                for( String x : menuXML) {
+//                    fw.write(x);
+//                }
+//            } catch ( Exception e) {
+//                ortus.api.DebugLogError("defaultMenu: Exception",e);
+//            } finally {
+//                if ( fw != null)
+//                    try { fw.close(); } catch ( Exception ex) {}
+//            }
         }
 
 	private void defaultMenuOld() {
@@ -1073,7 +1151,7 @@ public void decSubMenuPosition(String mt, String smt) {
                         mi.setMenuType("setup");
         		menu.put(mi.getTitle(), mi);
 			
-			writexml();
+			writeDB();
 		}
 
 	}

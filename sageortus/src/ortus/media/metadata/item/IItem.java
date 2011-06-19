@@ -16,4 +16,5 @@ public interface IItem {
     public HashMap toHash();
     public HashMap toHashFull();
     public boolean isValid();
+    public String toXML();
 }

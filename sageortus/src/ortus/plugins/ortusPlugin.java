@@ -5,6 +5,7 @@
 
 package ortus.plugins;
 
+import ortus.Ortus;
 import ortus.vars.LogLevel;
 import sage.SageTVPlugin;
 import sage.SageTVPluginRegistry;
@@ -22,6 +23,8 @@ public class ortusPlugin extends AbstractPlugin {
 	private IPropertyPersistence bp = new ButtonPersistence();
 
 	public final String PROP_FANART_FOLDER = "ortus/fanart/folder";
+        public final String PROP_BACKUP_FOLDER = "ortus/backup/folder";
+        public final String PROP_BACKUP_LIMIT = "ortus/backup/limit";
 	public final String PROP_FANART_DOWNLOAD_LIMIT = "ortus/fanart/download_limit";
 	public final String PROP_AUTO_METADATA = "ortus/metadata/autometadata";
         public final String PROP_WIZ_UPDATE_METADATA = "ortus/metadata/wizupdate";
@@ -43,12 +46,14 @@ public class ortusPlugin extends AbstractPlugin {
 		super(registry);
 
 		addProperty(SageTVPlugin.CONFIG_CHOICE, PROP_LOG_LEVEL, "Trace", "Logging Level", "Specify the level of logging to the ortus.log", new String[] { "Off", "Fatal", "Error","Warning","Info","Debug","Trace" }).setPersistence(ssp);
+                addProperty(SageTVPlugin.CONFIG_DIRECTORY, PROP_BACKUP_FOLDER, ortus.api.GetOrtusBasePath() + java.io.File.separator + "backups", "Backup Folder", "Specify the backup folder to use for Wiz.bin and DB backups").setPersistence(ssp);
+                addProperty(SageTVPlugin.CONFIG_INTEGER, PROP_BACKUP_LIMIT, "30", "Backup Limit (Days)", "Specify the limit for backups in days").setPersistence(ssp);
 		addProperty(SageTVPlugin.CONFIG_DIRECTORY, PROP_FANART_FOLDER, "Ortus" + java.io.File.separator + "Fanart", "Fanart Folder", "Specify the fanart folder to use for images");
 		addProperty(SageTVPlugin.CONFIG_INTEGER, PROP_FANART_DOWNLOAD_LIMIT, "4", "Fanart Download Limit", "Specify the limit for fanart downloads");
 		addProperty(SageTVPlugin.CONFIG_BOOL, PROP_AUTO_METADATA, "false", "Enable Automatic Metadata", "Enable automatic metadata population for new media files").setPersistence(ssp);
                 addProperty(SageTVPlugin.CONFIG_BOOL, PROP_WIZ_UPDATE_METADATA, "false", "Enable Automatic Sage Update", "Enable automatic metadata population for new media files").setPersistence(ssp);
                 addProperty(SageTVPlugin.CONFIG_BOOL, PROP_WIZ_EPISODE, "false", "Import Episodes as TV", "Set imported media identified to be a series as a TV show").setPersistence(ssp);
-                addProperty(SageTVPlugin.CONFIG_BOOL, PROP_USE_PROPERTY, "true", "Use Property Files for import", "Use property files for metadata");
+                addProperty(SageTVPlugin.CONFIG_BOOL, PROP_USE_PROPERTY, "false", "Use Property Files for import", "Use property files for metadata");
                 addProperty(SageTVPlugin.CONFIG_BOOL, PROP_WRITE_PROPERTY, "false", "Write Property Files for metadata", "Create property files for each media object");
 		addProperty(SageTVPlugin.CONFIG_CHOICE, PROP_METADATA_SCAN_TARGET, "Server", "Metadata Scan Target", "Where to run a metadata scan Server/Client", new String[] { "Server", "Client" });
                 addProperty(SageTVPlugin.CONFIG_CHOICE, PROP_METADATA_SCAN_TYPE, "Full", "Metadata Scan Type", "Scan Type: Full, Missing Fanart", new String[] { "Full", "Fanart" });
@@ -61,13 +66,13 @@ public class ortusPlugin extends AbstractPlugin {
                 if ( ortus.util.ui.IsServer())
                     Configuration.SetServerProperty("ortus/h2server", "true");
 
-		ortus.Ortus.getInstance().doStartupTasks();
+		Ortus.getInstance().doStartupTasks();
 	}
 
 	public void stop() {
 		super.stop();
 
-		ortus.Ortus.getInstance().Shutdown();
+		Ortus.getInstance().Shutdown();
 
                 if ( ortus.util.ui.IsServer())
                     Configuration.SetServerProperty("ortus/h2server", "false");

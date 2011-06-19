@@ -6,6 +6,8 @@ import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.List;
 import ortus.daemon.OrtusTask;
@@ -13,16 +15,13 @@ import ortus.media.OrtusMedia;
 import ortus.media.fanart.IFanartProvider;
 import ortus.media.fanart.fanartEngine;
 import ortus.media.metadata.IMetadataProvider;
-
 import sagex.UIContext;
 import sagex.api.MediaFileAPI;
 
-import ortus.ui.menu.menuEngine;
 import ortus.media.metadata.metadataEngine;
+import ortus.onlinescrapper.MediaObject;
 import ortus.property.IProperty;
-import ortus.property.OrtusDBProperty;
 import sagex.api.Configuration;
-import sagex.api.Global;
 
 /**
  *
@@ -31,25 +30,29 @@ import sagex.api.Global;
 public class api extends vars {
 
 	public static String GetVersion() {
-		return "1.0.15.000";
+		return "1.0.18.0";
 	}
 
 	public static String GetVersionFull() {
-		return "1.0.15.000;09/02/2010;jphipps";
+		return "1.0.18.0;06/01/2011;jphipps";
 	}
 
         public static String GetOrtusBasePath() {
-            return configurationEngine.getInstance().getBasePath();
+            return Ortus.getInstance().getBasePath();
         }
 
 	/**
 	 *
 	 * @return
 	 */
-	public static boolean IsOrtusInitialized() {
-		return Ortus.getInstance().IsOrtusInitialized();
-	}
 
+        public static String toString(Object om) {
+            if ( om instanceof String)
+                return (String)om;
+            if ( om instanceof OrtusMedia)
+                return om.toString();
+            return String.valueOf(om);
+        }
 /**
  * Setup Ortus Environment
  * @param context Context from the STV
@@ -101,7 +104,7 @@ public class api extends vars {
 	 * @return
 	 */
 	public static String GetMACAddress() {
-		return configurationEngine.getInstance().getMACAddress();
+		return Ortus.getInstance().getMACAddress();
 	}
 
 // Debug Logging
@@ -124,6 +127,11 @@ public class api extends vars {
 	 * @param MsgString Message String
 	 *
 	 */
+
+        public static void SetDebugLevel(int debuglevel) {
+            ortus.logger.getInstance().SetDebugLevel(debuglevel);
+        }
+        
 	public static void SetLoggerLog4jAll() {
 		ortus.logger.getInstance().SetLog4jAll();
 	}
@@ -398,7 +406,7 @@ public class api extends vars {
 	 * @return
 	 */
 	public static String GetClientName() {
-            return configurationEngine.getInstance().getIdentity().GetClientName();
+            return Ortus.getInstance().getIdentity().GetClientName();
         }
 
 	/**
@@ -406,136 +414,159 @@ public class api extends vars {
 	 * @param clientname
 	 */
 	public static void SetClientName(String clientname) {
-		configurationEngine.getInstance().getIdentity().SetClientName(clientname);
+		Ortus.getInstance().getIdentity().SetClientName(clientname);
 		return;
 	}
 
 	public static int GetCurrentUser() {
-		return configurationEngine.getInstance().getIdentity().GetCurrentUser();
+		return Ortus.getInstance().getIdentity().GetCurrentUser();
 	}
 
 	public static Object GetCurrentUserName() {
-		return configurationEngine.getInstance().getIdentity().GetCurrentUserName();
+		return Ortus.getInstance().getIdentity().GetCurrentUserName();
 	}
 
 	public static Object GetUserName(Object userid) {
-		return configurationEngine.getInstance().getIdentity().GetUserName(userid);
+		return Ortus.getInstance().getIdentity().GetUserName(userid);
 	}
 
 	public static void SetUserName(Object userid, Object username) {
-		configurationEngine.getInstance().getIdentity().SetUserName(userid, username);
+		Ortus.getInstance().getIdentity().SetUserName(userid, username);
 	}
 	
 	public static Object GetUserThumb(Object userid) {
-		return configurationEngine.getInstance().getIdentity().GetUserThumb(userid);
+		return Ortus.getInstance().getIdentity().GetUserThumb(userid);
 	}
 
 	public static void SetUserThumb(Object userid, Object thumb) {
-		configurationEngine.getInstance().getIdentity().SetUserThumb(userid, thumb);
+		Ortus.getInstance().getIdentity().SetUserThumb(userid, thumb);
 	}
 	public static void SetCurrentUser(Object userid) {
-		configurationEngine.getInstance().getIdentity().SetCurrentUser(userid);
+		Ortus.getInstance().getIdentity().SetCurrentUser(userid);
 	}
 
-	public static Object GetUserProperty(String prop, String defval) {
-		return ((IProperty)configurationEngine.getInstance().getIdentity().GetUserProperty()).GetProperty(prop, defval);
+	public static Object GetUserProperty(String prop, Object defval) {
+		return ((IProperty)Ortus.getInstance().getIdentity().GetUserProperty()).GetProperty(prop, defval);
 	}
 
 	public static void SetUserProperty(String prop, Object propval) {
-		((IProperty)configurationEngine.getInstance().getIdentity().GetUserProperty()).SetProperty(prop, String.valueOf(propval));
+		((IProperty)Ortus.getInstance().getIdentity().GetUserProperty()).SetProperty(prop, String.valueOf(propval));
 	}
 
 	public static void RemoveUserProperty(String prop) {
-		configurationEngine.getInstance().getIdentity().GetUserProperty().RemoveProperty(prop);
+		Ortus.getInstance().getIdentity().GetUserProperty().RemoveProperty(prop);
 	}
 
+        public static void StoreUserProperty() {
+                for ( Object x : Ortus.getInstance().getAllContext()) {
+                    ortus.api.DebugLogTrace("StoreUserProperty: Storing for context: " + x);
+                    Ortus.getInstance().getIdentity((String)x).GetUserProperty().StoreProperty();
+                }               
+        }
+
+        public static void ReloadUserProperty(Object userid) {
+                for ( Object x : Ortus.getInstance().getAllContext()) {
+                    ortus.api.DebugLogTrace("StoreUserProperty: Storing for context: " + x);
+                    Ortus.getInstance().getIdentity((String)x).GetUserProperty().Reload(userid);
+                }               
+        }
+
+        public static void ReloadUserMenu(Object userid) {
+             for ( Object x : Ortus.getInstance().getAllContext()) {
+                if ( Ortus.getInstance().getIdentity((String)x).GetCurrentUser() == userid) {
+                      ortus.api.DebugLogTrace("UserMenuReload: reloading menu for user: " + userid);
+                      Ortus.getInstance().getIdentity((String)x).getMenu().loadMenuDB((Integer)userid);
+                }
+            }
+        }
+
 	public static void AddUser(String userid) {
-		configurationEngine.getInstance().getIdentity().AddUser(userid);
+		Ortus.getInstance().getIdentity().AddUser(userid);
 	}
 
 	public static void RemoveUser(Object userid) {
-		configurationEngine.getInstance().getIdentity().RemoveUser(userid);
+		Ortus.getInstance().getIdentity().RemoveUser(userid);
 	}
 	public static void SetUserPin(Object userid, String userpin) {
-		configurationEngine.getInstance().getIdentity().SetUserPin(userid, userpin);
+		Ortus.getInstance().getIdentity().SetUserPin(userid, userpin);
 	}
 	public static void ClearUserPin(Object userid) {
-		configurationEngine.getInstance().getIdentity().ClearUserPin(userid);
+		Ortus.getInstance().getIdentity().ClearUserPin(userid);
 	}
 	public static String GetUserPin(Object userid) {
-		return configurationEngine.getInstance().getIdentity().GetUserPin(userid);
+		return Ortus.getInstance().getIdentity().GetUserPin(userid);
 	}
 	
 	public static List<Object> GetUsers() {
-		return configurationEngine.getInstance().getIdentity().GetUsers();
+		return Ortus.getInstance().getIdentity().GetUsers();
 	}
 
 	public static void SetUserWatched(Object mediafile) {
-		configurationEngine.getInstance().getIdentity().SetUserWatched(mediafile);
+		Ortus.getInstance().getIdentity().SetUserWatched(mediafile);
 	}
 	public static void SetUserWatched(Object mediafile, Object userid) {
-		configurationEngine.getInstance().getIdentity().SetUserWatched(mediafile,userid);
+		Ortus.getInstance().getIdentity().SetUserWatched(mediafile,userid);
 	}
 
 	public static void ClearUserWatched(Object mediafile) {
-		configurationEngine.getInstance().getIdentity().ClearUserWatched(mediafile);
+		Ortus.getInstance().getIdentity().ClearUserWatched(mediafile);
 	}
 	public static void ClearUserWatched(Object mediafile, Object userid) {
-		configurationEngine.getInstance().getIdentity().ClearUserWatched(mediafile, userid);
+		Ortus.getInstance().getIdentity().ClearUserWatched(mediafile, userid);
 	}
 
 	public static boolean IsUserWatched(Object mediafile) {
-		return configurationEngine.getInstance().getIdentity().IsUserWatched(mediafile);
+		return Ortus.getInstance().getIdentity().IsUserWatched(mediafile);
 	}
 	public static boolean IsUserWatched(Object mediafile, Object userid) {
-		return configurationEngine.getInstance().getIdentity().IsUserWatched(mediafile, userid);
+		return Ortus.getInstance().getIdentity().IsUserWatched(mediafile, userid);
 	}
 
-	public static void SetUserWatchPosition(Object mediafile, long wtime) {
-		configurationEngine.getInstance().getIdentity().SetUserWatchPosition(mediafile, wtime);
+	public static void SetUserWatchedPosition(Object mediafile, long wtime) {
+		Ortus.getInstance().getIdentity().SetUserWatchPosition(mediafile, wtime);
 	}
 
-	public static void ClearUserWatchPosition(Object mediafile) {
-		configurationEngine.getInstance().getIdentity().ClearUserWatchPosition(mediafile);
+	public static void ClearUserWatchedPosition(Object mediafile) {
+		Ortus.getInstance().getIdentity().ClearUserWatchPosition(mediafile);
 	}
-	public static void ClearUserWatchPosition(Object mediafile, Object userid) {
-		configurationEngine.getInstance().getIdentity().ClearUserWatchPosition(mediafile, userid);
+	public static void ClearUserWatchedPosition(Object mediafile, Object userid) {
+		Ortus.getInstance().getIdentity().ClearUserWatchPosition(mediafile, userid);
 	}
-	public static long GetUserWatchPosition(Object mediafile) {
-		return configurationEngine.getInstance().getIdentity().GetUserWatchPosition(mediafile);
+	public static long GetUserWatchedPosition(Object mediafile) {
+		return Ortus.getInstance().getIdentity().GetUserWatchPosition(mediafile);
 	}
-	public static long GetUserWatchPosition(Object mediafile, Object userid) {
-		return configurationEngine.getInstance().getIdentity().GetUserWatchPosition(mediafile, userid);
+	public static long GetUserWatchedPosition(Object mediafile, Object userid) {
+		return Ortus.getInstance().getIdentity().GetUserWatchPosition(mediafile, userid);
 	}
-	public static long GetUserWatchTime(Object mediafile) {
-		return configurationEngine.getInstance().getIdentity().GetUserWatchTime(mediafile);
+	public static long GetUserWatchedTime(Object mediafile) {
+		return Ortus.getInstance().getIdentity().GetUserWatchTime(mediafile);
 	}
-	public static long GetUserWatchTime(Object mediafile, Object userid) {
-		return configurationEngine.getInstance().getIdentity().GetUserWatchTime(mediafile, userid);
+	public static long GetUserWatchedTime(Object mediafile, Object userid) {
+		return Ortus.getInstance().getIdentity().GetUserWatchTime(mediafile, userid);
 	}
-	public static int GetUserWatchTitle(Object mediafile) {
-		return configurationEngine.getInstance().getIdentity().GetUserWatchTitle(mediafile);
+	public static int GetUserWatchedTitle(Object mediafile) {
+		return Ortus.getInstance().getIdentity().GetUserWatchTitle(mediafile);
 	}
-	public static int GetUserWatchTitle(Object mediafile, Object userid) {
-		return configurationEngine.getInstance().getIdentity().GetUserWatchTitle(mediafile, userid);
+	public static int GetUserWatchedTitle(Object mediafile, Object userid) {
+		return Ortus.getInstance().getIdentity().GetUserWatchTitle(mediafile, userid);
 	}
-	public static int GetUserWatchChapter(Object mediafile) {
-		return configurationEngine.getInstance().getIdentity().GetUserWatchChapter(mediafile);
+	public static int GetUserWatchedChapter(Object mediafile) {
+		return Ortus.getInstance().getIdentity().GetUserWatchChapter(mediafile);
 	}
-	public static int GetUserWatchChapter(Object mediafile, Object userid) {
-		return configurationEngine.getInstance().getIdentity().GetUserWatchChapter(mediafile, userid);
+	public static int GetUserWatchedChapter(Object mediafile, Object userid) {
+		return Ortus.getInstance().getIdentity().GetUserWatchChapter(mediafile, userid);
 	}
 	public static void SetUserFavorite(Object favid) {
-		configurationEngine.getInstance().getIdentity().SetUserFavorite(favid);
+		Ortus.getInstance().getIdentity().SetUserFavorite(favid);
 	}
 	public static void SetUserFavorite(Object favid, Object userid) {
-		configurationEngine.getInstance().getIdentity().SetUserFavorite(favid, userid);
+		Ortus.getInstance().getIdentity().SetUserFavorite(favid, userid);
 	}
 	public static int GetUserFavorite(Object favid) {
-		return configurationEngine.getInstance().getIdentity().GetUserFavorite(favid);
+		return Ortus.getInstance().getIdentity().GetUserFavorite(favid);
 	}
 	public static Object[] GetUserFavorites(Object userid) {
-		return configurationEngine.getInstance().getIdentity().GetUserFavorites(userid);
+		return Ortus.getInstance().getIdentity().GetUserFavorites(userid);
 	}
 
 	public static void SetFavoriteExcluder(String favrule) {
@@ -558,8 +589,8 @@ public class api extends vars {
 	 * @param PropName
 	 * @return
 	 */
-	public static String GetProperty(String PropName) {
-		return configurationEngine.getInstance().getProperty().GetProperty(PropName, null);
+	public static Object GetProperty(String PropName) {
+		return Ortus.getInstance().getProperty().GetProperty(PropName, null);
 	}
 //	Ortus Property interface
 
@@ -569,8 +600,8 @@ public class api extends vars {
 	 * @param defaultvalue
 	 * @return Property Value
 	 */
-	public static String GetProperty(String PropName, String defaultvalue) {
-		return configurationEngine.getInstance().getProperty().GetProperty(PropName, defaultvalue);
+	public static Object GetProperty(String PropName, String defaultvalue) {
+		return Ortus.getInstance().getProperty().GetProperty(PropName, defaultvalue);
 	}
 
 	/**
@@ -580,7 +611,7 @@ public class api extends vars {
 	 */
 	public static void SetProperty(String PropName, Object PropValue) {
 		api.DebugLog(api.LogLevel.Trace, "SetProperty: propname: " + PropName + " value: " + PropValue);
-		configurationEngine.getInstance().getProperty().SetProperty(PropName, PropValue.toString());
+		Ortus.getInstance().getProperty().SetProperty(PropName, PropValue.toString());
 		return;
 	}
 
@@ -589,7 +620,7 @@ public class api extends vars {
 	 * @param PropName Property Name
 	 */
 	public static void RemoveProperty(String PropName) {
-		configurationEngine.getInstance().getProperty().RemoveProperty(PropName);
+		Ortus.getInstance().getProperty().RemoveProperty(PropName);
 		return;
 	}
 
@@ -930,7 +961,7 @@ public class api extends vars {
 	{return ortus.util.scrubString.GetShowDuration(MediaObject);}
         
         public static String ScrubFileName(String filename) {
-            return ortus.util.scrubString.ScrubFileName(filename);
+            return ortus.util.string.ScrubFileName(filename);
         }
 	
 	
@@ -979,6 +1010,10 @@ public class api extends vars {
 	public static List RemoveElements(Object superset, Object subset){
 		return ortus.util.array.RemoveElements(superset, subset);
 	}
+
+        public static HashMap GroupArray(List<HashMap> map, Object key) {
+                return ortus.util.array.GroupArray(map, key);
+        }
 
 
 //
@@ -1150,7 +1185,7 @@ public class api extends vars {
 	 * @param filepos
 	 * @return
 	 */
-	public static HashMap<String,List<Object>>GroupByPath(List<Object> MediaFiles, String filepos) {
+	public static LinkedHashMap<String,LinkedList<Object>>GroupByPath(List<Object> MediaFiles, String filepos) {
             return ortus.util.file.GroupByPath(MediaFiles, filepos);
         }
 
@@ -1220,159 +1255,329 @@ public class api extends vars {
         public static String GetFanartFolder() {
             return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartFolder();
         }
+
+        public static Object GetFanartForID(int id, String resolution) {
+            return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartForID(id, resolution);
+        }
 	/**
 	 * Get fanart poster for an media object
 	 * @param mediafile
 	 * @return path of fanart poster
 	 */
-	public static String GetFanartPoster(Object mediafile) {
+	public static Object GetFanartPoster(Object mediafile) {
 		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartPoster(mediafile);
 	}
-	/**
-	 * Get fanart poster for an media object
-	 * @param mediafile
-	 * @return path of fanart poster
-	 */
-	public static String GetFanartPosterThumb(Object mediafile) {
-		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartPosterThumb(mediafile);
+        public static Object GetFanartPosterAll(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartPosterAll(mediafile);
 	}
-	/**
-	 * Get fanart poster for an media object
-	 * @param mediafile
-	 * @return path of fanart poster
-	 */
-	public static String GetFanartPosterCover(Object mediafile) {
-		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartPosterCover(mediafile);
+        public static Object GetFanartPosterRandom(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartPosterRandom(mediafile);
 	}
-	/**
-	 * Get fanart poster for an media object
-	 * @param mediafile
-	 * @return path of fanart poster
-	 */
-	public static String GetFanartPosterHigh(Object mediafile) {
-		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartPosterHigh(mediafile);
-	}
-
-	/**
-	 * Get all fanart posters for a media object
-	 * @param mediafile
-	 * @return an array of all poster fanart
-	 */
-	public static List<Object> GetFanartPosters(Object mediafile) {
-		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartPosters(mediafile);
-	}
-	/**
-	 * Get fanart banner for a media object
-	 * @param mediafile
-	 * @return path of fanart banner
-	 */
-	public static String GetFanartBanner(Object mediafile) {
-		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBanner(mediafile);
-	}
-	/**
-	 * Get all fanart banners for a media object
-	 * @param mediafile
-	 * @return an array of fanart banners
-	 */
-	public static List<Object> GetFanartBanners(Object mediafile) {
-		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBanners(mediafile);
-	}
-	/**
-	 * Get fanart background for a media object
-	 * @param mediafile
-	 * @return path of fanart background
-	 */
-	public static String GetFanartBackground(Object mediafile) {
+	public static Object GetFanartBackgroundPoster(Object mediafile) {
 		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBackground(mediafile);
 	}
-	/**
-	 * Get fanart background for a media object
-	 * @param mediafile
-	 * @return path of fanart background
-	 */
-	public static String GetFanartBackgroundThumb(Object mediafile) {
-		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBackgroundThumb(mediafile);
+        public static Object GetFanartBackgroundAll(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBackgroundAll(mediafile);
 	}
-	/**
-	 * Get fanart background for a media object
-	 * @param mediafile
-	 * @return path of fanart background
-	 */
-	public static String GetFanartBackgroundCover(Object mediafile) {
-		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBackgroundCover(mediafile);
+        public static Object GetFanartBackgroundRandom(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBackgroundRandom(mediafile);
 	}
-	/**
-	 * Get fanart background for a media object
-	 * @param mediafile
-	 * @return path of fanart background
-	 */
-	public static String GetFanartBackgroundHigh(Object mediafile) {
-		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBackgroundHigh(mediafile);
+	public static Object GetFanartBanner(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBanner(mediafile);
 	}
-	/**
-	 * Get fanart background for a media object
-	 * @param mediafile
-	 * @return path of fanart background
-	 */
-	public static String GetFanartBackgroundHighRandom() {
-		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBackgroundHighRandom();
+        public static Object GetFanartBannerAll(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBannerAll(mediafile);
+	}
+        public static Object GetFanartBannerRandom(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBannerRandom(mediafile);
 	}
 
-	/**
-	 * Get all fanart backgrounds for a media object
-	 * @param mediafile
-	 * @return an array of fanart backgrounds
-	 */
-	public static List<Object> GetFanartBackgrounds(Object mediafile) {
-		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBackgrounds(mediafile);
+        public static Object GetFanartPoster(Object mediafile, String quality) {
+            if ( quality.equalsIgnoreCase("low")) {
+                return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartPosterLow(mediafile);
+            } else if ( quality.equalsIgnoreCase("medium")) {
+                return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartPosterMedium(mediafile);
+            } else if ( quality.equalsIgnoreCase("high")) {
+                return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartPosterHigh(mediafile);
+            } else
+                return null;
+        }
+
+        public static Object GetFanartPosterAll(Object mediafile, String quality) {
+            if ( quality.equalsIgnoreCase("low")) {
+                return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartPosterLowAll(mediafile);
+            } else if ( quality.equalsIgnoreCase("medium")) {
+                return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartPosterMediumAll(mediafile);
+            } else if ( quality.equalsIgnoreCase("high")) {
+                return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartPosterHighAll(mediafile);
+            } else
+                return null;
+        }
+
+        public static Object GetFanartPosterRandom(Object mediafile, String quality) {
+            if ( quality.equalsIgnoreCase("low")) {
+                return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartPosterLowRandom(mediafile);
+            } else if ( quality.equalsIgnoreCase("medium")) {
+                return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartPosterMediumRandom(mediafile);
+            } else if ( quality.equalsIgnoreCase("high")) {
+                return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartPosterHighRandom(mediafile);
+            } else
+                return null;
+        }
+
+         public static Object GetFanartBackground(Object mediafile, String quality) {
+            if ( quality.equalsIgnoreCase("low")) {
+                return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBackgroundLow(mediafile);
+            } else if ( quality.equalsIgnoreCase("medium")) {
+                return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBackgroundMedium(mediafile);
+            } else if ( quality.equalsIgnoreCase("high")) {
+                return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBackgroundHigh(mediafile);
+            } else
+                return null;
+        }
+
+         public static Object GetFanartBackgroundAll(Object mediafile, String quality) {
+            if ( quality.equalsIgnoreCase("low")) {
+                return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBackgroundLowAll(mediafile);
+            } else if ( quality.equalsIgnoreCase("medium")) {
+                return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBackgroundMediumAll(mediafile);
+            } else if ( quality.equalsIgnoreCase("high")) {
+                return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBackgroundHighAll(mediafile);
+            } else
+                return null;
+        }
+
+         public static Object GetFanartBackgroundRandom(Object mediafile, String quality) {
+            if ( quality.equalsIgnoreCase("low")) {
+                return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBackgroundLowRandom(mediafile);
+            } else if ( quality.equalsIgnoreCase("medium")) {
+                return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBackgroundMediumRandom(mediafile);
+            } else if ( quality.equalsIgnoreCase("high")) {
+                return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBackgroundHighRandom(mediafile);
+            } else
+                return null;
+        }
+
+        public static Object GetFanartBanner(Object mediafile, String quality) {
+            if ( quality.equalsIgnoreCase("low")) {
+                return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBannerLow(mediafile);
+            } else if ( quality.equalsIgnoreCase("medium")) {
+                return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBannerMedium(mediafile);
+            } else if ( quality.equalsIgnoreCase("high")) {
+                return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBannerHigh(mediafile);
+            } else
+                return null;
+        }
+
+        public static Object GetFanartBannerAll(Object mediafile, String quality) {
+            if ( quality.equalsIgnoreCase("low")) {
+                return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBannerLowAll(mediafile);
+            } else if ( quality.equalsIgnoreCase("medium")) {
+                return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBannerMediumAll(mediafile);
+            } else if ( quality.equalsIgnoreCase("high")) {
+                return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBannerHighAll(mediafile);
+            } else
+                return null;
+        }
+
+        public static Object GetFanartBannerRandom(Object mediafile, String quality) {
+            if ( quality.equalsIgnoreCase("low")) {
+                return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBannerLowRandom(mediafile);
+            } else if ( quality.equalsIgnoreCase("medium")) {
+                return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBannerMediumRandom(mediafile);
+            } else if ( quality.equalsIgnoreCase("high")) {
+                return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBannerHighRandom(mediafile);
+            } else
+                return null;
+        }
+
+        public static Object GetFanartPosterLow(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartPosterLow(mediafile);
 	}
-	/**
-	 * Randomize an array of fanart
-	 * @param fanart array
-	 * @return randomized fanart array
-	 */
-	public static List<Object> GetFanartRandom(List<Object> fanart) {
-		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartRandom(fanart);
+        public static Object GetFanartPosterLowAll(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartPosterLowAll(mediafile);
 	}
+        public static Object GetFanartPosterLowRandom(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartPosterLowRandom(mediafile);
+	}
+	public static Object GetFanartBackgroundLow(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBackgroundLow(mediafile);
+	}
+        public static Object GetFanartBackgroundLowAll(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBackgroundLowAll(mediafile);
+	}
+        public static Object GetFanartBackgroundLowRandom(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBackgroundLowRandom(mediafile);
+	}
+	public static Object GetFanartBannerLow(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBannerLow(mediafile);
+	}
+        public static Object GetFanartBannerLowAll(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBannerLowAll(mediafile);
+	}
+        public static Object GetFanartBannerLowRandom(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBannerLowRandom(mediafile);
+	}
+	public static Object GetFanartEpisodeLow(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartEpisodeLow(mediafile);
+	}
+        public static Object GetFanartEpisodeLowAll(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartEpisodeLowAll(mediafile);
+	}
+        public static Object GetFanartEpisodeLowRandom(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartEpisodeLowRandom(mediafile);
+	}
+        public static Object GetFanartPosterMedium(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartPosterMedium(mediafile);
+	}
+        public static Object GetFanartPosterMediumAll(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartPosterMediumAll(mediafile);
+	}
+        public static Object GetFanartPosterMediumRandom(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartPosterMediumRandom(mediafile);
+	}
+	public static Object GetFanartBackgroundMedium(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBackgroundMedium(mediafile);
+	}
+        public static Object GetFanartBackgroundMediumAll(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBackgroundMediumAll(mediafile);
+	}
+        public static Object GetFanartBackgroundMediumRandom(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBackgroundMediumRandom(mediafile);
+	}
+	public static Object GetFanartBannerMedium(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBannerMedium(mediafile);
+	}
+        public static Object GetFanartBannerMediumAll(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBannerMediumAll(mediafile);
+	}
+        public static Object GetFanartBannerMediumRandom(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBannerMediumRandom(mediafile);
+	}
+	public static Object GetFanartEpisodeMedium(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartEpisodeMedium(mediafile);
+	}
+        public static Object GetFanartEpisodeMediumAll(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartEpisodeMediumAll(mediafile);
+	}
+        public static Object GetFanartEpisodeMediumRandom(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartEpisodeMediumRandom(mediafile);
+	}
+        public static Object GetFanartPosterHigh(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartPosterHigh(mediafile);
+	}
+        public static Object GetFanartPosterHighAll(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartPosterHighAll(mediafile);
+	}
+        public static Object GetFanartPosterHighRandom(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartPosterHighRandom(mediafile);
+	}
+	public static Object GetFanartBackgroundHigh(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBackgroundHigh(mediafile);
+	}
+        public static Object GetFanartBackgroundHighAll(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBackgroundHighAll(mediafile);
+	}
+        public static Object GetFanartBackgroundHighRandom(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBackgroundHighRandom(mediafile);
+	}
+	public static Object GetFanartBannerHigh(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBannerHigh(mediafile);
+	}
+        public static Object GetFanartBannerHighAll(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBannerHighAll(mediafile);
+	}
+        public static Object GetFanartBannerHighRandom(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartBannerHighRandom(mediafile);
+	}
+        public static Object GetFanartEpisodeHigh(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartEpisodeHigh(mediafile);
+	}
+        public static Object GetFanartEpisodeHighAll(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartEpisodeHighAll(mediafile);
+	}
+        public static Object GetFanartEpisodeHighRandom(Object mediafile) {
+		return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetFanartEpisodeHighRandom(mediafile);
+	}
+
+        public static Object GetTVFanartPoster(Object seriesid, String quality) {
+            	return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetTVFanart(String.valueOf(seriesid),"Posters" , quality);
+        }
+        public static Object GetTVFanartBackground(Object seriesid, String quality) {
+            	return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetTVFanart(String.valueOf(seriesid),"Backgrounds" , quality);
+        }
+        public static Object GetTVFanartBanners(Object seriesid, String quality) {
+            	return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetTVFanart(String.valueOf(seriesid),"Banners" , quality);
+        }
+        public static Object GetTVFanartEpisodePoster(Object seriesid, Object episodeid, String quality) {
+            	return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetTVFanart(String.valueOf(seriesid),"Episode-" + episodeid + "-Posters" , quality);
+        }
+        public static Object GetTVFanartSeasonPoster(Object seriesid, Object season, String quality) {
+            	return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetTVFanart(String.valueOf(seriesid),"Season-" + season + "-Posters" , quality);
+        }
+
+        public static List<Object> GetTVFanartPosterAll(Object seriesid, String quality) {
+            	return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetTVFanartAll(String.valueOf(seriesid),"Posters" , quality);
+        }
+        public static List<Object> GetTVFanartBackgroundAll(Object seriesid, String quality) {
+            	return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetTVFanartAll(String.valueOf(seriesid),"Backgrounds" , quality);
+        }
+        public static List<Object> GetTVFanartEpisodePosterAll(Object seriesid, Object episodeid, String quality) {
+            	return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetTVFanartAll(String.valueOf(seriesid),"Episode-" + episodeid + "-Posters" , quality);
+        }
+        public static List<Object> GetTVFanartSeasonPosterAll(Object seriesid, Object season, String quality) {
+            	return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetTVFanartAll(String.valueOf(seriesid),"Season-" + season + "-Posters" , quality);
+        }
+
+        public static Object GetTVFanartPosterRandom(Object seriesid, String quality) {
+            	return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetRandom(ortus.media.fanart.fanartEngine.getInstance().getProvider().GetTVFanartAll(String.valueOf(seriesid),"Posters" , quality));
+        }
+        public static Object GetTVFanartBackgroundRandom(Object seriesid, String quality) {
+            	return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetRandom(ortus.media.fanart.fanartEngine.getInstance().getProvider().GetTVFanartAll(String.valueOf(seriesid),"Backgrounds" , quality));
+        }
+        public static Object GetTVFanartEpisodePosterRandom(Object seriesid, Object episodeid, String quality) {
+            	return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetRandom(ortus.media.fanart.fanartEngine.getInstance().getProvider().GetTVFanartAll(String.valueOf(seriesid),"Episode-" + episodeid + "-Posters" , quality));
+        }
+        public static Object GetTVFanartSeasonPosterRandom(Object seriesid, Object season, String quality) {
+            	return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetRandom(ortus.media.fanart.fanartEngine.getInstance().getProvider().GetTVFanartAll(String.valueOf(seriesid),"Season-" + season + "-Posters" , quality));
+        }
+
 	/**
 	 *
 	 * @param castname
 	 * @return
 	 */
-        public static String GetCastFanartPoster(String castname) {
-            return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetCastFanartPoster(castname);
+        public static Object GetCastFanartLow(String castname) {
+            return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetCastFanartLow(castname);
         }
+        public static Object GetCastFanartMedium(String castname) {
+            return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetCastFanartMedium(castname);
+        }
+        public static Object GetCastFanartHigh(String castname) {
+            return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetCastFanartHigh(castname);
+        }
+
 	/**
 	 *
 	 * @param MediaObject
 	 * @return
 	 */
-	public static String GetSeasonFanartBanner(Object MediaObject) {
+	public static Object GetSeasonFanartBanner(Object MediaObject) {
             return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetSeasonFanartBanner(MediaObject);
         }
-	/**
-	 *
-	 * @param MediaObject
-	 * @return
-	 */
-	public static List<Object> GetSeasonFanartBanners(Object MediaObject) {
-            return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetSeasonFanartBanners(MediaObject);
+	public static List<Object> GetSeasonFanartBannerAll(Object MediaObject) {
+            return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetSeasonFanartBannerAll(MediaObject);
         }
 	/**
 	 *
 	 * @param MediaObject
 	 * @return
 	 */
-	public static String GetSeasonFanartPoster(Object MediaObject) {
+	public static Object GetSeasonFanartPoster(Object MediaObject) {
             return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetSeasonFanartPoster(MediaObject);
         }
-	/**
-	 *
-	 * @param MediaObject
-	 * @return
-	 */
-	public static List<Object> GetSeasonFanartPosters(Object MediaObject) {
-            return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetSeasonFanartPosters(MediaObject);
+	public static List<Object> GetSeasonFanartPosterAll(Object MediaObject) {
+            return ortus.media.fanart.fanartEngine.getInstance().getProvider().GetSeasonFanartPosterAll(MediaObject);
         }
 	/**
 	 *
@@ -1549,7 +1754,7 @@ public class api extends vars {
 	 * @return Vector of menu items
 	 */
 	public static Object[] GetMenu() {
-		return configurationEngine.getInstance().getIdentity().getMenu().getMenu();
+		return Ortus.getInstance().getIdentity().getMenu().getMenu();
 	}
 
 	/**
@@ -1558,7 +1763,7 @@ public class api extends vars {
 	 * @return
 	 */
 	public static String GetMenuType(String menutitle) {
-            return configurationEngine.getInstance().getIdentity().getMenu().GetMenuType(menutitle);
+            return Ortus.getInstance().getIdentity().getMenu().GetMenuType(menutitle);
         }
 	/**
 	 *
@@ -1566,7 +1771,7 @@ public class api extends vars {
 	 * @param menutype
 	 */
 	public static void SetMenuType(String menutitle, String menutype) {
-            configurationEngine.getInstance().getIdentity().getMenu().SetMenuType(menutitle, menutype);
+            Ortus.getInstance().getIdentity().getMenu().SetMenuType(menutitle, menutype);
             return;
         }
 
@@ -1576,7 +1781,7 @@ public class api extends vars {
 	 * @return Sage Menu to execute
 	 */
 	public static String GetMenuAction(String m) {
-		return configurationEngine.getInstance().getIdentity().getMenu().GetMenuAction(m);
+		return Ortus.getInstance().getIdentity().getMenu().GetMenuAction(m);
 	}
 
 	/**
@@ -1586,7 +1791,7 @@ public class api extends vars {
 	 * @return Sage menu to execute
 	 */
 	public static String GetSubMenuAction(String m, String s) {
-		return configurationEngine.getInstance().getIdentity().getMenu().getSubMenuAction(m,s);
+		return Ortus.getInstance().getIdentity().getMenu().getSubMenuAction(m,s);
 	}
 	/**
 	 * Return a list of Static variables to set upon selection of a sub menu item
@@ -1595,74 +1800,74 @@ public class api extends vars {
 	 * @return Sage menu to execute
 	 */
        public static void addMenuItemStatic(String m, String Title, String var, String val) {
-            configurationEngine.getInstance().getIdentity().getMenu().addMenuItemStatic(m,Title,var,val);
+            Ortus.getInstance().getIdentity().getMenu().addMenuItemStatic(m,Title,var,val);
         }
         public static void addMenuItemStatic(String m, String var, String val) {
-            configurationEngine.getInstance().getIdentity().getMenu().addMenuItemStatic(m,var,var,val);
+            Ortus.getInstance().getIdentity().getMenu().addMenuItemStatic(m,var,var,val);
         }
         public static void addMenuItemGlobal(String m, String Title, String var, String val) {
-            configurationEngine.getInstance().getIdentity().getMenu().addMenuItemGlobal(m,Title,var,val);
+            Ortus.getInstance().getIdentity().getMenu().addMenuItemGlobal(m,Title,var,val);
         }
         public static void addMenuItemImage(String m, String Title, String var, String val) {
-            configurationEngine.getInstance().getIdentity().getMenu().addMenuItemImage(m,Title,var,val);
+            Ortus.getInstance().getIdentity().getMenu().addMenuItemImage(m,Title,var,val);
         }
         public static void addMenuItemSageCommand(String m, String Title, String var, String val) {
-            configurationEngine.getInstance().getIdentity().getMenu().addMenuItemSageCommand(m,Title,var,val);
+            Ortus.getInstance().getIdentity().getMenu().addMenuItemSageCommand(m,Title,var,val);
         }
         public static void addMenuItemProperty(String m, String Title, String var, String val) {
-            configurationEngine.getInstance().getIdentity().getMenu().addMenuItemProperty(m,Title,var,val);
+            Ortus.getInstance().getIdentity().getMenu().addMenuItemProperty(m,Title,var,val);
         }
 
         public static void delMenuItemStatic(String m, String var) {
-            configurationEngine.getInstance().getIdentity().getMenu().delMenuItemStatic(m,var);
+            Ortus.getInstance().getIdentity().getMenu().delMenuItemStatic(m,var);
         }
         public static void delMenuItemGlobal(String m, String var) {
-            configurationEngine.getInstance().getIdentity().getMenu().delMenuItemGlobal(m,var);
+            Ortus.getInstance().getIdentity().getMenu().delMenuItemGlobal(m,var);
         }
         public static void delMenuItemImage(String m, String var) {
-            configurationEngine.getInstance().getIdentity().getMenu().delMenuItemImage(m,var);
+            Ortus.getInstance().getIdentity().getMenu().delMenuItemImage(m,var);
         }
         public static void delMenuItemSageCommand(String m, String var) {
-            configurationEngine.getInstance().getIdentity().getMenu().delMenuItemSageCommand(m,var);
+            Ortus.getInstance().getIdentity().getMenu().delMenuItemSageCommand(m,var);
         }
         public static void delMenuItemProperty(String m, String var) {
-            configurationEngine.getInstance().getIdentity().getMenu().delMenuItemProperty(m,var);
+            Ortus.getInstance().getIdentity().getMenu().delMenuItemProperty(m,var);
         }
 
         public static Object getMenuItemStatic(String m,String var) {
-            return configurationEngine.getInstance().getIdentity().getMenu().getMenuItemStatic(m,var);
+            return Ortus.getInstance().getIdentity().getMenu().getMenuItemStatic(m,var);
         }
         public static Object getMenuItemGlobal(String m, String var) {
-            return configurationEngine.getInstance().getIdentity().getMenu().getMenuItemGlobal(m,var);
+            return Ortus.getInstance().getIdentity().getMenu().getMenuItemGlobal(m,var);
         }
         public static Object getMenuItemImage(String m, String var) {
-            return configurationEngine.getInstance().getIdentity().getMenu().getMenuItemImage(m,var);
+            return Ortus.getInstance().getIdentity().getMenu().getMenuItemImage(m,var);
         }
         public static Object getMenuItemSageCommand(String m, String var) {
-            return configurationEngine.getInstance().getIdentity().getMenu().getMenuItemSageCommand(m,var);
+            return Ortus.getInstance().getIdentity().getMenu().getMenuItemSageCommand(m,var);
         }
         public static Object getMenuItemProperty(String m, String var) {
-            return configurationEngine.getInstance().getIdentity().getMenu().getMenuItemProperty(m,var);
+            return Ortus.getInstance().getIdentity().getMenu().getMenuItemProperty(m,var);
         }
 
         public static Object[] getMenuItemStatic(String m) {
-            return configurationEngine.getInstance().getIdentity().getMenu().getMenuItemStatic(m);
+            return Ortus.getInstance().getIdentity().getMenu().getMenuItemStatic(m);
         }
         public static Object[] getMenuItemGlobal(String m) {
-            return configurationEngine.getInstance().getIdentity().getMenu().getMenuItemGlobal(m);
+            return Ortus.getInstance().getIdentity().getMenu().getMenuItemGlobal(m);
         }
         public static Object[] getMenuItemImage(String m) {
-            return configurationEngine.getInstance().getIdentity().getMenu().getMenuItemImage(m);
+            return Ortus.getInstance().getIdentity().getMenu().getMenuItemImage(m);
         }
         public static Object[] getMenuItemSageCommand(String m) {
-            return configurationEngine.getInstance().getIdentity().getMenu().getMenuItemSageCommand(m);
+            return Ortus.getInstance().getIdentity().getMenu().getMenuItemSageCommand(m);
         }
         public static Object[] getMenuItemProperty(String m) {
-            return configurationEngine.getInstance().getIdentity().getMenu().getMenuItemProperty(m);
+            return Ortus.getInstance().getIdentity().getMenu().getMenuItemProperty(m);
         }
 
         public static void dumpMenuItems() {
-            configurationEngine.getInstance().getIdentity().getMenu().dumpMenuItems();
+            Ortus.getInstance().getIdentity().getMenu().dumpMenuItems();
         }
 	/**
 	 * Return a sub menu for a main menu item
@@ -1670,7 +1875,7 @@ public class api extends vars {
 	 * @return Sub menu for a main menu
 	 */
 	public static Object[] GetSubMenu(String m) {
-		return configurationEngine.getInstance().getIdentity().getMenu().getSubMenu(m);
+		return Ortus.getInstance().getIdentity().getMenu().getSubMenu(m);
 	}
 
 	/**
@@ -1679,7 +1884,7 @@ public class api extends vars {
 	 * @return return code
 	 */
 	public static int DeleteMenu(String m) {
-		return configurationEngine.getInstance().getIdentity().getMenu().deleteMenu(m);
+		return Ortus.getInstance().getIdentity().getMenu().deleteMenu(m);
 	}
 
 	/**
@@ -1688,7 +1893,7 @@ public class api extends vars {
 	 * @param ma Sage menu to execute
 	 */
 	public static void AddMenu(String mt, String ma) {
-		configurationEngine.getInstance().getIdentity().getMenu().addMenu(mt, ma);
+		Ortus.getInstance().getIdentity().getMenu().addMenu(mt, ma);
 		return;
 	}
 
@@ -1698,7 +1903,7 @@ public class api extends vars {
 	 * @param nmt New Main Menu Title
 	 */
 	public static void UpdateMenuTitle(String mt, String nmt) {
-		configurationEngine.getInstance().getIdentity().getMenu().updateMenuTitle(mt, nmt);
+		Ortus.getInstance().getIdentity().getMenu().updateMenuTitle(mt, nmt);
 
 		return;
 	}
@@ -1710,18 +1915,18 @@ public class api extends vars {
 	 * @return return code
 	 */
 	public static int UpdateMenuAction(String mt, String nma) {
-		return configurationEngine.getInstance().getIdentity().getMenu().updateMenuAction(mt, nma);
+		return Ortus.getInstance().getIdentity().getMenu().updateMenuAction(mt, nma);
 	}
 
         public static int GetPosition(String mt) {
-            return configurationEngine.getInstance().getIdentity().getMenu().getPosition(mt);
+            return Ortus.getInstance().getIdentity().getMenu().getPosition(mt);
         }
 	/**
 	 * Increase the menu position
 	 * @param mt Main Menu Title
 	 */
 	public static void IncPosition(String mt) {
-		configurationEngine.getInstance().getIdentity().getMenu().incPosition(mt);
+		Ortus.getInstance().getIdentity().getMenu().incPosition(mt);
 		return;
 	}
 
@@ -1730,7 +1935,7 @@ public class api extends vars {
 	 * @param mt Main Menu Title
 	 */
 	public static void DecPosition(String mt) {
-		configurationEngine.getInstance().getIdentity().getMenu().decPosition(mt);
+		Ortus.getInstance().getIdentity().getMenu().decPosition(mt);
 		return;
 	}
 
@@ -1742,7 +1947,7 @@ public class api extends vars {
 	 * @return return code
 	 */
 	public static int AddSubMenu(String mt, String smt, String sma) {
-		return configurationEngine.getInstance().getIdentity().getMenu().addSubMenu(mt, smt, sma);
+		return Ortus.getInstance().getIdentity().getMenu().addSubMenu(mt, smt, sma);
 	}
 
 	/**
@@ -1753,7 +1958,7 @@ public class api extends vars {
 	 * @return return code
 	 */
 	public static int UpdateSubMenuTitle(String mt, String smt, String nsmt) {
-		return configurationEngine.getInstance().getIdentity().getMenu().updateSubMenuTitle(mt, smt, nsmt);
+		return Ortus.getInstance().getIdentity().getMenu().updateSubMenuTitle(mt, smt, nsmt);
 	}
 
 	/**
@@ -1764,7 +1969,7 @@ public class api extends vars {
 	 * @return return code
 	 */
 	public static int UpdateSubMenuAction(String mt, String smt, String nsma) {
-		return configurationEngine.getInstance().getIdentity().getMenu().updateSubMenuAction(mt, smt, nsma);
+		return Ortus.getInstance().getIdentity().getMenu().updateSubMenuAction(mt, smt, nsma);
 	}
 
 	/**
@@ -1774,78 +1979,78 @@ public class api extends vars {
 	 * @return return code
 	 */
 	public static int DeleteSubMenu(String mt, String smt) {
-		return configurationEngine.getInstance().getIdentity().getMenu().deleteSubMenu(mt, smt);
+		return Ortus.getInstance().getIdentity().getMenu().deleteSubMenu(mt, smt);
 	}
 
         public static void addSubMenuItemStatic(String m, String sm, String Title, String var, String val) {
-            configurationEngine.getInstance().getIdentity().getMenu().addSubMenuItemStatic(m,sm,Title,var,val);
+            Ortus.getInstance().getIdentity().getMenu().addSubMenuItemStatic(m,sm,Title,var,val);
         }
         public static void addSubMenuItemStatic(String m, String sm,String var, String val) {
-            configurationEngine.getInstance().getIdentity().getMenu().addSubMenuItemStatic(m,sm,var,var,val);
+            Ortus.getInstance().getIdentity().getMenu().addSubMenuItemStatic(m,sm,var,var,val);
         }
         public static void addSubMenuItemGlobal(String m, String sm,String Title, String var, String val) {
-            configurationEngine.getInstance().getIdentity().getMenu().addSubMenuItemGlobal(m,sm,Title,var,val);
+            Ortus.getInstance().getIdentity().getMenu().addSubMenuItemGlobal(m,sm,Title,var,val);
         }
         public static void addSubMenuItemImage(String m, String sm,String Title, String var, String val) {
-            configurationEngine.getInstance().getIdentity().getMenu().addSubMenuItemImage(m,sm,Title,var,val);
+            Ortus.getInstance().getIdentity().getMenu().addSubMenuItemImage(m,sm,Title,var,val);
         }
         public static void addSubMenuItemSageCommand(String m, String sm,String Title, String var, String val) {
-            configurationEngine.getInstance().getIdentity().getMenu().addSubMenuItemSageCommand(m,sm,Title,var,val);
+            Ortus.getInstance().getIdentity().getMenu().addSubMenuItemSageCommand(m,sm,Title,var,val);
         }
         public static void addSubMenuItemProperty(String m, String sm,String Title, String var, String val) {
-            configurationEngine.getInstance().getIdentity().getMenu().addSubMenuItemProperty(m,sm,Title,var,val);
+            Ortus.getInstance().getIdentity().getMenu().addSubMenuItemProperty(m,sm,Title,var,val);
         }
 
         public static void delSubMenuItemStatic(String m, String sm,String var) {
-            configurationEngine.getInstance().getIdentity().getMenu().delSubMenuItemStatic(m,sm,var);
+            Ortus.getInstance().getIdentity().getMenu().delSubMenuItemStatic(m,sm,var);
         }
         public static void delSubMenuItemGlobal(String m, String sm,String var) {
-            configurationEngine.getInstance().getIdentity().getMenu().delSubMenuItemGlobal(m,sm,var);
+            Ortus.getInstance().getIdentity().getMenu().delSubMenuItemGlobal(m,sm,var);
         }
         public static void delSubMenuItemImage(String m, String sm,String var) {
-            configurationEngine.getInstance().getIdentity().getMenu().delSubMenuItemImage(m,sm,var);
+            Ortus.getInstance().getIdentity().getMenu().delSubMenuItemImage(m,sm,var);
         }
         public static void delSubMenuItemSageCommand(String m, String sm,String var) {
-            configurationEngine.getInstance().getIdentity().getMenu().delSubMenuItemSageCommand(m,sm,var);
+            Ortus.getInstance().getIdentity().getMenu().delSubMenuItemSageCommand(m,sm,var);
         }
         public static void delSubMenuItemProperty(String m, String sm,String var) {
-            configurationEngine.getInstance().getIdentity().getMenu().delSubMenuItemProperty(m,sm,var);
+            Ortus.getInstance().getIdentity().getMenu().delSubMenuItemProperty(m,sm,var);
         }
 
         public static Object getSubMenuItemStatic(String m,String sm,String var) {
-            return configurationEngine.getInstance().getIdentity().getMenu().getSubMenuItemStatic(m,sm,var);
+            return Ortus.getInstance().getIdentity().getMenu().getSubMenuItemStatic(m,sm,var);
         }
         public static Object getSubMenuItemGlobal(String m, String sm,String var) {
-            return configurationEngine.getInstance().getIdentity().getMenu().getSubMenuItemGlobal(m,sm,var);
+            return Ortus.getInstance().getIdentity().getMenu().getSubMenuItemGlobal(m,sm,var);
         }
         public static Object getSubMenuItemImage(String m, String sm,String var) {
-            return configurationEngine.getInstance().getIdentity().getMenu().getSubMenuItemImage(m,sm,var);
+            return Ortus.getInstance().getIdentity().getMenu().getSubMenuItemImage(m,sm,var);
         }
         public static Object getSubMenuItemSageCommand(String m, String sm,String var) {
-            return configurationEngine.getInstance().getIdentity().getMenu().getSubMenuItemSageCommand(m,sm,var);
+            return Ortus.getInstance().getIdentity().getMenu().getSubMenuItemSageCommand(m,sm,var);
         }
         public static Object getSubMenuItemProperty(String m, String sm,String var) {
-            return configurationEngine.getInstance().getIdentity().getMenu().getSubMenuItemProperty(m,sm,var);
+            return Ortus.getInstance().getIdentity().getMenu().getSubMenuItemProperty(m,sm,var);
         }
 
         public static Object[] getSubMenuItemStatic(String m, String sm) {
-            return configurationEngine.getInstance().getIdentity().getMenu().getSubMenuItemStatic(m,sm);
+            return Ortus.getInstance().getIdentity().getMenu().getSubMenuItemStatic(m,sm);
         }
         public static Object[] getSubMenuItemGlobal(String m, String sm) {
-            return configurationEngine.getInstance().getIdentity().getMenu().getSubMenuItemGlobal(m,sm);
+            return Ortus.getInstance().getIdentity().getMenu().getSubMenuItemGlobal(m,sm);
         }
         public static Object[] getSubMenuItemImage(String m, String sm) {
-            return configurationEngine.getInstance().getIdentity().getMenu().getSubMenuItemImage(m,sm);
+            return Ortus.getInstance().getIdentity().getMenu().getSubMenuItemImage(m,sm);
         }
         public static Object[] getSubMenuItemSageCommand(String m,String sm) {
-            return configurationEngine.getInstance().getIdentity().getMenu().getSubMenuItemSageCommand(m,sm);
+            return Ortus.getInstance().getIdentity().getMenu().getSubMenuItemSageCommand(m,sm);
         }
         public static Object[] getSubMenuItemProperty(String m,String sm) {
-            return configurationEngine.getInstance().getIdentity().getMenu().getSubMenuItemProperty(m,sm);
+            return Ortus.getInstance().getIdentity().getMenu().getSubMenuItemProperty(m,sm);
         }
 
         public static int GetSubMenuPosition(String mt, String smt) {
-            return configurationEngine.getInstance().getIdentity().getMenu().getSubMenuPosition(mt,smt);
+            return Ortus.getInstance().getIdentity().getMenu().getSubMenuPosition(mt,smt);
         }
 
 	/**
@@ -1854,7 +2059,7 @@ public class api extends vars {
 	 * @param smt
 	 */
 	public static void IncSubMenuPosition(String mt, String smt) {
-		configurationEngine.getInstance().getIdentity().getMenu().incSubMenuPosition(mt, smt);
+		Ortus.getInstance().getIdentity().getMenu().incSubMenuPosition(mt, smt);
 		return;
 	}
 
@@ -1864,7 +2069,7 @@ public class api extends vars {
 	 * @param smt
 	 */
 	public static void DecSubMenuPosition(String mt, String smt) {
-		configurationEngine.getInstance().getIdentity().getMenu().decSubMenuPosition(mt, smt);
+		Ortus.getInstance().getIdentity().getMenu().decSubMenuPosition(mt, smt);
 		return;
 	}
 
@@ -1910,11 +2115,24 @@ public class api extends vars {
       public static void DownloadAppleTrailiers(String dirname) {
               ortus.onlinescrapper.trailers.api.downloadTrailers(dirname);
       }
-      
+
+      public static void CreateSageShow(MediaObject mo) {
+          ortus.onlinescrapper.tools.SageMetadata.createShow(mo);
+          ortus.cache.cacheEngine.getInstance().ReLoadCache("MD"+ MediaFileAPI.GetMediaFileID(mo.getMedia()));
+      }
+
+      public static Object GetOrtusObject(Object o) {
+          OrtusMedia smo = new OrtusMedia(o);
+          smo.setTitle(ortus.api.GetMediaTitle(smo));
+          return smo;
+      }
       public static boolean BackupWiz() {
                return ortus.onlinescrapper.tools.SageMetadata.BackupWiz();
       }
 
+      public static void DeleteBackupFiles() {
+          ortus.util.file.DeleteBackupFiles();
+      }
       public static boolean RestoreDatabase(String backupfile) {
 	      return Ortus.getInstance().getDB().restoreDB(backupfile);
       }
@@ -2029,7 +2247,7 @@ public class api extends vars {
 	 */
 	public static boolean IsRemoteHost() {
 
-		if ( ortus.api.GetProperty("remotehost", "none").equalsIgnoreCase("none"))
+		if ( ((String)ortus.api.GetProperty("remotehost", "none")).equalsIgnoreCase("none"))
 			return false;
 		else
 			return true;
@@ -2042,7 +2260,7 @@ public class api extends vars {
 	public static Object ExecuteRemoteCMD(String methd, Object[] commandparm) {
 		if ( ! IsRemoteHost())
 			return null;
-		return ortus.daemon.api.executecCMD(ortus.api.GetProperty("remotehost", null), methd, commandparm);
+		return ortus.daemon.api.executecCMD((String)ortus.api.GetProperty("remotehost", null), methd, commandparm);
 	}
 
 	public static void AddProcessQueue(String methd, Object[] o) {
@@ -2181,16 +2399,37 @@ public class api extends vars {
 	 * @param title
 	 * @return
 	 */
-	public static int ManualMovieSearch(Object mediafile, String title) {
-            return ortus.onlinescrapper.api.ManualMovieSearch(mediafile, title);
-        }
+//	public static int ManualMovieSearch(Object mediafile, String title) {
+//            return ortus.onlinescrapper.api.ManualMovieSearch(mediafile, title);
+//        }
 
         public static List<HashMap> LiveSearch(String scope, String title) {
             return ortus.onlinescrapper.api.LiveSearch(scope, title);
         }
 
-        public static void LiveSearchStore(HashMap entry) {
-            ortus.onlinescrapper.api.LiveSearchStore(entry);
+        public static List<HashMap> LiveSearchEpisode(HashMap entry) {
+            return ortus.onlinescrapper.api.LiveSearchEpisode(entry);
+        }
+
+
+        public static void LiveSearchStore(Object mediafile, HashMap entry) {
+            ortus.onlinescrapper.api.LiveSearchStore(mediafile, entry);
+        }
+
+        public static void GetMissingFanart(HashMap entry) {
+            ortus.onlinescrapper.api.GetMissingFanart(entry);
+        }
+
+        public static void GetMissingFanartForID(HashMap entry) {
+            ortus.onlinescrapper.api.GetMissingFanartForID(entry);
+        }
+
+        public static void DeleteFanartForID(HashMap entry) {
+            ortus.onlinescrapper.api.DeleteFanartForID(entry);
+        }
+
+        public static void DeleteAllFanart(HashMap entry) {
+            ortus.onlinescrapper.api.DeleteAllFanart(entry);
         }
 	/**
 	 *
@@ -2199,9 +2438,9 @@ public class api extends vars {
 	 * @param download_fanart
 	 * @return
 	 */
-	public static boolean ManualMovieMatch(Object mediafile, Object scrapperid, Object download_fanart){
-            return ortus.onlinescrapper.api.ManualMovieMatch(mediafile, scrapperid, download_fanart);
-        }
+//	public static boolean ManualMovieMatch(Object mediafile, Object scrapperid, Object download_fanart){
+//            return ortus.onlinescrapper.api.ManualMovieMatch(mediafile, scrapperid, download_fanart);
+//        }
 
 	/**
 	 *
@@ -2225,6 +2464,10 @@ public class api extends vars {
             ortus.onlinescrapper.api.cleanMedia();
             return;
         }
+
+        public static void CleanMediaObject(Object mediafile) {
+            ortus.onlinescrapper.api.cleanMediaObject(mediafile);
+        }
 	/**
 	 *
 	 */
@@ -2245,11 +2488,6 @@ public class api extends vars {
 	 *
 	 */
 	public static void indexMediaRecordings() {
-            if ( ! ortus.api.IsOrtusInitialized()) {
-                DebugLog(LogLevel.Error,"indexMediaRecordings: Jumpted the gun");
-                return;
-            }
-
             if ( ! ortus.onlinescrapper.api.index_running )
 		    Ortus.getInstance().getProcessServer().AddQueue("ortus.onlinescrapper.api.indexMediaRecordings",null);
 //                new Thread(new ortus.daemonWorker("indexrecording"),"daemonWorker").start();
@@ -2480,6 +2718,11 @@ public class api extends vars {
          * Run backup of database
          * @return
          */
+
+        public static boolean clearDB() {
+            return Ortus.getInstance().getDB().clearDB();
+        }
+        
         public static boolean backupDB() {
             return Ortus.getInstance().getDB().backupDB();
         }
@@ -2487,7 +2730,7 @@ public class api extends vars {
 	 *
 	 * @return
 	 */
-	public static List<Object> GetDBStatus() {
+	public static HashMap GetDBStatus() {
 		return Ortus.getInstance().getDB().GetStatus();
 	}
 
@@ -2610,11 +2853,18 @@ public class api extends vars {
 
         public static HashMap GetMetadata(Object mediafile) {
             return metadataEngine.getInstance().getProvider().GetMetadata(mediafile);
-        }
+        }  
         public static HashMap GetMetadataFull(Object mediafile) {
             return metadataEngine.getInstance().getProvider().GetMetadataFull(mediafile);
         }
 
+        public static String GetMetadataFullXML(Object mediafile) {
+            return metadataEngine.getInstance().getProvider().GetMetadataFullXML(mediafile);
+        }
+        
+        public static List<HashMap> GetMetadataCast(Object mediafile) {
+            return metadataEngine.getInstance().getProvider().GetMetadataCast(mediafile);
+        }
 
         public static OrtusMedia GetOrtusMediaSeries(Object mediafile) {
             if ( mediafile instanceof Integer) {
@@ -2673,6 +2923,10 @@ public class api extends vars {
 	public static int GetEpisodeNumber(Object mediafile) {
 		return metadataEngine.getInstance().getProvider().GetEpisodeNumber(mediafile);
 	}
+
+        public static int GetEpisodeID(Object mediafile) {
+            return metadataEngine.getInstance().getProvider().GetEpisodeID(mediafile);
+        }
 
 	/**
 	 *
@@ -2851,18 +3105,26 @@ public class api extends vars {
 	public static List<String> GetMediaGenre(Object mediafile) {
 		return metadataEngine.getInstance().getProvider().GetGenre(mediafile);
 	}
+
+        public static void SetMediaGenre(Object mediafile, List genre) {
+                metadataEngine.getInstance().getProvider().SetGenre(mediafile, genre);
+        }
 	/**
 	 *
 	 * @param mediafile
 	 * @param mediatype
 	 */
-	public static void SetMediaType(Object mediafile, Object mediatype) {
+	public static void SetMediaType(Object mediafile, int mediatype) {
 		metadataEngine.getInstance().getProvider().SetMediaType(mediafile, mediatype);
 	}
 
 	public static void SetMediaTitle(Object mediafile, String newtitle) {
 		metadataEngine.getInstance().getProvider().SetMediaTitle(mediafile, newtitle);
 	}
+
+        public static void SetMediaEpisodeTitle(Object mediafile, String newtitle) {
+                metadataEngine.getInstance().getProvider().SetEpisodeTitle(mediafile, newtitle);
+        }
 //	public static void SetMediaDescription(Object mediafile, String newdescription) {
 //		MetadataFactory.getInstance().getProvider().SetDescription(mediafile, newdescription);
 //	}
@@ -2874,7 +3136,7 @@ public class api extends vars {
 		metadataEngine.getInstance().getProvider().SetUserRating(mediafile, newuserrating);
 	}
 	public static void SetMediaReleaseDate(Object mediafile, String newreleasedate) {
-		metadataEngine.getInstance().getProvider().SetUserRating(mediafile, newreleasedate);
+		metadataEngine.getInstance().getProvider().SetReleaseDate(mediafile, newreleasedate);
 	}
 //ortus.Search
 

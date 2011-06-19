@@ -6,7 +6,9 @@
 package ortus.onlinescrapper.themoviedb;
 
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.xml.stream.XMLEventReader;
@@ -24,16 +26,19 @@ public class TMDBProvider extends ortus.vars {
         return ProviderName;
     }
 
-       public HashMap<String,SearchResult> Search(String title,int limit) {
+       public List<Movie> Search(String title,String year, int limit) {
  	   XMLEventReader xmlReader = null;
 
            int search_count = 0;
            long t0 = System.currentTimeMillis();
            ortus.api.DebugLog(LogLevel.Info, ProviderName + " : Search for raw title: " + title + " clean: " + CleanName(title));
-           HashMap<String,SearchResult> resultTitles = new HashMap<String,SearchResult>();
-
+           List<Movie> resultTitles = new ArrayList<Movie>();
+           
 	   try {
-		xmlReader = XMLHelper.getEventReaderUrl("http://api.themoviedb.org/2.1/Movie.search/en/xml/6d89df83f02af2b3b712a9e63f8be6fb/" + URLEncoder.encode(CleanName(title),"UTF-8"));
+                String searchTitle = URLEncoder.encode(CleanName(title),"UTF-8");
+                if ( ! year.isEmpty())
+                   searchTitle+="+" + year;
+		xmlReader = XMLHelper.getEventReaderUrl("http://api.themoviedb.org/2.1/Movie.search/en/xml/6d89df83f02af2b3b712a9e63f8be6fb/" + searchTitle);
 
 		while (xmlReader.hasNext()) {
 			Movie movie = ortus.onlinescrapper.themoviedb.TheMovieDB.parseNextMovie(xmlReader);
@@ -41,14 +46,14 @@ public class TMDBProvider extends ortus.vars {
                             continue;
 			if (movie.isMetadatafound()) {
 //                           ortus.api.DebugLog(LogLevel.Trace, " metadatafound");
-		           if ( ! movie.getName().isEmpty()) {
-				SearchResult sr = new SearchResult(movie.getName(),"themoviedb:" + movie.getTmdbid());
-				if ( movie.getReleasedate() != null)
-					sr.setDate(movie.getReleasedate());
-                                sr.setDescription(movie.getOverview());
-			        ortus.api.DebugLog(LogLevel.Info, ProviderName + " Found: " + sr.toString());
-				resultTitles.put(movie.getName(), sr);
-			   }
+//		           if ( ! movie.getName().isEmpty()) {
+//				SearchResult sr = new SearchResult(movie.getName(),"themoviedb:" + movie.getTmdbid());
+//				if ( movie.getReleasedate() != null)
+//					sr.setDate(movie.getReleasedate());
+//                                sr.setDescription(movie.getOverview());
+			        ortus.api.DebugLog(LogLevel.Info, ProviderName + " Found: " + movie.getName());
+				resultTitles.add(movie);
+//			   }
                 }
             }
             long ttotal = System.currentTimeMillis() - t0;

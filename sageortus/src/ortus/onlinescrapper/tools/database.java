@@ -5,6 +5,7 @@
 
 package ortus.onlinescrapper.tools;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -26,65 +27,68 @@ import sagex.api.ShowAPI;
  * @author jphipps
  */
 public class database extends ortus.vars {
-    public static void LogFind(int scantype, int mediaid, String searchtitle, HashMap<String,SearchResult> resultTitles) {
-        ortus.api.executeSQL("delete from sage.scrapperlog where scantype = " + scantype + " and mediaid = " + mediaid);
-         Object[] mk = resultTitles.keySet().toArray();
-        for ( Object mt : mk ) {
-            ortus.api.executeSQL("insert into sage.scrapperlog (scantype, mediaid, searchtitle, foundtitle, foundkey, scandate) values( " + scantype + "," + mediaid + ",'" + StringEscapeUtils.escapeSql(searchtitle) + "','" + StringEscapeUtils.escapeSql((String)mt) + "','" + StringEscapeUtils.escapeSql(resultTitles.get(mt).getMetadatakey()) + "',current_timestamp)");
-        }
-
-        if ( mk.length == 0) {
-            ortus.api.executeSQL("insert into sage.scrapperlog (scantype, mediaid, searchtitle, foundtitle, foundkey, scandate) values( " + scantype + "," + mediaid + ",'" + StringEscapeUtils.escapeSql(searchtitle) + "','None Found','None Found',current_timestamp)");
-        }
-    }
-
-    public static Movie GetCacheMetadataIMDB(String imdbid) {
-        return GetCacheMetadata("imdbid",imdbid);
-    }
-
-    public static Movie GetCacheMetadataTMDB(String tmdbid) {
-        return GetCacheMetadata("tmdbid",tmdbid);
-    }
-
-    private static Movie GetCacheMetadata(String keytype, String key) {
-//        ortus.api.DebugLog(LogLevel.Trace2,"GetCacheMetadata: Searching cache for type: " + keytype + " key: " + key.trim());
+//    public static void LogFind(int scantype, int mediaid, String searchtitle, HashMap<String,SearchResult> resultTitles) {
+//        ortus.api.executeSQL("delete from sage.scrapperlog where scantype = " + scantype + " and mediaid = " + mediaid);
+//         Object[] mk = resultTitles.keySet().toArray();
+//        for ( Object mt : mk ) {
+//            ortus.api.executeSQL("insert into sage.scrapperlog (scantype, mediaid, searchtitle, foundtitle, foundkey, scandate) values( " + scantype + "," + mediaid + ",'" + StringEscapeUtils.escapeSql(searchtitle) + "','" + StringEscapeUtils.escapeSql((String)mt) + "','" + StringEscapeUtils.escapeSql(resultTitles.get(mt).getMetadatakey()) + "',current_timestamp)");
+//        }
+//
+//        if ( mk.length == 0) {
+//            ortus.api.executeSQL("insert into sage.scrapperlog (scantype, mediaid, searchtitle, foundtitle, foundkey, scandate) values( " + scantype + "," + mediaid + ",'" + StringEscapeUtils.escapeSql(searchtitle) + "','None Found','None Found',current_timestamp)");
+//        }
+//    }
+//
+//    public static Movie GetCacheMetadataIMDB(String imdbid) {
+//        return GetCacheMetadata("imdbid",imdbid);
+//    }
+//
+//    public static Movie GetCacheMetadataTMDB(String tmdbid) {
+//        return GetCacheMetadata("tmdbid",tmdbid);
+//    }
+//
+    public static HashMap GetCacheMetadata(String source, MediaObject mo) {
+        ortus.api.DebugLog(LogLevel.Trace2,"GetCacheMetadata: Searching cache for type: " + source + " title: " + mo.getShowtitle().toLowerCase());
         Connection conn = ortus.api.GetConnection();
-        String sql = "select mediaobject from sage.metadatacache where " + keytype + " = ?";
+        String sql = "select title, id from sage.metadatacache where source = ? and match_title = ?";
+
+        HashMap result = new HashMap();
+
         try {
-          Movie cacheitem = null;
           PreparedStatement stmt = conn.prepareStatement(sql);
-          stmt.setString(1,key.trim());
+          stmt.setString(1,source);
+          stmt.setString(2,mo.getShowtitle().toLowerCase());
           ResultSet rs = stmt.executeQuery();
           if  ( rs.next() ) {
-              cacheitem = (Movie)rs.getObject(1);
+              result.put("title",rs.getString(1));
+              result.put("id",rs.getString(2));
           }
           stmt.close();
 	  conn.close();
-          if ( cacheitem != null )
-              ortus.api.DebugLog(LogLevel.Trace2," GetMetadataCache: Found: key: " + key + " in cache");
-          return cacheitem;
+          if ( result.get("title") != null )
+              ortus.api.DebugLog(LogLevel.Trace2," GetMetadataCache: Found: key: " + result.get("id") + " in cache");
+          return result;
         } catch(Exception e ) {
 	    try { conn.close(); } catch(Exception ex) {}
             ortus.api.DebugLog(LogLevel.Error,"GetCacheMetadata: SQL: " + sql);
             ortus.api.DebugLog( LogLevel.Error, "GetCacheMetadata: SQLException: " , e);
-            return null;
+            return result;
         }
     }
-    public static void cacheMetadata(Movie mo) {
-//	ortus.api.DebugLog(LogLevel.Trace2,"cacheMetadata:  caching tmdbid: " + mo.GetId() + " imdbid: " + mo.GetIMDBId());
-        Connection conn = ortus.api.GetConnection();
-
-        List<Object> result = ortus.api.executeSQLQuery("select imdbid from sage.metadatacache where imdbid = '" + mo.getImdbid() + "' and tmdbid = '" + mo.getTmdbid() + "'");
-        if ( result.size() > 0) {
+    
+    public static void cacheMetadata(String source, String match_title, String title, String id) {
+	ortus.api.DebugLog(LogLevel.Trace2,"cacheMetadata:  caching source: " + source + " match_title: " + match_title.toLowerCase() + " title: " + title + " id: " + id);
+        if ( match_title.equalsIgnoreCase(title))
             return;
-        }
-        String sql = "insert into sage.metadatacache ( tmdbid, imdbid, title, mediaobject ) values(?,?,?,?)";
+
+        Connection conn = ortus.api.GetConnection();
+        String sql = "insert into sage.metadatacache ( match_title, title, source, id ) values(?,?,?,?)";
         try {
           PreparedStatement stmt = conn.prepareStatement(sql);
-          stmt.setString(1,mo.getTmdbid());
-          stmt.setString(2,mo.getImdbid());
-          stmt.setString(3,mo.getName());
-          stmt.setObject(4, mo);
+          stmt.setString(1,match_title.toLowerCase());
+          stmt.setString(2,title);
+          stmt.setString(3,source);
+          stmt.setString(4, id);
           stmt.execute();
           stmt.close();
 	  conn.close();
@@ -137,7 +141,7 @@ public class database extends ortus.vars {
             SQL =  "INSERT INTO sage.episode (seriesid, episodeid, seasonid, episodeno,  title,description,originalairdate,userrating,seasonno )  " +
                     " VALUES(" + Episode.getSeriesId() + "," + Episode.getId() + ", "+ Episode.getSeasonId() + " , " + Episode.getEpisodeNumber() + ", '" + EpisodeName +"','" +
                     Description +"',";
-	    if ( Episode.getFirstAired().isEmpty())
+	    if ( Episode.getFirstAired().isEmpty() || Episode.getFirstAired().equals("0000-00-00"))
 			SQL+="'1900-01-01'";
 	    else
 		    SQL+="'" + Episode.getFirstAired() +"'";
@@ -280,30 +284,59 @@ public class database extends ortus.vars {
 		ortus.api.DebugLog(LogLevel.Trace2,"UpdateSeriesDB: Seriesid: " + Series.getId() + " not found");
     }
 
-    public static void WriteTVFanart(String metadataid, String type, String url , String filename) {
+    public static void WriteTVFanart(int id, String metadataid, String resolution, String type, String url , String filename) {
         int width = 0;
         int height = 0;
         int imagetype = 0;
-        HashMap<String,String> imginfo = ortus.image.util.GetImageInfo(ortus.api.GetFanartFolder() + java.io.File.separator + filename);
 
-	if ( imginfo != null) {
-		width = Integer.parseInt(imginfo.get("width"));
-		height = Integer.parseInt(imginfo.get("height"));
+        String urlField = "high_url";
+        String fileField = "high_file";
+        String widthField = "high_width";
+        String heightField = "high_height";
+        String imageSizeField = "high_imagesize";
 
-		if ( height < 200)
-			imagetype = 1;
-		if ( height < 600)
-			imagetype = 2;
-		if ( height > 599)
-			imagetype = 3;
+        if ( resolution.equalsIgnoreCase("low")) {
+            urlField = "low_url";
+            fileField = "low_file";
+            widthField = "low_width";
+            heightField = "low_height";
+            imageSizeField = "low_imagesize";
+        } else if ( resolution.equalsIgnoreCase("medium")) {
+            urlField = "medium_url";
+            fileField = "medium_file";
+            widthField = "medium_width";
+            heightField = "medium_height";
+            imageSizeField = "medium_imagesize";
+        }
+        
+        if ( filename != null) {
+            HashMap<String,String> imginfo = ortus.image.util.GetImageInfo(ortus.api.GetFanartFolder() + java.io.File.separator + filename);
 
-		ortus.api.DebugLog(LogLevel.Trace,"FanartImage: ImageType: " + imagetype + " Size: Width: " + width + " Height: " + height);
-	}
+            if ( imginfo != null) {
+                    width = Integer.parseInt(imginfo.get("width"));
+                    height = Integer.parseInt(imginfo.get("height"));
 
-	String SQL = "update sage.fanart set width = " + width + ", height="+height + ",imagetype = " + imagetype + ",file = '" + filename + "' where metadataid = '" + metadataid + "' and type = '" + type + "' and url = '" + url + "'";
+                    if ( height < 200)
+                            imagetype = 1;
+                    if ( height < 600)
+                            imagetype = 2;
+                    if ( height > 599)
+                            imagetype = 3;
+
+                    ortus.api.DebugLog(LogLevel.Trace,"FanartImage: ImageType: " + imagetype + " Size: Width: " + width + " Height: " + height);
+            }
+        }
+
+        long filesize = 0;
+        File faf = new File(ortus.api.GetFanartFolder() + java.io.File.separator + filename);
+        if ( faf.exists()) {
+             filesize = faf.length();
+        }
+
+	String SQL = "update sage.fanart set " + widthField + "  = " + width + ", " + heightField + "=" + height + ", " + imageSizeField + " = " + filesize + "," + fileField + " = '" + StringEscapeUtils.escapeSql(filename) + "', " + urlField + " = '" + StringEscapeUtils.escapeSql(url) + "' where mediaid = " + id + " and metadataid = '" + metadataid + "' and idtype = 'SR' and type = '" + type + "'";
 	int success = ortus.api.executeSQL(SQL);
 	if ( success < 1) {
-		SQL =  "INSERT INTO sage.fanart (width, height, imagetype, metadataid, type, url, file) VALUES("+ width + "," + height + "," + imagetype + ",'" + metadataid + "', '" + type + "','" + url + "','" + filename + "')";
+		SQL =  "INSERT INTO sage.fanart (" + widthField + "," + heightField + " , " + urlField + "," + fileField + "," + imageSizeField + ", metadataid, mediaid , idtype, type) VALUES("+ width + "," + height + ",'" + StringEscapeUtils.escapeSql(url) + "','" + StringEscapeUtils.escapeSql(filename) + "'," + filesize + ",'" + metadataid + "'," + id + ",'SR','" + type + "')";
 		ortus.api.executeSQL(SQL);
 	}
     }
@@ -319,25 +352,48 @@ public class database extends ortus.vars {
         String workSeriesTitle = StringEscapeUtils.escapeSql(mo.getShowtitle());
         String workEpisodeTitle = StringEscapeUtils.escapeSql(mo.getEpisodetitle());
 
+        if ( ! mo.getEpisodeID().isEmpty()) {
+//            	String SQL ="UPDATE sage.episode SET mediaid = " + MediaFileAPI.GetMediaFileID(mo.getMedia()) + " where episodeid = " + mo.getEpisodeID() + " and seriesid = " + mo.getSeriesID();
+                String SQL = "delete from sage.episodemedia where mediaid = " + MediaFileAPI.GetMediaFileID(mo.getMedia()) + " and episodeid = " + mo.getEpisodeID();
+		ortus.api.executeSQL(SQL);
+              	SQL ="insert into sage.episodemedia (mediaid, episodeid) values( " + MediaFileAPI.GetMediaFileID(mo.getMedia()) + "," + mo.getEpisodeID() + ")";
+		int success = ortus.api.executeSQL(SQL);
+		if ( success > 0 ) {
+//		    SQL = "update sage.media set mediatype = 3, mediatitle = '" + workSeriesTitle + "',episodetitle = '" + ((String)mtv.get(0).get(3)).replaceAll("'","''") + "' where mediaid = " + MediaFileAPI.GetMediaFileID(mo.getMedia());
+//		    success = ortus.api.executeSQL(SQL);
+//		    if ( success > 0 )
+			mo.setEpisodetitle(mo.getEpisodetitle());
+                        mo.setOverview(mo.getOverview());
+			ortus.api.DebugLog(LogLevel.Trace2, "UpdateEpisodeMediaID: Successful");
+//		    else
+//			ortus.api.DebugLog(LogLevel.Trace2, "UpdateEpisodeMediaID: Failed media series set");
+		} else
+		    ortus.api.DebugLog(LogLevel.Trace2, "UpdateEpisodeMediaID: Fail");
+
+                return true;
+        }
+
         if ( ! mo.getSeasonno().isEmpty()) {
 //            ortus.api.DebugLog(LogLevel.Trace2, " UpdateEpisodeID: matcher found: " + matcher.groupCount());
             ortus.api.DebugLog(LogLevel.Trace2, " Series found, title: " + mo.getShowtitle() + " Season:" +  mo.getSeasonno() + " Episode: " + mo.getEpisodeno());
             titleset = false;
 //            SeasonNo = Integer.parseInt(matcher.group(1));
 //            EpisodeNo = Integer.parseInt(matcher.group(2));
-            String sql = "select e.seasonno, s.seriesid, e.episodeno, e.title, e.description from sage.episode e, sage.series s where s.seriesid = e.seriesid and lower(s.title) = '" + workSeriesTitle.toLowerCase().trim() + "' and e.seasonno = " + mo.getSeasonno() + " and e.episodeno = " + mo.getEpisodeno();
+            String sql = "select e.episodeid, e.seasonno, s.seriesid, e.episodeno, e.title, e.description from sage.episode e, sage.series s where s.seriesid = e.seriesid and lower(s.title) = '" + workSeriesTitle.toLowerCase().trim() + "' and e.seasonno = " + mo.getSeasonno() + " and e.episodeno = " + mo.getEpisodeno();
             mtv = ortus.api.executeSQLQueryArray(sql);
         } else {
-            mtv = ortus.api.executeSQLQueryArray("select e.seasonno, s.seriesid, e.episodeno, e.title, e.description from sage.episode e, sage.series s where s.seriesid = e.seriesid and episodeid not = 999 and lower(s.title) = '" + workSeriesTitle.toLowerCase() + "' and lower(e.title) = '" + workEpisodeTitle.toLowerCase() + "'");
+            mtv = ortus.api.executeSQLQueryArray("select e.episodeid, e.seasonno, s.seriesid, e.episodeno, e.title, e.description from sage.episode e, sage.series s where s.seriesid = e.seriesid and episodeid not = 999 and lower(s.title) = '" + workSeriesTitle.toLowerCase() + "' and lower(e.title) = '" + workEpisodeTitle.toLowerCase() + "'");
         }
 
         if ( mtv.size() < 1) {
 		ortus.api.DebugLog(LogLevel.Trace2, " Series: " + mo.getShowtitle() + " Episode: " + mo.getEpisodetitle() + " not found" );
 		if ( workEpisodeTitle.isEmpty())
 			workEpisodeTitle = workSeriesTitle;
-		String SQL = "delete from sage.episode where seriesid = " + series.getId() + " and  episodeid = 999 and mediaid = " + MediaFileAPI.GetMediaFileID(mo.getMedia());
+		String SQL = "delete from sage.customepisode where seriesid = " + series.getId() + " and  episodeid = 999 and mediaid = " + MediaFileAPI.GetMediaFileID(mo.getMedia());
 		ortus.api.executeSQL(SQL);
-		SQL =  "INSERT INTO sage.episode (seriesid, episodeid, seasonid, episodeno, mediaid, title,description,originalairdate,userrating,seasonno )  " +
+                SQL = "delete from sage.metadata where mediaid = " + MediaFileAPI.GetMediaFileID(mo.getMedia());
+		ortus.api.executeSQL(SQL);
+		SQL =  "INSERT INTO sage.customepisode (seriesid, episodeid, seasonid, episodeno, mediaid, title,description,originalairdate,userrating,seasonno )  " +
 		    " VALUES(" + series.getId() + ",999,0,999," + MediaFileAPI.GetMediaFileID(mo.getMedia()) + ",'" + StringEscapeUtils.escapeSql(workEpisodeTitle) +"','" + StringEscapeUtils.escapeSql(ShowAPI.GetShowDescription(mo.getMedia())) + "',";
 		if ( ShowAPI.GetOriginalAiringDate(mo.getMedia()) == 0 )
 			SQL+="'1900-01-01'";
@@ -361,19 +417,23 @@ public class database extends ortus.vars {
 			ortus.api.DebugLog(LogLevel.Trace2, "UpdateEpisodeMediaID: Failed media series set");
 
         } else {
-		String SQL ="UPDATE sage.episode SET mediaid = " + MediaFileAPI.GetMediaFileID(mo.getMedia()) + " where seasonno = " + mtv.get(0).get(0) + " and seriesid = " + mtv.get(0).get(1) + " and episodeno = " + mtv.get(0).get(2);
+                String SQL = "delete from sage.episodemedia where mediaid = " + MediaFileAPI.GetMediaFileID(mo.getMedia()) + " and episodeid = " + mtv.get(0).get(0);
+		ortus.api.executeSQL(SQL);
+              	SQL ="insert into sage.episodemedia (mediaid, episodeid) values( " + MediaFileAPI.GetMediaFileID(mo.getMedia()) + "," + mtv.get(0).get(0) + ")";
 		int success = ortus.api.executeSQL(SQL);
 		if ( success > 0 ) {
 //		    SQL = "update sage.media set mediatype = 3, mediatitle = '" + workSeriesTitle + "',episodetitle = '" + ((String)mtv.get(0).get(3)).replaceAll("'","''") + "' where mediaid = " + MediaFileAPI.GetMediaFileID(mo.getMedia());
 //		    success = ortus.api.executeSQL(SQL);
 //		    if ( success > 0 )
-			mo.setEpisodetitle((String)mtv.get(0).get(3));
-                        mo.setOverview((String)mtv.get(0).get(4));
+			mo.setEpisodetitle(mo.getEpisodetitle());
+                        mo.setOverview(mo.getOverview());
 			ortus.api.DebugLog(LogLevel.Trace2, "UpdateEpisodeMediaID: Successful");
 //		    else
 //			ortus.api.DebugLog(LogLevel.Trace2, "UpdateEpisodeMediaID: Failed media series set");
 		} else
-		    ortus.api.DebugLog(LogLevel.Trace2, "UpdateEpisodeMediaID: Failed");
+		    ortus.api.DebugLog(LogLevel.Trace2, "UpdateEpisodeMediaID: Fail");
+
+                return true;
 	}
 	return true;
     }

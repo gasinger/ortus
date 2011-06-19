@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import ortus.configurationEngine;
+import ortus.Ortus;
 import ortus.mq.EventListener;
 import ortus.mq.OrtusEvent;
 import ortus.vars.LogLevel;
@@ -54,7 +54,7 @@ public class FavoriteExcluder extends EventListener {
 		
 		FavExc.clear();
 		
-		File ef = new File(configurationEngine.getInstance().getBasePath() + java.io.File.separator + "Configuration" + java.io.File.separator + "excluder.def");
+		File ef = new File(Ortus.getInstance().getBasePath() + java.io.File.separator + "Configuration" + java.io.File.separator + "excluder.def");
 		
 		if ( ef.exists()) {
 			try{
@@ -136,7 +136,7 @@ public class FavoriteExcluder extends EventListener {
 	
 	private void WriteExcluderFile() {
 		try{
-			FileOutputStream fstream = new FileOutputStream(configurationEngine.getInstance().getBasePath() + java.io.File.separator + "Configuration" + java.io.File.separator + "excluder.def");
+			FileOutputStream fstream = new FileOutputStream(Ortus.getInstance().getBasePath() + java.io.File.separator + "Configuration" + java.io.File.separator + "excluder.def");
 			DataOutputStream out = new DataOutputStream(fstream);
 			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(out));
 			
@@ -160,7 +160,7 @@ public class FavoriteExcluder extends EventListener {
 	@OrtusEvent("RunExcluder")
 	public void RunExcluder() {
 		 
-		 ortus.api.DebugLog(LogLevel.Info, "Favorite Excluder: Starting" );
+		 ortus.api.DebugLog(LogLevel.Debug, "Favorite Excluder: Starting" );
 
 		 int totalschedule = 0;
 		 int totalsetwatched = 0;
@@ -218,17 +218,17 @@ public class FavoriteExcluder extends EventListener {
 			 if ( ExcludeAiring ) {
 				 if ( SetWatched ) {
 					 totalsetwatched++;
-					ortus.api.DebugLog(LogLevel.Info, "FE: marking " + AiringAPI.GetAiringTitle(sa) + " as watched" );
+					ortus.api.DebugLog(LogLevel.Debug, "FE: marking " + AiringAPI.GetAiringTitle(sa) + " as watched" );
 					AiringAPI.SetWatched(sa);
 				 } else {
 					 totalsetdontlike++;
-					 ortus.api.DebugLog(LogLevel.Info, "FE: marking " + AiringAPI.GetAiringTitle(sa) + " as dont like" );
+					 ortus.api.DebugLog(LogLevel.Debug, "FE: marking " + AiringAPI.GetAiringTitle(sa) + " as dont like" );
 					 AiringAPI.SetDontLike(sa);
 				 }
 			 }
 		 }
-		 ortus.api.DebugLog(LogLevel.Info, "Total Airings: " + totalschedule + "  Marked: Watched: " + totalsetwatched + " DontLike: " + totalsetdontlike);
-		 ortus.api.DebugLog(LogLevel.Info, "Favorite Excluder: Completed" );
+		 ortus.api.DebugLog(LogLevel.Debug, "Total Airings: " + totalschedule + "  Marked: Watched: " + totalsetwatched + " DontLike: " + totalsetdontlike);
+		 ortus.api.DebugLog(LogLevel.Debug, "Favorite Excluder: Completed" );
 	 }
 }
 

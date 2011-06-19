@@ -13,6 +13,7 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.MediaTracker;
 import java.awt.RenderingHints;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.awt.image.FilteredImageSource;
 import java.awt.image.ImageFilter;
@@ -27,6 +28,7 @@ import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
+import org.apache.commons.io.FilenameUtils;
 
 /**
  *
@@ -34,11 +36,23 @@ import javax.imageio.ImageIO;
  */
 public class util extends ortus.vars {
 
+    private enum ImageSize {
+        THUMBNAIL(60),
+        MEDIUM(250),
+        LARGE(450);
+
+        int longSide;
+
+        ImageSize(int longSide) {
+            this.longSide = longSide;
+         }
+    };
+    
 	public static HashMap<String,String> GetImageInfo(String imagename) {
 //		ortus.api.DebugLog(LogLevel.Trace, "GetImageInfo: for file: " + imagename);
 		File imgfile = new File(imagename);
 		if (!imgfile.exists()) {
-			ortus.api.DebugLog(LogLevel.Error,"GetImageInfo: file not found");
+			ortus.api.DebugLog(LogLevel.Error,"GetImageInfo: " + imagename + " file not found");
 			return null;
 		}
 		Image img;
@@ -110,28 +124,51 @@ public class util extends ortus.vars {
 	}
 
         public static void scale(String src, int width, int height, String dest) {
-boolean preserveAlpha=src.contains(".png");
- int imageType = !preserveAlpha ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB;
-    BufferedImage originalimage;
-        try {
-            originalimage = ImageIO.read(new File(src));
-
-    BufferedImage scaledBI = new BufferedImage(width, height, imageType);
-    Graphics2D g = scaledBI.createGraphics();
-    if (preserveAlpha) {
-       g.setComposite(AlphaComposite.Src);}
+                File x = new File(dest);
+                if ( x.exists()) {
+                    ortus.api.DebugLogTrace("ImageScale: file " + dest + " already exists, skipping");
+                }
 
 
-    g.drawImage(originalimage, 0, 0,width, height, null);
-    g.dispose();
 
-            ImageIO.write(scaledBI, "png", new File(dest));
-        } catch (IOException ex) {
-             ortus.api.DebugLog(LogLevel.Error, "TheTVDB: Scaling Poster error: " + ex.getMessage());
-           
+                boolean preserveAlpha=src.contains(".png");
+                int imageType = !preserveAlpha ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB;
+                BufferedImage originalimage;
+                try {
+                    originalimage = ImageIO.read(new File(src));
+                    BufferedImage scaledBI = new BufferedImage(width, height, imageType);
+                    Graphics2D g = scaledBI.createGraphics();
+                    if (preserveAlpha) {
+                        g.setComposite(AlphaComposite.Src);}
+
+
+                    g.drawImage(originalimage, 0, 0,width, height, null);
+                    g.dispose();
+
+                    ImageIO.write(scaledBI, "png", new File(dest));
+                } catch (IOException ex) {
+                    ortus.api.DebugLog(LogLevel.Error, "TheTVDB: Scaling Poster error: " + ex.getMessage());
+                }
         }
 
-
-
-}
+        public static void generate(String imageFileName, int longSide, String outputFileName) {
+            try {
+                BufferedImage sourceImage = ImageIO.read(new File(imageFileName));
+                int srcWidth = sourceImage.getWidth();
+                int srcHeight = sourceImage.getHeight();
+ //           for (ImageSize imageSize : ImageSize.values()) {
+                double longSideForSource = (double) Math.max(srcWidth, srcHeight);
+                double longSideForDest = (double) longSide;
+                double multiplier = longSideForDest / longSideForSource;
+                int destWidth = (int) (srcWidth * multiplier);
+                int destHeight = (int) (srcHeight * multiplier);
+                BufferedImage destImage = new BufferedImage(destWidth, destHeight,BufferedImage.TYPE_INT_RGB);
+                Graphics2D graphics = destImage.createGraphics();
+                AffineTransform affineTransform = AffineTransform.getScaleInstance(multiplier, multiplier);
+                graphics.drawRenderedImage(sourceImage, affineTransform);
+                ImageIO.write(destImage, "JPG", new File(outputFileName));
+            } catch ( Exception e) {
+                ortus.api.DebugLog(LogLevel.Error, "TheTVDB: Scaling Poster error: " + e.getMessage());
+            }
+        }
 }

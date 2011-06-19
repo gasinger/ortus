@@ -13,7 +13,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import ortus.configurationEngine;
+import ortus.Ortus;
 import sagex.api.MediaFileAPI;
 
 /**
@@ -233,7 +233,7 @@ public class DBAccess extends ortus.vars {
               ResultSetMetaData rsmd = rs.getMetaData();
 	      HashMap rechash = new HashMap();
               for ( int x = 1; x <= rsmd.getColumnCount();x++) {
-		      rechash.put(rsmd.getColumnName(x), rs.getString(x));
+		      rechash.put(rsmd.getColumnLabel(x), rs.getString(x));
               }
               ra.add(rechash);
           }
@@ -274,7 +274,7 @@ public class DBAccess extends ortus.vars {
               ResultSetMetaData rsmd = rs.getMetaData();
  	      HashMap rechash = new HashMap();
               for ( int x = 1; x <= rsmd.getColumnCount();x++) {
-		      rechash.put(rsmd.getColumnName(x), rs.getString(x));
+		      rechash.put(rsmd.getColumnLabel(x), rs.getString(x));
               }
               ra.add(rechash);
           }
@@ -296,7 +296,7 @@ public class DBAccess extends ortus.vars {
 
     public int executeSQLQueryFile(String sqlfile) {
 //        List<String> sql = ortus.util.dump.DumpLogFile(sqlfile);
-	List<String> sql = configurationEngine.getInstance().LoadJarFile(sqlfile);
+	List<String> sql = Ortus.getInstance().LoadJarFile(sqlfile);
         int totalrows = 0;
 
         StringBuffer sqlglob = new StringBuffer();
@@ -346,31 +346,32 @@ public class DBAccess extends ortus.vars {
         return null;
     }
     
-    public boolean createDB() {
-       int rc = 0;
-//       String sqlpath = ortus.api.GetProperty("ortus/basepath","") + java.io.File.separator + "sql" + java.io.File.separator;
-       String sqlpath = "/ortus/resources/";
-       ortus.api.DebugLog(LogLevel.Info, "ortusDB: building tables using connection pool");
-       try {
-         rc = executeSQLQueryFile(sqlpath + "createschema.sql");
-         rc = executeSQLQueryFile(sqlpath + "createaliases.sql");
-         rc = executeSQLQueryFile(sqlpath + "createmedia.sql");
-         rc = executeSQLQueryFile(sqlpath + "createmetadata.sql");
-         rc = executeSQLQueryFile(sqlpath + "createtv.sql");
-         rc = executeSQLQueryFile(sqlpath + "createuser.sql");
-         rc = executeSQLQueryFile(sqlpath + "createviews.sql");
-         rc = executeSQLQueryFile(sqlpath + "createscrapperlog.sql");
-         rc = executeSQLQueryFile(sqlpath + "createfanart.sql");
-         rc = executeSQLQueryFile(sqlpath + "createcache.sql");
-         rc = executeSQLQueryFile(sqlpath + "createsyslog.sql");
-	 rc = executeSQLQueryFile(sqlpath + "createactor.sql");
-
-       } catch ( Exception e2) {
-         ortus.api.DebugLog(LogLevel.Error, "ortusDB: create tables : Excetpion: " + e2);
-         return false;
-       }
-
-       ortus.api.DebugLog(LogLevel.Info, "ortusDB: create table successful");
-       return true;
-    }
+//    public boolean createDB() {
+//       int rc = 0;
+////       String sqlpath = ortus.api.GetProperty("ortus/basepath","") + java.io.File.separator + "sql" + java.io.File.separator;
+//       String sqlpath = "/ortus/resources/";
+//       ortus.api.DebugLog(LogLevel.Info, "ortusDB: building tables using connection pool");
+//       try {
+//         rc = executeSQLQueryFile(sqlpath + "createschema.sql");
+//         rc = executeSQLQueryFile(sqlpath + "createversion.sql");
+//         rc = executeSQLQueryFile(sqlpath + "createaliases.sql");
+//         rc = executeSQLQueryFile(sqlpath + "createmedia.sql");
+//         rc = executeSQLQueryFile(sqlpath + "createmetadata.sql");
+//         rc = executeSQLQueryFile(sqlpath + "createtv.sql");
+//         rc = executeSQLQueryFile(sqlpath + "createuser.sql");
+//         rc = executeSQLQueryFile(sqlpath + "createviews.sql");
+////         rc = executeSQLQueryFile(sqlpath + "createscrapperlog.sql");
+//         rc = executeSQLQueryFile(sqlpath + "createfanart.sql");
+////         rc = executeSQLQueryFile(sqlpath + "createcache.sql");
+//         rc = executeSQLQueryFile(sqlpath + "createsyslog.sql");
+//	 rc = executeSQLQueryFile(sqlpath + "createactor.sql");
+//
+//       } catch ( Exception e2) {
+//         ortus.api.DebugLog(LogLevel.Error, "ortusDB: create tables : Excetpion: " + e2);
+//         return false;
+//       }
+//
+//       ortus.api.DebugLog(LogLevel.Info, "ortusDB: create table successful");
+//       return true;
+//    }
 }

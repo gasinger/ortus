@@ -9,7 +9,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
 /**
  *
  * @author jphipps
@@ -268,4 +267,10 @@ public class Episode implements Serializable,IItem  {
     public void addCast(Cast cic) {
         cast.add(cic);
     }
+
+    @Override
+    public String toXML() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+   
 }

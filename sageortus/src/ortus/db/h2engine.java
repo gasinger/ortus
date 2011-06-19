@@ -10,6 +10,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -18,6 +19,7 @@ import org.h2.tools.Server;
 import ortus.mq.EventListener;
 import ortus.mq.OrtusEvent;
 import ortus.vars.LogLevel;
+import sagex.api.Configuration;
 import sagex.api.Global;
 import sagex.api.MediaFileAPI;
 
@@ -28,6 +30,7 @@ import sagex.api.MediaFileAPI;
 public class h2engine extends EventListener implements IEngine {
 
 	private final String H2PROTOCOL = "org.h2.Driver";
+        private int db_version = 4;
 	private String h2protocol = null;
 	private JdbcConnectionPool cp = null;
 	public boolean indexMediaRunning = false;
@@ -40,18 +43,27 @@ public class h2engine extends EventListener implements IEngine {
 		super();
 
 		boolean dbstarted = false;
-		h2protocol = ortus.api.GetProperty("h2protocol", "");
 
+                ortus.api.DebugLogTrace("h2server is " + Configuration.GetServerProperty("ortus/h2server", "false"));
+
+                if (Configuration.GetServerProperty("ortus/h2server", "false").equalsIgnoreCase("true") && ortus.util.ui.IsClient()) {
+                    String tcpport = Configuration.GetServerProperty("h2/tcp_port", "9093");
+                    h2protocol="jdbc:h2:tcp://" + Global.GetServerAddress() + ":" + tcpport + "/STVs/Ortus/db/ortusDB";
+                } else {
+                    h2protocol="jdbc:h2:STVs/Ortus/db/ortusDB;CACHE_SIZE=128000";
+                }
+                ortus.api.DebugLogTrace("H2: Protocol: " + h2protocol);
+
+                if ( ! Configuration.GetServerProperty("ortus/h2protocol", "").isEmpty()) {
+                    h2protocol = Configuration.GetServerProperty("ortus/h2protocol", "");
+                    ortus.api.DebugLogTrace("H2: Protocol override using: " + h2protocol);
+                }
+
+                
+                
 		if ( ! h2protocol.isEmpty()) {
 			dbstarted = connectDB(h2protocol, "sage", "sage");
 		}
-
-//		if ( ! dbstarted && ortus.util.ui.IsClient()) {
-//			h2protocol="jdbc:h2:tcp://" + Global.GetServerAddress() + "/STVs/Ortus/db/ortusDB";
-//			dbstarted = connectDB(h2protocol, "sage", "sage");
-//			if ( dbstarted )
-//				ortus.api.SetProperty("remotehost", Global.GetServerAddress());
-//		}
 
 		if ( !dbstarted ) {
 			h2protocol="jdbc:h2:STVs/Ortus/db/ortusDB";
@@ -74,7 +86,50 @@ public class h2engine extends EventListener implements IEngine {
 			ortus.api.DebugLog(LogLevel.Info, "Ortus: Database not found, creating...");
 			cleandb = true;
 			createDB();
+		} else {
+                   int workversion = 0;
+                   result = executeSQLQuery("SELECT table_name  FROM INFORMATION_SCHEMA.TABLES where table_schema = 'SAGE' and table_name = 'VERSION'");
+                   if ( result.size() > 0) {
+                       result = executeSQLQuery("SELECT db_version FROM sage.version");
+                       if ( result.size() > 0)
+                            workversion = Integer.parseInt((String)result.get(0));
+                   }
+                   ortus.api.DebugLogTrace("Ortus: Current db_version: " + workversion + " Jar db_version: " + db_version);
+                   if ( workversion < db_version) {
+                       if ( workversion == 1 && db_version == 2 ) {
+                           ortus.api.DebugLog(LogLevel.Info, "ortusDB: Upgrading from version 1 to 2");
+                           String sqlpath = "/ortus/resources/";
+                           int rc = executeSQLQueryJar(sqlpath + "upgradeFrom1To2.sql");
+                           executeSQL("update sage.version set db_version = 2");
+                       } else if ( workversion == 2 && db_version == 3 ) {
+                           ortus.api.DebugLog(LogLevel.Info, "ortusDB: Upgrading from version 2 to 3");
+                           String sqlpath = "/ortus/resources/";
+                           int rc = executeSQLQueryJar(sqlpath + "upgradeFrom2To3.sql");
+                           executeSQL("update sage.version set db_version = 3");
+                       }else if ( workversion == 3 && db_version == 4 ) {
+                           ortus.api.DebugLog(LogLevel.Info, "ortusDB: Upgrading from version 3 to 4");
+                           String sqlpath = "/ortus/resources/";
+                           int rc = executeSQLQueryJar(sqlpath + "upgradeFrom3To4.sql");
+                       } else {
+                           ortus.api.DebugLog(LogLevel.Info, "Ortus: Database older version, re-creating...");
+                           cleandb = true;
+                           reCreateDB();
+                       }
+                   }
+//                   else {
+//                       reCreateAliases();
+//                   }
+                }
+                    
+                result = executeSQLQuery("SELECT count(*) FROM sage.media");
+		if (result.size() > 0) {
+                    int nrows = Integer.parseInt((String)result.get(0));
+                    if ( nrows == 0) {
+                        ortus.api.DebugLogTrace("No Media Objects found in the db");
+                        cleandb=true;
+                    }
 		}
+
 
 //                ortus.api.DebugLog(LogLevel.Trace, "OrtusDB: Starting web interface");
 //                Thread webThread = new Thread() {
@@ -103,7 +158,7 @@ public class h2engine extends EventListener implements IEngine {
 	}
 
 	private boolean connectDB(String connectinfo, String user, String passwd) {
-		ortus.api.DebugLog(LogLevel.Debug, "OrtusDB: Connecting to: " + connectinfo);
+		ortus.api.DebugLog(LogLevel.Info, "OrtusDB: Connecting to: " + connectinfo);
 		if (!loadDriver()) {
 			ortus.api.DebugLog(LogLevel.Fatal, "h2 jar files are missing");
 			return false;
@@ -129,7 +184,7 @@ public class h2engine extends EventListener implements IEngine {
 			if ( conn != null)
 				try { conn.close(); } catch(Exception e) {}
 		}
-		ortus.api.DebugLog(LogLevel.Debug, "OrtusDB: Successfully connected to " + h2protocol);
+		ortus.api.DebugLog(LogLevel.Info, "OrtusDB: Successfully connected to " + h2protocol);
 		return true;
 	}
 
@@ -164,40 +219,40 @@ public class h2engine extends EventListener implements IEngine {
 		}
 	}
 
-	public List<Object> GetStatus() {
-		List<Object> status = new ArrayList<Object>();
+	public HashMap GetStatus() {
+		HashMap status = new HashMap();
 
 		ortus.api.DebugLog(LogLevel.Trace2, "database()");
 		List<List> result = executeSQLQueryArray("call database()");
 		if (result.size() > 0) {
-			status.add("Database Name: " + result.get(0).get(0));
+			status.put("name", result.get(0).get(0));
 		}
 		ortus.api.DebugLog(LogLevel.Trace2, "db path");
 		result = executeSQLQueryArray("call database_path()");
 		if (result.size() > 0) {
-			status.add("Database Path: " + result.get(0).get(0));
+			status.put("path",result.get(0).get(0));
 		}
 		ortus.api.DebugLog(LogLevel.Trace2, "memused)");
 		result = executeSQLQueryArray("call memory_used()");
 		if (result.size() > 0) {
-			status.add("Memory Used: " + result.get(0).get(0));
+			status.put("memory_used",result.get(0).get(0));
 		}
 		ortus.api.DebugLog(LogLevel.Trace2, "memfree");
 		result = executeSQLQueryArray("call memory_free()");
 		if (result.size() > 0) {
-			status.add("Memory Free: " + result.get(0).get(0));
+			status.put("memory_free",result.get(0).get(0));
 		}
 		ortus.api.DebugLog(LogLevel.Trace2, "sessions");
 		result = executeSQLQueryArray("select count(*) from INFORMATION_SCHEMA.SESSIONS");
 		if (result.size() > 0) {
-			status.add("Active Sessions: " + result.get(0).get(0));
+			status.put("sessions",result.get(0).get(0));
 		}
 		ortus.api.DebugLog(LogLevel.Trace2, "sagemediacount");
 		result = executeSQLQueryArray("select count(*) from sage.media");
 		if (result.size() > 0) {
-			status.add("Total Media Objects: " + result.get(0).get(0));
+			status.put("mediaobjects",result.get(0).get(0));
 		}
-		status.add("Procotol: " + h2protocol);
+		status.put("protocol",h2protocol);
 
 		return status;
 	}
@@ -242,7 +297,7 @@ public class h2engine extends EventListener implements IEngine {
 	 * @return An array of results
 	 */
 	public List<Object> executeSQLQuery(String sql) {
-		List<Object> ra = new ArrayList<Object>();
+		List<Object> ra = new LinkedList<Object>();
 		Connection conn = GetConnection();
 		Statement stmt = null;
 		ResultSet rs = null;
@@ -307,7 +362,7 @@ public class h2engine extends EventListener implements IEngine {
 		Connection conn = GetConnection();
 		Statement stmt = null;
 		ResultSet rs = null;
-		List<Object> ra = new ArrayList<Object>();
+		List<Object> ra = new LinkedList<Object>();
 		try {
 			stmt = conn.createStatement();
 			rs = stmt.executeQuery(sql);
@@ -362,7 +417,7 @@ public class h2engine extends EventListener implements IEngine {
 	 * @return An array of results
 	 */
 	public List<List> executeSQLQueryArray(String sql) {
-		List<List> ra = new ArrayList<List>();
+		List<List> ra = new LinkedList<List>();
 		Connection conn = GetConnection();
 		Statement stmt = null;
 		ResultSet rs = null;
@@ -415,7 +470,7 @@ public class h2engine extends EventListener implements IEngine {
 			return (List) ci;
 		}
 
-		List<List> ra = new ArrayList<List>();
+		List<List> ra = new LinkedList<List>();
 		Connection conn = GetConnection();
 		Statement stmt = null;
 		ResultSet rs = null;
@@ -464,7 +519,7 @@ public class h2engine extends EventListener implements IEngine {
 	 * @return An array of results
 	 */
 	public List<HashMap> executeSQLQueryHash(String sql) {
-		List<HashMap> ra = new ArrayList<HashMap>();
+		List<HashMap> ra = new LinkedList<HashMap>();
 		Connection conn = GetConnection();
 		Statement stmt = null;
 		ResultSet rs = null;
@@ -476,7 +531,7 @@ public class h2engine extends EventListener implements IEngine {
 				ResultSetMetaData rsmd = rs.getMetaData();
 				HashMap rechash = new HashMap();
 				for (int x = 1; x <= rsmd.getColumnCount(); x++) {
-					rechash.put(rsmd.getColumnName(x), rs.getString(x));
+					rechash.put(rsmd.getColumnLabel(x), rs.getString(x));
 				}
 				ra.add(rechash);
 			}
@@ -518,7 +573,7 @@ public class h2engine extends EventListener implements IEngine {
 			return (List) ci;
 		}
 
-		List<HashMap> ra = new ArrayList<HashMap>();
+		List<HashMap> ra = new LinkedList<HashMap>();
 		Connection conn = GetConnection();
 		Statement stmt = null;
 		ResultSet rs = null;
@@ -530,7 +585,7 @@ public class h2engine extends EventListener implements IEngine {
 				ResultSetMetaData rsmd = rs.getMetaData();
 				HashMap rechash = new HashMap();
 				for (int x = 1; x <= rsmd.getColumnCount(); x++) {
-					rechash.put(rsmd.getColumnName(x), rs.getString(x));
+					rechash.put(rsmd.getColumnLabel(x), rs.getString(x));
 				}
 				ra.add(rechash);
 			}
@@ -602,7 +657,7 @@ public class h2engine extends EventListener implements IEngine {
 	 * @return Media Object Array
 	 */
 	public List<Object> getMediaFilesSQL(String sql) {
-		List<Object> mfl = new ArrayList<Object>();
+		List<Object> mfl = new LinkedList<Object>();
 		Connection conn = GetConnection();
 		Statement stmt = null;
 		ResultSet rs = null;
@@ -651,18 +706,20 @@ public class h2engine extends EventListener implements IEngine {
 		ortus.api.DebugLog(LogLevel.Info, "ortusDB: building tables using connection pool");
 		try {
 			rc = executeSQLQueryJar(sqlpath + "createschema.sql");
+                        rc = executeSQLQueryJar(sqlpath + "createversion.sql");
 			rc = executeSQLQueryJar(sqlpath + "createaliases.sql");
 			rc = executeSQLQueryJar(sqlpath + "createmedia.sql");
+                        rc = executeSQLQueryJar(sqlpath + "createmetadata.sql");
 			rc = executeSQLQueryJar(sqlpath + "createtv.sql");
 			rc = executeSQLQueryJar(sqlpath + "createuser.sql");
-			rc = executeSQLQueryJar(sqlpath + "createscrapperlog.sql");
+//			rc = executeSQLQueryJar(sqlpath + "createscrapperlog.sql");
 			rc = executeSQLQueryJar(sqlpath + "createfanart.sql");
-			rc = executeSQLQueryJar(sqlpath + "createcache.sql");
-			rc = executeSQLQueryJar(sqlpath + "createsyslog.sql");
+//			rc = executeSQLQueryJar(sqlpath + "createcache.sql");
+			rc = executeSQLQueryJar(sqlpath + "createutils.sql");
 			rc = executeSQLQueryJar(sqlpath + "createactor.sql");
 			rc = executeSQLQueryJar(sqlpath + "createmenu.sql");
 			rc = executeSQLQueryJar(sqlpath + "createmusic.sql");
-                        rc = executeSQLQueryJar(sqlpath + "createmovies.sql");
+//                        rc = executeSQLQueryJar(sqlpath + "createmovies.sql");
 			rc = executeSQLQueryJar(sqlpath + "createviews.sql");
 
 		} catch (Exception e2) {
@@ -674,12 +731,91 @@ public class h2engine extends EventListener implements IEngine {
 		return true;
 	}
 
+        @OrtusEvent("ClearDB")
+	public boolean clearDB() {
+		int rc = 0;
+//       String sqlpath = ortus.api.GetProperty("ortus/basepath","") + java.io.File.separator + "sql" + java.io.File.separator;
+		String sqlpath = "/ortus/resources/";
+		ortus.api.DebugLog(LogLevel.Info, "ortusDB: cleardb");
+		try {
+			rc = executeSQLQueryJar(sqlpath + "cleardb.sql");
+		} catch (Exception e2) {
+			ortus.api.DebugLog(LogLevel.Error, "ortusDB: cleardb : Excetpion: " ,e2);
+			return false;
+		}
+
+		ortus.api.DebugLog(LogLevel.Info, "ortusDB: cleardb successful");
+		return true;
+	}
+        
+        @OrtusEvent("ReCreateDB")
+        public boolean reCreateDB() {
+            ortus.api.DebugLog(LogLevel.Info, "ortusDB: dropping tables using connection pool");
+            String sqlpath = "/ortus/resources/";
+
+            try {
+			int rc = executeSQLQueryJar(sqlpath + "dropViews.sql");
+                        rc = executeSQLQueryJar(sqlpath + "createaliases.sql");
+                        rc = executeSQLQueryJar(sqlpath + "createversion.sql");
+			rc = executeSQLQueryJar(sqlpath + "createmedia.sql");
+                        rc = executeSQLQueryJar(sqlpath + "createmetadata.sql");
+			rc = executeSQLQueryJar(sqlpath + "createtv.sql");
+			rc = executeSQLQueryJar(sqlpath + "createuser.sql");
+//			rc = executeSQLQueryJar(sqlpath + "createscrapperlog.sql");
+			rc = executeSQLQueryJar(sqlpath + "createfanart.sql");
+//			rc = executeSQLQueryJar(sqlpath + "createcache.sql");
+			rc = executeSQLQueryJar(sqlpath + "createutils.sql");
+			rc = executeSQLQueryJar(sqlpath + "createactor.sql");
+			rc = executeSQLQueryJar(sqlpath + "createmenu.sql");
+			rc = executeSQLQueryJar(sqlpath + "createmusic.sql");
+//                        rc = executeSQLQueryJar(sqlpath + "createmovies.sql");
+			rc = executeSQLQueryJar(sqlpath + "createviews.sql");
+		} catch (Exception e2) {
+			ortus.api.DebugLog(LogLevel.Error, "ortusDB: create tables : Excetpion: " ,e2);
+			return false;
+		}
+
+		ortus.api.DebugLog(LogLevel.Info, "ortusDB: drop tables successful");
+		return true;
+        }
+
+         public boolean reCreateAliases() {
+            ortus.api.DebugLog(LogLevel.Info, "ortusDB: re-creating aliases");
+            String sqlpath = "/ortus/resources/";
+
+            try {
+			int rc = executeSQLQueryJar(sqlpath + "createaliases.sql");
+		} catch (Exception e2) {
+			ortus.api.DebugLog(LogLevel.Error, "ortusDB: create tables : Excetpion: " ,e2);
+			return false;
+		}
+
+		ortus.api.DebugLog(LogLevel.Info, "ortusDB: re-creating aliases successful");
+		return true;
+        }
+
+        @OrtusEvent("AnalyzeDB")
+        public boolean AnalyzeDB() {
+            ortus.api.DebugLog(LogLevel.Info, "ortusDB: Analyze database");
+            String sqlpath = "/ortus/resources/";
+
+            try {
+			int rc = executeSQLQueryJar(sqlpath + "analyze.sql");
+		} catch (Exception e2) {
+			ortus.api.DebugLog(LogLevel.Error, "ortusDB: analyze : Excetpion: " ,e2);
+			return false;
+		}
+
+		ortus.api.DebugLog(LogLevel.Info, "ortusDB: database analyze successful");
+		return true;
+        }
+
 	@OrtusEvent("BackupDB")
 	public boolean backupDB() {
 
 		ortus.api.DebugLog(LogLevel.Info, "backupDB: Performing database backup");
 		String currentdate = new java.text.SimpleDateFormat("yyyyMMddhhmm").format(new Date());
-		String backuppath = ortus.api.GetProperty("ortus/basepath") + java.io.File.separator + "backups";
+		String backuppath = Configuration.GetServerProperty("ortus/backup/folder", ortus.api.GetProperty("ortus/basepath") + java.io.File.separator + "backups");
 		File bp = new File(backuppath);
 		if (!bp.exists()) {
 			bp.mkdirs();

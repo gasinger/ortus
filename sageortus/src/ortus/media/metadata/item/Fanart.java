@@ -5,21 +5,38 @@
 
 package ortus.media.metadata.item;
 
+import java.io.Serializable;
+
 /**
  *
  * @author jphipps
  */
-public class Fanart {
+public class Fanart implements Serializable {
+    private int id;
     private String metadataid;
     private int default_ind;
     private int height;
     private int width;
-    private int imagetype;
+    private String imagetype;
     private String type;
     private String url;
     private String file;
+    private long mediasize;
 
-    public Fanart(String metadataid,int default_ind,int height,int width, int imagetype,String type,String url, String file) {
+    public Fanart(int id, String metadataid,int default_ind,int height,int width, String imagetype,String type,String url, String file, long mediasize) {
+        this.id = id;
+        this.metadataid = metadataid;
+        this.default_ind = default_ind;
+        this.height = height;
+        this.width = width;
+        this.imagetype = imagetype;
+        this.type = type;
+        this.url = url;
+        this.file = file;
+        this.mediasize = mediasize;
+    }
+
+    public Fanart(String metadataid,int default_ind,int height,int width, String imagetype,String type,String url, String file) {
         this.metadataid = metadataid;
         this.default_ind = default_ind;
         this.height = height;
@@ -89,14 +106,14 @@ public class Fanart {
     /**
      * @return the imagetype
      */
-    public int getImagetype() {
+    public String getImagetype() {
         return imagetype;
     }
 
     /**
      * @param imagetype the imagetype to set
      */
-    public void setImagetype(int imagetype) {
+    public void setImagetype(String imagetype) {
         this.imagetype = imagetype;
     }
 
@@ -140,5 +157,33 @@ public class Fanart {
      */
     public void setFile(String file) {
         this.file = file;
+    }
+
+    /**
+     * @return the id
+     */
+    public int getId() {
+        return id;
+    }
+
+    /**
+     * @param id the id to set
+     */
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    /**
+     * @return the mediasize
+     */
+    public long getMediasize() {
+        return mediasize;
+    }
+
+    /**
+     * @param mediasize the mediasize to set
+     */
+    public void setMediasize(long mediasize) {
+        this.mediasize = mediasize;
     }
 }

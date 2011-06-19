@@ -7,6 +7,7 @@ package ortus.onlinescrapper.tools;
 
 import java.io.*;
 import java.net.*;
+import org.apache.commons.io.IOUtils;
 import sagex.api.Configuration;
 
 public class urldownload extends ortus.vars {
@@ -21,7 +22,7 @@ public class urldownload extends ortus.vars {
 
 		long t0 = System.currentTimeMillis();
 
-		localFileName = ortus.util.scrubString.ScrubFileName(localFileName);
+		localFileName = ortus.util.string.ScrubFileName(localFileName);
 
                 if ( destinationDir.trim().endsWith(java.io.File.separator))
                     downloadfile = destinationDir.trim() + localFileName;
@@ -59,6 +60,7 @@ public class urldownload extends ortus.vars {
 			uCon.setRequestProperty("User-Agent", "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008072820 Firefox/3.0.1");
 			uCon.connect();
                         uCon.setReadTimeout(60000);
+                        uCon.setConnectTimeout(60000);
 
 			if (uCon.getResponseCode() != uCon.HTTP_OK) {
 				if (uCon.getResponseCode() == uCon.HTTP_NOT_FOUND) {
@@ -71,17 +73,22 @@ public class urldownload extends ortus.vars {
 			}
 
 			is = uCon.getInputStream();
+
 			outStream = new BufferedOutputStream(new FileOutputStream(downloadfile));
 
-			buf = new byte[size];
-			ortus.api.DebugLog(LogLevel.Trace2, "Staring download: " + fAddress);
+//			buf = new byte[size];
+			ortus.api.DebugLog(LogLevel.Trace2, "Starting download: " + fAddress);
 
-			while ((ByteRead = is.read(buf)) != -1) {
-				outStream.write(buf, 0, ByteRead);
-				ByteWritten += ByteRead;
-			}
+                        IOUtils.copy(is, outStream);
+
+                        outStream.flush();
+                        outStream.close();
+//			while ((ByteRead = is.read(buf)) != -1) {
+//				outStream.write(buf, 0, ByteRead);
+//				ByteWritten += ByteRead;
+//			}
 			long t1 = System.currentTimeMillis() - t0;
-			ortus.api.DebugLog(LogLevel.Trace, "Successful Download File name:\"" + downloadfile + "\" No ofbytes: " + ByteWritten + " Time: " + t1 + " ms");
+			ortus.api.DebugLog(LogLevel.Trace, "Successful Download File name:\"" + downloadfile + "\" No ofbytes: " + df.length() + " Time: " + t1 + " ms");
 		} catch (Exception e) {
 			ortus.api.DebugLog(LogLevel.Error, "http download exception occured: " + e);
 			try {
@@ -107,11 +114,20 @@ public class urldownload extends ortus.vars {
 	}
 
 	public static String fileDownload(String fAddress, String destinationDir) {
+                String fileName="";
 
 		int slashIndex = fAddress.lastIndexOf('/');
 		int periodIndex = fAddress.lastIndexOf('.');
 
-		String fileName = fAddress.substring(slashIndex + 1);
+                if ( fAddress.contains("themoviedb") &&
+                     fAddress.endsWith("jpg")) {
+                    int keyend = fAddress.substring(0,slashIndex+1).lastIndexOf("/");
+                    int keystart = fAddress.substring(0,keyend).lastIndexOf("/") + 1;
+                    String key = fAddress.substring(keystart, keyend);
+                    fileName=key.substring(key.length()-4) + "_";
+                }
+
+		fileName+=fAddress.substring(slashIndex + 1);
 
 		if (periodIndex >= 1 && slashIndex >= 0 && slashIndex < fAddress.length() - 1) {
 			return fileUrl(fAddress, fileName, destinationDir);

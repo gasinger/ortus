@@ -5,6 +5,7 @@
 
 package ortus.ui.menu;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -17,7 +18,7 @@ import sagex.UIContext;
  * @author jphipps
  *
  */
-class MenuItem extends ortus.vars {
+class MenuItem extends ortus.vars implements Serializable {
 	private HashMap<String,SubMenuItem> SubMenuItems = new HashMap<String,SubMenuItem>();
 	private HashMap<String,HashMap<String,MenuItemElement>> MenuItemElements = new HashMap<String,HashMap<String,MenuItemElement>>();
 	private String Title;
@@ -493,7 +494,7 @@ class MenuItem extends ortus.vars {
 	}
 }
 
-class SubMenuItem extends ortus.vars {
+class SubMenuItem extends ortus.vars implements Serializable {
         /*
          * MediaTypes:
          *      0 - General

@@ -7,6 +7,7 @@ package ortus.onlinescrapper.themoviedb;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.StartElement;
@@ -35,28 +36,32 @@ public void SetSearchLimit(int searchLimit) {
 	this.searchLimit = searchLimit;
 }
 
-public HashMap<String,SearchResult> Search(String title) {
+public HashMap<String,Movie> Search(String title, String year) {
 	long t0 = System.currentTimeMillis();
-	HashMap<String,SearchResult> results = new HashMap<String,SearchResult>();
+	HashMap<String,Movie> results = new HashMap<String,Movie>();
 
-	HashMap<String,SearchResult> tresults = tp.Search(title,searchLimit);
-        for ( SearchResult y : tresults.values())
-            if ( results.get(y.getTitle()) == null)
-                results.put(y.getTitle(),y);
+	List<Movie> tresults = tp.Search(title,year,searchLimit);
+        for ( Movie y : tresults)
+            if ( results.get(y.getName()) == null) {
+                results.put(y.getName(),y);
+                if ( ! y.getAlternateName().isEmpty())
+                    results.put(y.getAlternateName(), y);
+                if ( ! y.getOriginalName().isEmpty())
+                    results.put(y.getOriginalName(),y);
+            }
 
+//	List<Movie> gresults = gp.Search(title, searchLimit);
+//	for ( Movie y : gresults)
+//            if ( results.get(y.getName()) == null)
+//		results.put(y.getName(),y);
 
-	HashMap<String,SearchResult> gresults = gp.Search(title, searchLimit);
-	for ( SearchResult y : gresults.values())
-            if ( results.get(y.getTitle()) == null)
-		results.put(y.getTitle(),y);
-
-	HashMap<String,SearchResult> iresults = ip.Search(title, searchLimit);
-	for ( SearchResult y : iresults.values() )
-            if ( results.get(y.getTitle()) == null)
-                results.put(y.getTitle(),y);
+	List<Movie> iresults = ip.Search(title, year, searchLimit);
+	for ( Movie y : iresults)
+            if ( results.get(y.getName()) == null)
+                results.put(y.getName(),y);
 	
 	long ttotal = System.currentTimeMillis() - t0;
-	ortus.api.DebugLog(LogLevel.Info, "TheMovieDB: Search returned " + results.size() + " in " + ttotal + " ms");
+	ortus.api.DebugLog(LogLevel.Info, "MetadataSearch: Search returned " + results.size() + " in " + ttotal + " ms");
 
 	return results;
 }
@@ -66,33 +71,33 @@ public Movie GetDetail(String key) {
 	ortus.api.DebugLog(LogLevel.Info,"GetDetail: " + key);
 	Movie cacheitem = null;
 	String[] keyparts = key.split(":");
-	if ( keyparts[0].equals("imdb")) {
-            cacheitem = database.GetCacheMetadataIMDB(keyparts[1]);
-   	    if ( cacheitem != null ) {
-		return cacheitem;
-	    }
-	    cacheitem = GetItemDetailByIMDB(keyparts[1]);
+	if ( keyparts[0].trim().equals("imdb")) {
+//            cacheitem = database.GetCacheMetadataIMDB(keyparts[1]);
+//   	    if ( cacheitem != null ) {
+//		return cacheitem;
+//	    }
+	    cacheitem = GetItemDetailByIMDB(keyparts[1].trim());
 //	    if ( cacheitem.getImdbid().isEmpty()) {
 //		    cacheitem = ip.GetItemDetailByIMDB(keyparts[1]);
 //	    }
-	} else if (keyparts[0].equalsIgnoreCase("themoviedb")) {
+	} else if (keyparts[0].trim().equalsIgnoreCase("themoviedb")) {
             try {
-                cacheitem = database.GetCacheMetadataTMDB(keyparts[1]);
-                if ( cacheitem != null ) {
-                    return cacheitem;
-                }
-                cacheitem = GetItemDetailByTMDB(keyparts[1]);
+//                cacheitem = database.GetCacheMetadataTMDB(keyparts[1]);
+//                if ( cacheitem != null ) {
+//                    return cacheitem;
+//                }
+                cacheitem = GetItemDetailByTMDB(keyparts[1].trim());
                 if ( cacheitem.isMetadatafound()) {
                     if ( cacheitem.getImdbid() != null) {
                             Movie tempmovie = ip.GetItemDetailByIMDB(cacheitem.getImdbid());
                             if ( tempmovie != null) {
                                 if ( tempmovie.getCertification() != null)
                                         cacheitem.setCertification(tempmovie.getCertification());
-                                if ( cacheitem.GetCast().size() == 0) {
-                                        for ( CastItem ci : tempmovie.GetCast()) {
-                                                cacheitem.AddCast(ci.GetId(),ci.GetName(), ci.GetJob(), ci.GetCharacter());
-                                        }
-                                }
+//                                if ( cacheitem.GetCast().size() == 0) {
+//                                        for ( CastItem ci : tempmovie.GetCast()) {
+//                                                cacheitem.AddCast(ci.GetId(),ci.GetName(), ci.GetJob(), ci.GetCharacter());
+//                                        }
+//                                }
                             }
                     }
                 }
@@ -101,7 +106,7 @@ public Movie GetDetail(String key) {
             }
 	}
 
-        database.cacheMetadata(cacheitem);
+//        database.cacheMetadata(cacheitem);
 
 	ortus.api.DebugLog(LogLevel.Info,"GetDetail: Complete");
 	
@@ -189,7 +194,7 @@ public static Movie parseNextMovie(XMLEventReader xmlReader) throws XMLStreamExc
 		    movie = new Movie();
 		} else if (tag.equalsIgnoreCase("name")) {
 		    movie.setName(XMLHelper.getCData(xmlReader));
-		} else if (tag.equalsIgnoreCase("alternate_name")) {
+		} else if (tag.equalsIgnoreCase("alternative_name")) {
 		    movie.setAlternateName(XMLHelper.getCData(xmlReader));
 		} else if (tag.equalsIgnoreCase("original_name")) {
 		    movie.setOriginalName(XMLHelper.getCData(xmlReader));
@@ -235,6 +240,9 @@ public static Movie parseNextMovie(XMLEventReader xmlReader) throws XMLStreamExc
 			String itype = null;
 			String isize = null;
 			String iurl = null;
+                        String iid = null;
+                        int iwidth = 0;
+                        int iheight = 0;
 			Iterator<Attribute> attributes = se.getAttributes();
 			while (attributes.hasNext()) {
 				Attribute attribute = attributes.next();
@@ -244,10 +252,14 @@ public static Movie parseNextMovie(XMLEventReader xmlReader) throws XMLStreamExc
 				   isize = attribute.getValue();
 				if (attribute.getName().toString().equals("url"))
 				   iurl = attribute.getValue();
+                                if (attribute.getName().toString().equals("id"))
+				   iid = attribute.getValue();
 			}
-			movie.AddImage(itype,isize,iurl);
+                        if ( ! isize.equalsIgnoreCase("cover"))
+                            movie.AddImage(itype,isize,iurl,iid, iwidth, iheight);
 		} else if (tag.equalsIgnoreCase("person")) {
 			String id = null;
+                        int wId = 0;
 			String name = null;
 			String job = null;
 			String character = null;
@@ -263,7 +275,8 @@ public static Movie parseNextMovie(XMLEventReader xmlReader) throws XMLStreamExc
 				if (attribute.getName().toString().equals("character"))
 				   character = attribute.getValue();
 			}
-			movie.AddCast(id, name, job, character);
+                        try { wId = Integer.parseInt(id); } catch ( Exception e) {}
+			movie.AddCast(wId, name, job, character);
 		}
 	    } else if (event.isEndElement()) {
 		if (event.toString().equalsIgnoreCase("</movie>")) {
@@ -292,6 +305,10 @@ public static void parseNextPerson(XMLEventReader xmlReader, CastItem ci) throws
 		    ci.setBirthday(XMLHelper.getCData(xmlReader));
 		} else if (tag.equalsIgnoreCase("birthplace")) {
 		    ci.setBirthplace(XMLHelper.getCData(xmlReader));
+                } else if (tag.equalsIgnoreCase("known_movies")) {
+                    ci.setKnown_movies(XMLHelper.getCDataInt(xmlReader));
+                } else if (tag.equalsIgnoreCase("biography")) {
+                    ci.setBiography(XMLHelper.getCData(xmlReader));
 		} else if (tag.equalsIgnoreCase("movie")) {
 			HashMap<String,String> film = new HashMap<String,String>();
 			Iterator<Attribute> attributes = se.getAttributes();
@@ -305,6 +322,10 @@ public static void parseNextPerson(XMLEventReader xmlReader, CastItem ci) throws
 				   film.put("character", attribute.getValue());
 				if (attribute.getName().toString().equals("job"))
 				   film.put("job",attribute.getValue());
+                                if ( attribute.getName().toString().equalsIgnoreCase("poster"))
+                                    film.put("poster",attribute.getValue());
+                                if (attribute.getName().toString().equalsIgnoreCase("url"))
+                                    film.put("url",attribute.getValue());
 			}
 			ci.AddFilms(film);
 		} else if (tag.equalsIgnoreCase("image")) {
@@ -318,6 +339,8 @@ public static void parseNextPerson(XMLEventReader xmlReader, CastItem ci) throws
 				   image.put("size",attribute.getValue());
 				if (attribute.getName().toString().equals("url"))
 				   image.put("url",attribute.getValue());
+                                if (attribute.getName().toString().equals("id"))
+				   image.put("id",attribute.getValue());
 			}
 			ci.AddImages(image);
 		}

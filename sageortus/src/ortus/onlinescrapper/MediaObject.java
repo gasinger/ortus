@@ -8,10 +8,16 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.sql.Connection;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
+import org.apache.commons.dbutils.DbUtils;
+import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.lang.StringEscapeUtils;
+import ortus.onlinescrapper.htbackdrops.HTBackdrops;
 import ortus.onlinescrapper.themoviedb.CastItem;
 import ortus.onlinescrapper.themoviedb.ImageItem;
 import ortus.onlinescrapper.themoviedb.Movie;
@@ -35,6 +41,7 @@ public class MediaObject {
 	private int metadata = 0;
 	private int fanart = 0;
 	private int scantype = 0;
+        private boolean isTV = false;
 	private boolean likely_tv = false;
 	private MediaType mediatype = MediaType.None;
 	private MediaGroup mediagroup = MediaGroup.Imported;
@@ -53,16 +60,19 @@ public class MediaObject {
 	 * Video Metadata
 	 */
 	private String showtitle = "";
+        private String year = "";
 	private String episodetitle = "";
 	private String alternatename = "";
 	private String seasonno = "";
 	private String episodeno = "";
+        private String seriesid = "";
+        private String episodeid = "";
 	private String type = "";
 	private String overview = "";
-	private float rating = 5;
+	private int rating = 5;
 	private String rated = "";
 	private String releasedate = "1970-01-01";
-	private String runtime = "";
+	private long runtime = 0;
 	private String trailer = "";
 	private String metadatasource = "";
 	private boolean metadatafound = false;
@@ -75,6 +85,10 @@ public class MediaObject {
 	private List<ImageItem> images = new ArrayList<ImageItem>();
 	private List<CastItem> cast = new ArrayList<CastItem>();
 	private Properties mp = new Properties();
+        private boolean convertSageType = false;
+
+        private String sageCategory = null;
+        private String sageSubCategory = null;
 	
 	public MediaObject() {
 	}
@@ -84,11 +98,13 @@ public class MediaObject {
 		mediafile = mo;
 		showtitle = MediaFileAPI.GetMediaTitle(mo);
 		metadatasource = "Sage";
-		if (MediaFileAPI.IsTVFile(mo)) {
+                if ( MediaFileAPI.IsTVFile(mediafile)) {
 			mediatype = MediaType.Recording;
-			mediagroup = MediaGroup.Recorded;
-			episodetitle = ShowAPI.GetShowEpisode(mo);
-		} else if ( MediaFileAPI.IsPictureFile(mo)) {
+                        mediagroup = MediaGroup.Recorded;
+                        episodetitle = ShowAPI.GetShowEpisode(mo);
+                        seasonno = String.valueOf(ShowAPI.GetShowSeasonNumber(mo));
+                        episodeno = String.valueOf(ShowAPI.GetShowEpisodeNumber(mo));                                                
+        	} else if ( MediaFileAPI.IsPictureFile(mo)) {
 			mediatype = MediaType.Picture;
 		} else if ( MediaFileAPI.IsMusicFile(mo)) {
 			mediatype = MediaType.Music;
@@ -100,6 +116,7 @@ public class MediaObject {
 			songtitle = MediaFileAPI.GetMediaTitle(mo);
 			albumyear = AlbumAPI.GetAlbumYear(album);
 		}
+                runtime = ShowAPI.GetShowDuration(mo);
 		overview = ShowAPI.GetShowDescription(mo);
 		rated = ShowAPI.GetShowRated(mo);
 	}
@@ -375,14 +392,14 @@ public class MediaObject {
 	/**
 	 * @return the rating
 	 */
-	public float getRating() {
+	public int getRating() {
 		return rating;
 	}
 
 	/**
 	 * @param rating the rating to set
 	 */
-	public void setRating(float rating) {
+	public void setRating(int rating) {
 		this.rating = rating;
 	}
 
@@ -417,14 +434,14 @@ public class MediaObject {
 	/**
 	 * @return the runtime
 	 */
-	public String getRuntime() {
+	public long getRuntime() {
 		return runtime;
 	}
 
 	/**
 	 * @param runtime the runtime to set
 	 */
-	public void setRuntime(String runtime) {
+	public void setRuntime(long runtime) {
 		this.runtime = runtime;
 	}
 
@@ -604,6 +621,20 @@ public class MediaObject {
 		this.seasonno = seasonno;
 	}
 
+        public void setSeriesID(String seriesid) {
+            this.seriesid = seriesid;
+        }
+
+        public String getSeriesID() {
+            return seriesid;
+        }
+        public void setEpisodeID(String episodeid) {
+            this.episodeid = episodeid;
+        }
+
+        public String getEpisodeID() {
+            return episodeid;
+        }
 	/**
 	 * @return the episodeno
 	 */
@@ -621,12 +652,13 @@ public class MediaObject {
 	public void setMovie(Movie movie) {
             try {
                     this.showtitle = movie.getName();
+                    this.episodetitle = movie.getName();
                     this.alternatename = movie.getAlternateName();
                     this.overview = movie.getOverview();
-                    this.rating = movie.getRating();
+                    this.rating = Math.round(movie.getRating());
                     this.rated = movie.getCertification();
                     this.releasedate = movie.getReleasedate();
-                    this.runtime = String.valueOf(movie.getRuntime());
+                    this.runtime = movie.getRuntime();
                     this.trailer = movie.getTrailer();
                     this.url = movie.getUrl();
                     this.path = movie.getPath();
@@ -642,7 +674,7 @@ public class MediaObject {
 		try {
 			File propfile = new File(MediaFileAPI.GetFileForSegment(mediafile, 0).getAbsolutePath() + ".properties");
 			if ( ! propfile.exists())
-				propfile = new File(ortus.api.GetProperty("ortus/config") + java.io.File.separator + "metaprop" + java.io.File.separator + ortus.util.scrubString.ScrubFileName(showtitle) + ".properties");
+				propfile = new File(ortus.api.GetProperty("ortus/config") + java.io.File.separator + "metaprop" + java.io.File.separator + ortus.util.string.ScrubFileName(showtitle) + ".properties");
 
 			if (propfile.exists()) {
 				ortus.api.DebugLog(LogLevel.Info, "readProperty: " + propfile.getAbsolutePath());
@@ -666,7 +698,7 @@ public class MediaObject {
 				
 				showtitle = mp.getProperty("MediaTitle");
 				overview = mp.getProperty("Description");
-				runtime = mp.getProperty("RunningTime");
+				runtime = Long.parseLong(mp.getProperty("RunningTime"));
 				rated = mp.getProperty("MPAA");
 				releasedate = mp.getProperty("OriginalAirDate");
 
@@ -696,7 +728,7 @@ public class MediaObject {
         mp.setProperty("MediaTitle", showtitle);
         mp.setProperty("Title", showtitle);
         mp.setProperty("Description", overview);
-        mp.setProperty("RunningTime", runtime);
+        mp.setProperty("RunningTime", String.valueOf(runtime));
         if ( mediatype == MediaType.Recording )
             mp.setProperty("MediaType", "TV");
         else if ( mediatype == MediaType.Series)
@@ -707,7 +739,7 @@ public class MediaObject {
             mp.setProperty("MediaType","Movie");
 
         mp.setProperty("MPAA",rated);
-        mp.setProperty("UserRating",String.valueOf(Math.round(rating)));
+        mp.setProperty("UserRating",String.valueOf(rating));
         mp.setProperty("OriginalAirDate", releasedate);
         mp.setProperty("Trailer", trailer);
 
@@ -756,7 +788,7 @@ public class MediaObject {
 //	ortus.api.DebugLog(LogLevel.Trace,"build prop getting ready to write");
 	File mpfile = null;
         try {
-	    mpfile = new File(ortus.api.GetProperty("ortus/basepath") + java.io.File.separator + "metaprop" + java.io.File.separator + ortus.util.scrubString.ScrubFileName(showtitle) + ".properties");
+	    mpfile = new File(ortus.api.GetProperty("ortus/basepath") + java.io.File.separator + "metaprop" + java.io.File.separator + ortus.util.string.ScrubFileName(showtitle) + ".properties");
 //            mp.store(new FileOutputStream(new File(MediaFileAPI.GetFileForSegment(mediafile, 0).getAbsolutePath() + ".properties")), "Generator: Ortus; MediaFile: file:" + MediaFileAPI.GetFileForSegment(mediafile, 0).getAbsolutePath());
 	    mp.store(new FileOutputStream(mpfile),propComment);
         } catch (IOException ex) {
@@ -822,46 +854,64 @@ public class MediaObject {
 		if (showtitle.isEmpty()) {
 			showtitle = MediaFileAPI.GetMediaTitle(mediafile);
 		}
-		overview = StringEscapeUtils.escapeSql(overview);
-		showtitle = StringEscapeUtils.escapeSql(showtitle);
-		showtitle = showtitle.replaceAll("\"", "");
-		episodetitle = StringEscapeUtils.escapeSql(episodetitle);
-		episodetitle = episodetitle.replaceAll("\"", "");
+
+                if ( rated == null)
+                    rated="UnKnown";
+                if ( rated.isEmpty())
+                    rated="UnKnown";
+		String xoverview = StringEscapeUtils.escapeSql(overview);
+		String xshowtitle = StringEscapeUtils.escapeSql(showtitle);
+		xshowtitle = xshowtitle.replaceAll("\"", "");
+		String xepisodetitle = StringEscapeUtils.escapeSql(episodetitle);
+		xepisodetitle = xepisodetitle.replaceAll("\"", "");
 		int mfid = MediaFileAPI.GetMediaFileID(mediafile);
                 long mediaduration = MediaFileAPI.GetFileDuration(mediafile);
 
-		String SQL = "UPDATE sage.media SET mediatitle='" + showtitle + "', episodetitle = '" + episodetitle + "', mediatype=" + getMediaTypeInt() + ",mediagroup=" + getMediaGroupInt() + ", mediapath='" + MediaFileAPI.GetFileForSegment(mediafile, 0).getAbsolutePath().replaceAll("'", "''") + "', mediaencoding = '" + MediaFileAPI.GetMediaFileFormatDescription(mediafile).trim() + "', mediasize = " + MediaFileAPI.GetSize(mediafile) + ", mediaduration = " + mediaduration + ",lastwatchedtime = "
+		String SQL = "UPDATE sage.media SET mediatitle='" + xshowtitle + "', episodetitle = '" + xepisodetitle + "', mediatype=" + getMediaTypeInt() + ",mediagroup=" + getMediaGroupInt() + ", mediapath='" + MediaFileAPI.GetFileForSegment(mediafile, 0).getAbsolutePath().replaceAll("'", "''") + "', mediaencoding = '" + MediaFileAPI.GetMediaFileFormatDescription(mediafile).trim() + "', mediasize = " + MediaFileAPI.GetSize(mediafile) + ", mediaduration = " + mediaduration + ",lastwatchedtime = "
 			+ AiringAPI.GetLatestWatchedTime(mediafile) + ", airingstarttime = " + AiringAPI.GetAiringStartTime(mediafile) + " WHERE mediaid = " + String.valueOf(mfid);
 		int success = ortus.api.executeSQL(SQL);
 		if (success < 1) {
 			SQL = "INSERT INTO sage.media (mediaid, mediatitle,episodetitle, mediapath, mediaencoding, mediatype, mediagroup, mediasize, mediaduration, lastwatchedtime, airingstarttime, mediaimporttime) "
-				+ " VALUES(" + mfid + ", '" + showtitle + "','" + episodetitle + "','" + MediaFileAPI.GetFileForSegment(mediafile, 0).getAbsolutePath().replaceAll("'", "''") + "','" + MediaFileAPI.GetMediaFileFormatDescription(mediafile).trim() + "'," + getMediaTypeInt() + "," + getMediaGroupInt() + ", " + MediaFileAPI.GetSize(mediafile)
+				+ " VALUES(" + mfid + ", '" + xshowtitle + "','" + xepisodetitle + "','" + MediaFileAPI.GetFileForSegment(mediafile, 0).getAbsolutePath().replaceAll("'", "''") + "','" + MediaFileAPI.GetMediaFileFormatDescription(mediafile).trim() + "'," + getMediaTypeInt() + "," + getMediaGroupInt() + ", " + MediaFileAPI.GetSize(mediafile)
 				+ ", " + mediaduration + ", " + AiringAPI.GetLatestWatchedTime(mediafile) + "," + AiringAPI.GetAiringStartTime(mediafile) + ", current_timestamp)";
 			ortus.api.executeSQL(SQL);
 		}
 
-//		if ( isMediaTypeSeries() || isMediaTypeRecording() || isPicture() ) {
-//		    return true;
-//		}
-//
-//		String workYear = ShowAPI.GetShowYear(mediafile);
-//		if (workYear.isEmpty() && !releasedate.isEmpty()) {
-//			workYear = releasedate.substring(0, 4);
-//		}
-//
-//		if (releasedate.isEmpty()) {
-//			releasedate = "1970-01-01";
-//		}
-//
-//		SQL = "UPDATE sage.mediavideos SET description ='" + overview + "', releasedate='" + releasedate + "',userrating=" + rating + ", mpaarated = '" + rated + "', "
-//			+ " mediayear = '" + ShowAPI.GetShowYear(mediafile) + "', tmdbid = " + String.valueOf(tmdbid) + ", imdbid = '" + String.valueOf(imdbid) + "', metadatasource = '" + metadatasource + "',trailer = '" + trailer + "' "
-//			+ " WHERE mediaid = " + String.valueOf(mfid);
-//		success = ortus.api.executeSQL(SQL);
-//		if (success < 1) {
-//			SQL = "INSERT INTO sage.mediavideos (mediaid, mediayear, description, releasedate, userrating, mpaarated, tmdbid, imdbid, metadatasource, trailer) "
-//				+ " VALUES(" + mfid + ", '" + workYear + "','" + overview + "','" + releasedate + "'," + rating + ",'" + rated + "'," + String.valueOf(tmdbid) + ",'" + imdbid + "','" + metadatasource + "','" + trailer + "')";
-//			ortus.api.executeSQL(SQL);
-//		}
+		if ( isMediaTypeSeries()) {
+		    return true;
+		}
+
+		String workYear = ShowAPI.GetShowYear(mediafile);
+		if (! workYear.isEmpty() && releasedate.isEmpty()) {
+			releasedate=workYear + "-01-01";
+		}
+
+		if (releasedate.isEmpty()) {
+			releasedate = "1970-01-01";
+		}
+
+                if ( mediagroup == MediaGroup.Recorded) {
+                    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+                    releasedate = format.format(AiringAPI.GetAiringStartTime(mediafile));
+                    ortus.api.DebugLogTrace(" Setting release date to airing date: " + releasedate);
+                }
+                Connection conn = ortus.api.GetConnection();
+
+                QueryRunner qr = new QueryRunner();
+
+                try {
+                    int updatecount = qr.update(conn,"update sage.metadata set mediaid=?, tmdbid=?, imdbid=? , original_name=? , name=?, alternate_name=? , url=? , votes=?, rating=? , tagline=? , certification=? , releasedate=?, runtime=?,budget=?,revenue=?,homepage=? , trailer=? , overview=? , metadatasource=? where mediaid = ?",
+                            mfid,tmdbid,imdbid, xshowtitle,xshowtitle, xshowtitle,"",0,rating,"",rated,releasedate,runtime,0,0,"",trailer,xoverview,metadatasource,mfid);
+                    if ( updatecount == 0) {
+                        updatecount = qr.update(conn,"INSERT INTO sage.metadata (mediaid, tmdbid, imdbid , original_name , name, alternate_name , url , votes, rating , tagline , certification , releasedate, runtime,budget,revenue,homepage , trailer , overview , metadatasource ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                            mfid,tmdbid,imdbid, xshowtitle,xshowtitle, xshowtitle,"",0,rating,"",rated,releasedate,runtime,0,0,"",trailer,xoverview,metadatasource);
+                    }
+               } catch ( Exception e) {
+                    ortus.api.DebugLog(LogLevel.Error,"WriteDB: Exception: ",e);
+                } finally {
+                     try { DbUtils.close(conn); } catch(Exception e) {}
+                }
+
 //
 //		SQL = "delete from sage.fanart where mediaid = " + String.valueOf(mfid);
 //		ortus.api.executeSQL(SQL);
@@ -888,25 +938,30 @@ public class MediaObject {
 
 	public void DownloadImages(String destination) {
 		destination = destination.trim();
-
-		int fanart_limit = Integer.parseInt(ortus.api.GetSageProperty("ortus/fanart/download_limit", "4"))*4;
+                int mediaid = MediaFileAPI.GetMediaFileID(mediafile);
+		int fanart_limit = Integer.parseInt(ortus.api.GetSageProperty("ortus/fanart/download_limit", "4"));
 
 		int bgfa = 0;
 		int pstfa = 0;
 
 		ortus.api.DebugLog(LogLevel.Trace2, "DownloadImages to: " + destination + " Limit: " + fanart_limit);
 		for (ImageItem ii : images) {
-			if (ii.IsBackgrounds()) {
+//                    if ( ii.getId() == 0)
+//                        ii.setId(mediaid);
+                    if ( ii.IsBackgrounds() && bgfa <= fanart_limit) {
+                        if (ii.IsOriginal()) {
                                 bgfa++;
-                            if (bgfa > fanart_limit)
-                                    continue;
                         }
-			if (ii.IsPoster()) {
+                        if ( bgfa <= fanart_limit)
+                            ii.getImage(destination);
+                    }
+                    if ( ii.IsPoster() && pstfa <= fanart_limit) {
+                        if (ii.IsOriginal()) {
                                 pstfa++;
-                            if (pstfa > fanart_limit)
-                                    continue;
                         }
-			ii.getImage(destination);
+                        if ( pstfa <= fanart_limit)
+                            ii.getImage(destination);
+                    }
 		}
 	}
 
@@ -931,4 +986,108 @@ public class MediaObject {
 			ortus.api.DebugLog(LogLevel.Trace2, "Cast: " + ci.GetName() + " as " + ci.GetJob());
 		}
 	}
+
+
+        public void GetMusicFanart() {
+            ortus.api.DebugLogTrace("GetMusicFanart: Getting fanart for " + showtitle);
+            HTBackdrops htb = new HTBackdrops();
+            String imgPath = "Music" + java.io.File.separator +  ortus.util.string.ScrubFileName(artistname);
+            int bg_count = 0;
+            int pst_count = 0;
+            int fanart_limit = Integer.parseInt(ortus.api.GetSageProperty("ortus/fanart/download_limit","4"));
+
+            List<HashMap> imgs = htb.Search(artistname);
+
+            for ( HashMap x : imgs) {
+                if ( ((String)x.get("type")).equalsIgnoreCase("backgrounds")) {
+                    bg_count++;
+                    if ( bg_count > fanart_limit)
+                        continue;
+                } else {
+                    pst_count++;
+                    if ( pst_count > fanart_limit)
+                        continue;
+                }
+
+                // Low
+                ImageItem ii = new ImageItem(MediaFileAPI.GetMediaFileID(mediafile),"MD",(String)x.get("type"),"low",htb.getUrlLow((String)x.get("id")),(String)x.get("id"),0,0);
+                ii.WriteImageDB();
+                ii.getImage(imgPath,(String)x.get("title") + "_"+ x.get("id") + "_thumb.jpg");
+                ii = new ImageItem(MediaFileAPI.GetMediaFileID(mediafile),"MD",(String)x.get("type"),"poster",htb.getUrlMedium((String)x.get("id")),(String)x.get("id"),0,0);
+                ii.WriteImageDB();
+                ii.getImage(imgPath,(String)x.get("title") + "_"+ x.get("id") + "_poster.jpg");
+                ii = new ImageItem(MediaFileAPI.GetMediaFileID(mediafile),"MD",(String)x.get("type"),"original",htb.getUrlHigh((String)x.get("id")),(String)x.get("id"),0,0);
+                ii.WriteImageDB();
+                ii.getImage(imgPath,(String)x.get("title") + "_"+ x.get("id") + "_original.jpg");
+            }
+        }
+    /**
+     * @return the convertSageType
+     */
+    public boolean isConvertSageType() {
+        return convertSageType;
+    }
+
+    /**
+     * @param convertSageType the convertSageType to set
+     */
+    public void setConvertSageType(boolean convertSageType) {
+        this.convertSageType = convertSageType;
+    }
+
+    /**
+     * @return the sageCategory
+     */
+    public String getSageCategory() {
+        return sageCategory;
+    }
+
+    /**
+     * @param sageCategory the sageCategory to set
+     */
+    public void setSageCategory(String sageCategory) {
+        this.sageCategory = sageCategory;
+    }
+
+    /**
+     * @return the sageSubCategory
+     */
+    public String getSageSubCategory() {
+        return sageSubCategory;
+    }
+
+    /**
+     * @param sageSubCategory the sageSubCategory to set
+     */
+    public void setSageSubCategory(String sageSubCategory) {
+        this.sageSubCategory = sageSubCategory;
+    }
+
+    /**
+     * @return the isTV
+     */
+    public boolean isIsTV() {
+        return isTV;
+    }
+
+    /**
+     * @param isTV the isTV to set
+     */
+    public void setIsTV(boolean isTV) {
+        this.isTV = isTV;
+    }
+
+    /**
+     * @return the year
+     */
+    public String getYear() {
+        return year;
+    }
+
+    /**
+     * @param year the year to set
+     */
+    public void setYear(String year) {
+        this.year = year;
+    }
 }

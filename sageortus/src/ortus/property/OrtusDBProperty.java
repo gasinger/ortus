@@ -38,7 +38,7 @@ public class OrtusDBProperty extends vars implements IProperty {
 	 * @param PropertyName OrtusProperty name
 	 * @return Value of property name
 	 */
-	public String GetProperty(String PropertyName, String defaultvalue) {
+	public Object GetProperty(String PropertyName, Object defaultvalue) {
 		List<List> result = ortus.api.executeSQLQueryArray("select propval from sage.properties where userid = " + currentuser + " and key = '" + PropertyName + "'");
 		if ( result.size() < 1)
 			return defaultvalue;
@@ -66,4 +66,19 @@ public class OrtusDBProperty extends vars implements IProperty {
 			result = ortus.api.executeSQL("insert into sage.properties (userid, key, propval) values ( " + currentuser + ",'" + PropertyKey + "','" + PropertyValue + "')");
 		}
 	}
+
+    @Override
+    public void StoreProperty() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void Load() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void Load(Object userid) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

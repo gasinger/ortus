@@ -4,6 +4,8 @@ drop table if exists sage.actormovies;
 create table sage.actor (
 	id int primary key,
         name varchar,
+        biography varchar,
+        nomovies int,
         birthday varchar,
         birthplace varchar);
 

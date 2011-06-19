@@ -471,6 +471,11 @@ public class TheTVDB extends ortus.vars {
                     if (!s.isEmpty()) {
                         banner.setThumb(bannerMirror + s);
                     }
+                } else if (tag.equalsIgnoreCase("<id>")) {
+                    String s = XMLHelper.getCData(xmlReader);
+                    if (!s.isEmpty()) {
+                        banner.setId(s);
+                    }
                 } else if (tag.equalsIgnoreCase("<BannerType>")) {
                     banner.setBannerType(XMLHelper.getCData(xmlReader));
                 } else if (tag.equalsIgnoreCase("<BannerType2>")) {
@@ -690,6 +695,7 @@ private void getZipFiles(String filename,String destinationname)
 		Series series = getSeries(tvdbpath + java.io.File.separator + Title);
                 List<Episode> episodes = getEpisodes(tvdbpath + java.io.File.separator + Title);
 		String CurrentFolder = ortus.api.GetFanartFolder() + java.io.File.separator + "TV" + java.io.File.separator + Title;
+
 		File Folder = new File(CurrentFolder);
 		if (!Folder.exists() || override == true) {
 			Folder.mkdirs();
@@ -703,57 +709,85 @@ private void getZipFiles(String filename,String destinationname)
 			Backgrounds.mkdirs();
 		}
 		int downlimit = java.lang.Integer.parseInt(ortus.api.GetSageProperty("ortus/fanart/download_limit", "4"));
-		for (int i = 0; i < fanarts.size() && i < downlimit; i++) {
+                int downloadCount = 0;
+		for (int i = 0; i < fanarts.size(); i++) {
 			Banner currentbanner = fanarts.get(i);
                         if ( ! currentbanner.getLanguage().equalsIgnoreCase("en"))
                             continue;
 			String url = currentbanner.getUrl();
 			String dest = CurrentFolder + java.io.File.separator + "Backgrounds" + java.io.File.separator;
+                        String FanartPath = "TV" + java.io.File.separator + Title + java.io.File.separator + "Backgrounds" + java.io.File.separator;
 			String filename = currentbanner.getUrl().substring(currentbanner.getUrl().lastIndexOf("/")+1);
-			if ( urldownload.fileUrl(url, filename, dest).equals("OK") )
-                            database.WriteTVFanart("SR" + series.getId(), "Backgrounds", url, "TV" + java.io.File.separator + Title + java.io.File.separator + "Backgrounds" + java.io.File.separator + filename);
-                        if ( currentbanner.getThumb() != null) {
-                            File Backgrounds = new File(CurrentFolder + java.io.File.separator + "Backgrounds" + java.io.File.separator + "Thumbs");
-                            Backgrounds.mkdirs();
-                            url = currentbanner.getThumb();
-                            dest = CurrentFolder + java.io.File.separator + "Backgrounds" + java.io.File.separator + "Thumbs" + java.io.File.separator;
-                            filename = url.substring(url.lastIndexOf("/")+1);
-                            if ( urldownload.fileUrl(url, filename, dest).equals("OK"))
-                                database.WriteTVFanart("SR" + series.getId(), "Thumbs", url, "TV" + java.io.File.separator + Title + java.io.File.separator + "Backgrounds" + java.io.File.separator + "Thumbs" + java.io.File.separator + filename);
+
+                        if ( downloadCount < downlimit ) {
+                            downloadCount++;
+                            urldownload.fileUrl(url, filename, dest);
+                            database.WriteTVFanart(Integer.parseInt(series.getId()),currentbanner.getId(),"high","Backgrounds", url, FanartPath + filename);
+                 //           ortus.image.util.scale(dest+filename,780,439,dest+"med-"+filename);
+                            ortus.image.util.generate(dest+filename,780,dest+"med-"+filename);
+                            database.WriteTVFanart(Integer.parseInt(series.getId()),currentbanner.getId(),"medium","Backgrounds",FanartPath+"med-"+ filename,FanartPath+"med-"+ filename);
+                            // ortus.image.util.scale(dest+filename,300,169,dest+"thmb-"+filename);
+                            ortus.image.util.generate(dest+filename,300,dest+"thmb-"+filename);
+                            database.WriteTVFanart(Integer.parseInt(series.getId()),currentbanner.getId(),"low","Backgrounds",FanartPath+"thmb-"+ filename,FanartPath+"thmb-"+ filename);
+                        }  else {
+                            database.WriteTVFanart(Integer.parseInt(series.getId()),currentbanner.getId(),"high","Backgrounds", url, null);//
                         }
-		}
+                }
 		if (!posters.isEmpty()) {
 			File Posters = new File(CurrentFolder + java.io.File.separator + "Posters" + java.io.File.separator);
 			Posters.mkdirs();
 		}
-		for (int i = 0; i < posters.size() && i < downlimit; i++) {
+                downloadCount=0;
+		for (int i = 0; i < posters.size() ; i++) {
 			Banner currentbanner = posters.get(i);
                         if ( ! currentbanner.getLanguage().equalsIgnoreCase("en"))
                             continue;
 			String url = currentbanner.getUrl();
 			String dest = CurrentFolder + java.io.File.separator + "Posters" + java.io.File.separator;
+                        String FanartPath = "TV" + java.io.File.separator + Title + java.io.File.separator + "Posters" + java.io.File.separator;
 			String filename = currentbanner.getUrl().substring(currentbanner.getUrl().lastIndexOf("/")+1);
-			if ( urldownload.fileUrl(url, filename, dest).equals("OK"))
-                            database.WriteTVFanart("SR" + series.getId(), "Posters", url, "TV" + java.io.File.separator + Title + java.io.File.separator + "Posters" + java.io.File.separator + filename);
 
-                        ortus.image.util.scale(dest+filename,185,254,dest+"med-"+filename);
-                        database.WriteTVFanart("SR"+series.getId(),"Posters",dest+filename,dest+"med-"+ filename);
-                        ortus.image.util.scale(dest+filename,92,126,dest+"thmb-"+filename);
-                        database.WriteTVFanart("SR"+series.getId(),"Posters",dest+filename,dest+"tmb-"+ filename);
+                        if ( downloadCount < downlimit) {
+                            downloadCount++;
+                            urldownload.fileUrl(url, filename, dest);
+                            database.WriteTVFanart(Integer.parseInt(series.getId()),currentbanner.getId(),"high","Posters", url, FanartPath + filename);
+                         //   ortus.image.util.scale(dest+filename,480,706,dest+"med-"+filename);
+                            ortus.image.util.generate(dest+filename,706,dest+"med-"+filename);
+                            database.WriteTVFanart(Integer.parseInt(series.getId()),currentbanner.getId(),"medium","Posters",FanartPath+"med-"+ filename,FanartPath+"med-"+ filename);
+                         //   ortus.image.util.scale(dest+filename,280,412,dest+"thmb-"+filename);
+                            ortus.image.util.generate(dest+filename,412,dest+"thmb-"+filename);
+                            database.WriteTVFanart(Integer.parseInt(series.getId()),currentbanner.getId(),"low","Posters",FanartPath+"thmb-"+ filename,FanartPath+"thmb-"+ filename);
+                        } else {
+                           database.WriteTVFanart(Integer.parseInt(series.getId()),currentbanner.getId(),"high","Posters", url, null);//
+                        }
                 }
 		if (!banners.isEmpty()) {
 			File Banners = new File(CurrentFolder + java.io.File.separator + "Banners" + java.io.File.separator);
 			Banners.mkdirs();
 		}
-		for (int i = 0; i < banners.size() && i < downlimit; i++) {
+                downloadCount=0;
+		for (int i = 0; i < banners.size(); i++) {
 			Banner currentbanner = banners.get(i);
                         if ( ! currentbanner.getLanguage().equalsIgnoreCase("en"))
                             continue;
 			String url = currentbanner.getUrl();
 			String dest = CurrentFolder + java.io.File.separator + "Banners" + java.io.File.separator;
+                        String FanartPath = "TV" + java.io.File.separator + Title + java.io.File.separator + "Banners" + java.io.File.separator;
 			String filename = currentbanner.getUrl().substring(currentbanner.getUrl().lastIndexOf("/")+1);
-			if ( urldownload.fileUrl(url, filename, dest).equals("OK") )
-                            database.WriteTVFanart("SR" + series.getId(), "Banners", url, "TV" + java.io.File.separator + Title + java.io.File.separator + "Banners" + java.io.File.separator + filename);
+
+                        if ( downloadCount < downlimit) {
+                            downloadCount++;
+                            urldownload.fileUrl(url, filename, dest);
+                            database.WriteTVFanart(Integer.parseInt(series.getId()),currentbanner.getId(),"high", "Banners", url, FanartPath + filename);
+                            // ortus.image.util.scale(dest+filename,455,84,dest+"med-"+filename);
+                            ortus.image.util.generate(dest+filename,500,dest+"med-"+filename);
+                            database.WriteTVFanart(Integer.parseInt(series.getId()),currentbanner.getId(),"medium","Banners",FanartPath+"med-"+ filename,FanartPath+"med-"+ filename);
+                            // ortus.image.util.scale(dest+filename,190,35,dest+"thmb-"+filename);
+                            ortus.image.util.generate(dest+filename,300,dest+"thmb-"+filename);
+                            database.WriteTVFanart(Integer.parseInt(series.getId()),currentbanner.getId(),"low","Banners",FanartPath+"thmb-"+ filename,FanartPath+"thmb-"+ filename);
+                        } else {
+                           database.WriteTVFanart(Integer.parseInt(series.getId()),currentbanner.getId(),"high","Banners", url, null);//
+                        }
 		}
 		for (int i = 0; i < seasons.size(); i++) {
 			Banner currentbanner = seasons.get(i);
@@ -777,19 +811,34 @@ private void getZipFiles(String filename,String destinationname)
                             bannertype="Posters";
                         }
 //                        ortus.api.DebugLogTrace("Season Fanart: downloading to : " + dest);
-			
+			String FanartPath = "TV" + java.io.File.separator + Title + java.io.File.separator + "Season-" + currentbanner.getSeason() + java.io.File.separator + bannertype + java.io.File.separator;
 			String filename = currentbanner.getUrl().substring(currentbanner.getUrl().lastIndexOf("/")+1);
 			if ( urldownload.fileUrl(url, filename, dest).equals("OK"))
-                            database.WriteTVFanart("SR" + series.getId(), "Season-" + currentbanner.getSeason() + "-" + bannertype, url, "TV" + java.io.File.separator + Title + java.io.File.separator + "Season-" + currentbanner.getSeason() + java.io.File.separator + bannertype + java.io.File.separator + filename);
-		}
+                            database.WriteTVFanart(Integer.parseInt(series.getId()), currentbanner.getId(),"high", "Season-" + currentbanner.getSeason() + "-" + bannertype, url, FanartPath + filename);
+
+                        // ortus.image.util.scale(dest+filename,185,254,dest+"med-"+filename);
+                        ortus.image.util.generate(dest+filename,706,dest+"med-"+filename);
+                        database.WriteTVFanart(Integer.parseInt(series.getId()),currentbanner.getId(),"medium","Season-" + currentbanner.getSeason() + "-" + bannertype,FanartPath+"med-"+ filename,FanartPath+"med-"+ filename);
+                        // ortus.image.util.scale(dest+filename,92,126,dest+"thmb-"+filename);
+                        ortus.image.util.generate(dest+filename,412,dest+"thmb-"+filename);
+                        database.WriteTVFanart(Integer.parseInt(series.getId()),currentbanner.getId(),"low","Season-" + currentbanner.getSeason() + "-" + bannertype,FanartPath+"thmb-"+ filename,FanartPath+"thmb-"+ filename);
+                }
                 for ( Episode ep : episodes) {
 			String url = ep.getFilename();
                         if ( url == null)
                             continue;
 			String dest = CurrentFolder + java.io.File.separator + "Episode" + java.io.File.separator;
+                        String FanartPath = "TV" + java.io.File.separator + Title + java.io.File.separator + "Episode" + java.io.File.separator;
 			String filename = url.substring(url.lastIndexOf("/")+1);
 			if ( urldownload.fileUrl(url, filename, dest).equals("OK"))
-                            database.WriteTVFanart("SR" + series.getId(), "Episode-" + ep.getId() + "-Posters", url, "TV" + java.io.File.separator + Title + java.io.File.separator + "Episode" + java.io.File.separator + filename);
+                            database.WriteTVFanart(Integer.parseInt(series.getId()), ep.getId(), "high", "Episode-" + ep.getId() + "-Posters", url, FanartPath + filename);
+
+                        // ortus.image.util.scale(dest+filename,192,144,dest+"med-"+filename);
+                        ortus.image.util.generate(dest+filename,280,dest+"med-"+filename);
+                        database.WriteTVFanart(Integer.parseInt(series.getId()),ep.getId(),"medium","Episode-" + ep.getId() + "-Posters",FanartPath+"med-"+ filename,FanartPath+"med-"+ filename);
+                        // ortus.image.util.scale(dest+filename,80,60,dest+"thmb-"+filename);
+                        ortus.image.util.generate(dest+filename,125,dest+"thmb-"+filename);
+                        database.WriteTVFanart(Integer.parseInt(series.getId()),ep.getId(),"low","Episode-" + ep.getId() + "-Posters",FanartPath+"thmb-"+ filename,FanartPath+"thmb-"+ filename);
                 }
 	}
 	

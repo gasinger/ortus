@@ -5,23 +5,12 @@
 
 package ortus.cache;
 
-import java.io.BufferedWriter;
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.commons.io.IOUtils;
 import org.apache.jcs.JCS;
 import org.apache.jcs.access.exception.CacheException;
 import ortus.Ortus;
-import ortus.configurationEngine;
-import ortus.vars;
 import ortus.vars;
 
 /**
@@ -34,7 +23,7 @@ public class cacheProviderJCS  extends vars implements IcacheProvider{
 	public cacheProviderJCS() {
 		ortus.api.DebugLog(LogLevel.Debug,"cache: Loading JCS Instance");
 
-		File cacheccf = new File(configurationEngine.getInstance().getSagePath() + java.io.File.separator + "cache.ccf");
+		File cacheccf = new File(Ortus.getInstance().getSagePath() + java.io.File.separator + "cache.ccf");
 
 		if ( ! cacheccf.exists() ) {
 			FileOutputStream os = null;

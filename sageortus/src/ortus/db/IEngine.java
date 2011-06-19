@@ -17,9 +17,11 @@ public interface IEngine {
     public void ShutdownDatabase();
     public Connection GetConnection();
     public boolean GetCleanDB();
-    public List<Object> GetStatus();
+    public HashMap GetStatus();
     public boolean createDB();
     public boolean backupDB();
+    public boolean clearDB();
+    public boolean AnalyzeDB();
     public boolean restoreDB(String backupdir);
     public int executeSQL(String sql);
     public List<Object> executeSQLQuery(String sql);

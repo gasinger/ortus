@@ -145,7 +145,12 @@ public class ui extends vars {
 	}
 
 	public static boolean IsClient() {
-		if( Global.IsClient(new UIContext(Global.GetUIContextName())) || Global.IsServerUI(new UIContext(Global.GetUIContextName())) || Global.IsDesktopUI(new UIContext(Global.GetUIContextName())))
+                String UICname = Global.GetUIContextName();
+                if ( UICname == null) {
+                    UICname="";
+                }
+//		if ( UICname.equalsIgnoreCase("SAGETV_PROCESS_LOCAL_UI") || Global.IsClient(new UIContext(Global.GetUIContextName())) || Global.IsServerUI(new UIContext(Global.GetUIContextName())) || Global.IsDesktopUI(new UIContext(Global.GetUIContextName())))
+                if ( UICname.equalsIgnoreCase("SAGETV_PROCESS_LOCAL_UI") || Global.IsClient() || Global.IsServerUI() || Global.IsDesktopUI())
 			return true;
 		else
 			return false;

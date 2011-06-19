@@ -77,11 +77,13 @@ else if (regexmethod==4){
         cleantitle = cleantitle.replaceAll("UNRATED", "");
         cleantitle = cleantitle.replaceAll("RATED", "");
         cleantitle = cleantitle.replaceAll("_", " ");
-        cleantitle = cleantitle.replaceAll("\\.","");
+        cleantitle = cleantitle.replaceAll("\\."," ");
         cleantitle = cleantitle.replaceAll("16X9","");
 
         cleantitle = cleantitle.toLowerCase();
-	cleantitle = cleantitle.replaceAll("-","");
+	cleantitle = cleantitle.replaceAll("-"," ");
+
+        cleantitle = cleantitle.replaceAll("the", "");
 
         Pattern pattern = Pattern.compile("\\(.*\\d+.*\\)");
         Matcher matcher = pattern.matcher(cleantitle);
@@ -93,7 +95,7 @@ else if (regexmethod==4){
         cleantitle = sb.toString();
 //        System.out.println("title: " + cleantitle);
 
-        return cleantitle;
+        return cleantitle.trim();
     }
 
 }

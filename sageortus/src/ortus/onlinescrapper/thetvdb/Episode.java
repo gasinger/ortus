@@ -1,6 +1,7 @@
 package ortus.onlinescrapper.thetvdb;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -34,6 +35,33 @@ public class Episode {
     private String lastUpdated;
     private String seriesId;
     private String seasonId;
+
+    public HashMap toHash() {
+        HashMap result = new HashMap();
+        result.put("episodeid",id);
+        result.put("combinedEpisodeNumber",combinedEpisodeNumber);
+        result.put("combinedSeason",combinedSeason);
+        result.put("dvdChapter",dvdChapter);
+        result.put("dvdDiscid",dvdDiscId);
+        result.put("dvdEpisodenumber",dvdEpisodeNumber);
+        result.put("dvdSeason",dvdSeason);
+//        private List<String> directors = new ArrayList<String>();
+//    private String epImgFlag;
+        result.put("name",episodeName);
+        result.put("episodenumber",episodeNumber);
+        result.put("releasedate",firstAired);
+//    private List<String> guestStars = new ArrayList<String>();
+        result.put("imdbId",imdbId);
+        result.put("language",language);
+        result.put("overview",overview);
+        result.put("rating",rating);
+        result.put("seasonnumber",seasonNumber);
+        result.put("seriesid",seriesId);
+        result.put("seasonid",seasonId);
+        result.put("metadataid", "TVDB"+seriesId+":"+ id);
+        result.put("source","episode");
+        return result;
+    }
 
     public String getId() {
         return id;

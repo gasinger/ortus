@@ -24,3 +24,18 @@ create table sage.properties
   ( userid int,
     key varchar,
     propval varchar);
+drop table if exists sage.syslog;
+create table sage.syslog (
+   syslogid long auto_increment not null primary key,
+   event_level int,
+   event_time timestamp,
+   event_msg varchar);
+drop table if exists sage.scrapperlog;
+create table sage.scrapperlog (
+   scrapperid long auto_increment not null primary key,
+   mediaid int,
+   scantype int,
+   searchtitle varchar,
+   foundtitle varchar,
+   foundkey varchar,
+   scandate timestamp);

@@ -1,7 +1,7 @@
 delete from sage.media;
 delete from sage.cast;
 delete from sage.genre;
-delete from sage.movies;
+delete from sage.metadata;
 delete from sage.fanart;
 delete from sage.episode;
 delete from sage.series;
@@ -9,5 +9,3 @@ delete from sage.seriesgenre;
 delete from sage.seriescast;
 delete from sage.actor;
 delete from sage.actormovies;
-delete from sage.metadatacache;
-delete from sage.scrapperlog;

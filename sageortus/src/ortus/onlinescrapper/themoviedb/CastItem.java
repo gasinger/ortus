@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.dbutils.DbUtils;
@@ -24,16 +25,18 @@ import org.apache.commons.dbutils.QueryRunner;
  */
 public class CastItem extends ortus.vars implements Serializable {
 
-	String id = "";
+	int id = 0;
 	private String name;
 	private String job;
 	private String character;
 	private String birthday;
 	private String birthplace;
+        private String biography;
+        private int known_movies;
 	List<HashMap> films = new ArrayList<HashMap>();
 	List<HashMap> images = new ArrayList<HashMap>();
 
-	public CastItem(String id, String name, String job, String character) {
+	public CastItem(int id, String name, String job, String character) {
 		this.id = id;
 		this.name = name;
 		this.job = job;
@@ -41,11 +44,11 @@ public class CastItem extends ortus.vars implements Serializable {
 //        ortus.api.DebugLog(TRACE2, " CastItem: " + name);
 	}
 
-	public String GetId() {
+	public int GetId() {
 		return id;
 	}
 
-	public void SetId(String id) {
+	public void SetId(int id) {
 		this.id = id;
 	}
 
@@ -137,50 +140,56 @@ public class CastItem extends ortus.vars implements Serializable {
 		images.add(f);
 	}
 	public void WriteToDB(Object mediafile) {
-		if( id.isEmpty())
+		if( id == 0)
 			return;
                 Connection conn = ortus.api.GetConnection();
                 PreparedStatement ps = null;
                 try {
-                    ps = conn.prepareStatement("update sage.actor set name = ?, birthday=?, birthplace=? where id = ?");
+                    ps = conn.prepareStatement("update sage.actor set name = ?, biography = ?, nomovies = ?, birthday=?, birthplace=? where id = ?");
                     ps.setString(1,name);
-                    ps.setString(2,birthday);
-                    ps.setString(3,birthplace);
-                    ps.setString(4,id);
+                    ps.setString(2,biography);
+                    ps.setInt(3,known_movies);
+                    ps.setString(4,birthday);
+                    ps.setString(5,birthplace);
+                    ps.setInt(6,id);
                     int updatecount = ps.executeUpdate();
                     ps.close();
                     if ( updatecount == 0) {
-                        ps = conn.prepareStatement("insert into sage.actor ( id, name,birthday, birthplace) values(?,?,?,?)");
-                        ps.setString(1,id);
+                        ps = conn.prepareStatement("insert into sage.actor ( id, name,biography, nomovies, birthday, birthplace) values(?,?,?,?,?,?)");
+                        ps.setInt(1,id);
                         ps.setString(2,name);
-                        ps.setString(3,birthday);
-                        ps.setString(4,birthplace);
+                        ps.setString(3,biography);
+                        ps.setInt(4,known_movies);
+                        ps.setString(5,birthday);
+                        ps.setString(6,birthplace);
                         ps.executeUpdate();
                         ps.close();
                     }
 
                     for ( HashMap film : films) {
                         ps = conn.prepareStatement("update sage.actormovies set name = ?, character=?, job=? where id = ? and personid = ?");
-                        ps.setString(1,name);
-                        ps.setString(2,character);
-                        ps.setString(3,job);
+                        ps.setString(1,(String)film.get("name"));
+                        ps.setString(2,(String)film.get("character"));
+                        ps.setString(3,(String)film.get("job"));
                         ps.setInt(4,Integer.parseInt((String)film.get("id")));
-                        ps.setInt(5,Integer.parseInt(id));
+                        ps.setInt(5,id);
 
                         updatecount = ps.executeUpdate();
                         ps.close();
                         if ( updatecount == 0 ) {
                             ps = conn.prepareStatement("insert into sage.actormovies (id, personid, name, character,job) values(?,?,?,?,?)");
-                            ps.setInt(1,Integer.parseInt(id));
-                            ps.setInt(2,Integer.parseInt((String)film.get("id")));
-                            ps.setString(3,name);
-                            ps.setString(4,character);
-                            ps.setString(5,job);
+                            ps.setInt(1,Integer.parseInt((String)film.get("id")));
+                            ps.setInt(2,id);
+                            ps.setString(3,(String)film.get("name"));
+                            ps.setString(4,(String)film.get("character"));
+                            ps.setString(5,(String)film.get("job"));
+                            ps.executeUpdate();
                             ps.close();
                         }
                     }
                     for ( HashMap image : images) {
-                            ImageItem ii = new ImageItem("CA"+id,name.replaceAll("'","''"),"",(String)image.get("url"));
+//                            ImageItem ii = new ImageItem(id, "CA",name.replaceAll("'","''"),"",(String)image.get("url"));
+                            ImageItem ii = new ImageItem(id, "CA",(String)image.get("type"),(String)image.get("size"),(String)image.get("url"), (String)image.get("id"),0,0);
                             ii.WriteImageDB();
                     }
 
@@ -193,12 +202,40 @@ public class CastItem extends ortus.vars implements Serializable {
 	}
 
 	public void DownloadImages(Object mediafile, String dest) {
-		if ( id.isEmpty())
+		if ( id == 0)
 			return;
 		for ( HashMap image : images) {
-			ImageItem ii = new ImageItem("CA"+id,name.replaceAll("'","''"),"",(String)image.get("url"));
+			ImageItem ii = new ImageItem(id,"CA",(String)image.get("type"),(String)image.get("size"),(String)image.get("url"), (String)image.get("id"),0,0);
 			ii.getImage(dest);
 
 		}
 	}
+
+    /**
+     * @return the biography
+     */
+    public String getBiography() {
+        return biography;
+    }
+
+    /**
+     * @param biography the biography to set
+     */
+    public void setBiography(String biography) {
+        this.biography = biography;
+    }
+
+    /**
+     * @return the known_movies
+     */
+    public int getKnown_movies() {
+        return known_movies;
+    }
+
+    /**
+     * @param known_movies the known_movies to set
+     */
+    public void setKnown_movies(int known_movies) {
+        this.known_movies = known_movies;
+    }
 }

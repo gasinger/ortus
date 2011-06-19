@@ -92,6 +92,23 @@ public class string extends ortus.vars {
 		return s1;
 	}
 
+        public static String ScrubFileName(String filename) {
+//            String s1 = filename.replaceAll("\\", " ");
+//            s1 = s1.replaceAll("/"," ");
+            String s1 = filename.replaceAll(":"," ");
+            s1 = s1.replaceAll("\\*"," ");
+            s1 = s1.replaceAll("\\?"," ");
+//            s1 = s1.replaceAll("\""," ");
+            s1 = s1.replaceAll("<"," ");
+            s1 = s1.replaceAll(">"," ");
+            s1 = s1.replaceAll("'","");
+	    s1 = s1.replaceAll("\"","");
+//	    s1 = s1.replaceAll(java.io.File.separator,"");
+	    s1 = s1.replaceAll("/","");
+
+            return s1.trim();
+        }
+        
 	public static String decodeString(String x) {
 //		DebugLog(TRACE2, "decodeString: parsing: " + x);
 		Pattern pattern = Pattern.compile("&#x([^;]+);");
@@ -132,4 +149,34 @@ public class string extends ortus.vars {
 //		ortus.api.DebugLog(TRACE2,"decodeString: returning: " + result);
 		return result.trim();
 	}
+
+        public static long getLong(Object val) {
+            long result = 0;
+
+            if ( val instanceof Long)
+                return (Long)val;
+            else if(val instanceof String) {
+                try {
+                    return Long.parseLong((String)val);
+                } catch(Exception e) {}                                   
+            }
+
+            return 0;
+        }
+
+         public static int getInt(Object val) {
+            int result = 0;
+
+            if ( val instanceof Integer)
+                return (Integer)val;
+            if ( val instanceof Long)
+                return ((Long)val).intValue();
+            else if(val instanceof String) {
+                try {
+                    return Integer.parseInt((String)val);
+                } catch(Exception e) {}
+            }
+
+            return 0;
+        }
 }
