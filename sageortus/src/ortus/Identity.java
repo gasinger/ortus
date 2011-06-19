@@ -8,9 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import ortus.mq.EventListener;
 import ortus.vars.LogLevel;
 import ortus.property.IProperty;
+import ortus.property.OrtusCachedDBProperty;
 import ortus.property.OrtusDBProperty;
 import ortus.ui.menu.menuEngine;
 import sagex.UIContext;
@@ -22,7 +22,7 @@ import sagex.api.MediaPlayerAPI;
  *
  * @author jphipps
  */
-public class Identity extends EventListener {
+public class Identity  {
 
 	String ClientName;
 	int CurrentUser;
@@ -30,7 +30,7 @@ public class Identity extends EventListener {
 	private menuEngine MenuAPI;
 
 	public Identity(String MAC) {
-		super();
+		
 		ortus.api.DebugLog(LogLevel.Info, "Ortus Identity: Loading");
 
 		if (ortus.api.GetSageProperty("ortus/clientname", null) == null) {
@@ -46,9 +46,11 @@ public class Identity extends EventListener {
 
 		CurrentUser = Integer.parseInt(ortus.api.GetSageProperty("ortus/user/current", "0"));
 
-		userprops = new OrtusDBProperty(CurrentUser);
+//		userprops = new OrtusDBProperty(CurrentUser);
+                userprops = new OrtusCachedDBProperty(CurrentUser);
 
-		MenuAPI = new menuEngine(configurationEngine.getInstance().getConfigPath() + java.io.File.separator + CurrentUser);
+//		MenuAPI = new menuEngine(configurationEngine.getInstance().getBasePath() + java.io.File.separator + "Configuration" + java.io.File.separator + CurrentUser);
+                MenuAPI = new menuEngine(CurrentUser);
 
 		ortus.api.DebugLog(LogLevel.Info, "Ortus: Identity loaded for " + ClientName);
 	}
@@ -101,6 +103,9 @@ public class Identity extends EventListener {
 
 	public void SetCurrentUser(Object userid) {
 		ortus.api.DebugLog(LogLevel.Trace2,"SetCurrentUser: Current: " + CurrentUser + " New User: " + userid);
+
+                userprops.StoreProperty();
+                
 		if (userid instanceof String) {
 			CurrentUser = Integer.parseInt((String)userid);
 		}
@@ -110,8 +115,8 @@ public class Identity extends EventListener {
 
 		ortus.api.DebugLog(LogLevel.Trace,"SetCurrentUser: CurrentUser is now: " + CurrentUser);
 		ortus.api.SetSageProperty("ortus/user/current", String.valueOf(CurrentUser));
-		userprops.Reload(CurrentUser);
-		MenuAPI.InitMenu(ortus.api.GetProperty("ortus/configpath") + java.io.File.separator + CurrentUser);
+		userprops.Load(CurrentUser);
+		MenuAPI.InitMenu(CurrentUser);
 	}
 
 	public IProperty GetUserProperty() {
@@ -237,24 +242,26 @@ public class Identity extends EventListener {
 	}
 
 	public void SetUserWatchPosition(Object mediafile, long wtime) {
+                int mediaid = ortus.media.metadata.utils.GetMediaID(mediafile);
+                Object mf = MediaFileAPI.GetMediaFileForID(mediaid);
 		String SQL = "update sage.usermedia set LASTWATCHEDTIME = " + wtime + " ,watched = true , lastwatchedtimestamp = current_timestamp";
 
-		if ( MediaFileAPI.IsDVD(mediafile) || MediaFileAPI.IsBluRay(mediafile)) {
+		if ( MediaFileAPI.IsDVD(mf) || MediaFileAPI.IsBluRay(mf)) {
 			SQL+= " , lastwatchedtitle = " + MediaPlayerAPI.GetDVDCurrentTitle() + ", lastwatchedtrack=" + MediaPlayerAPI.GetDVDCurrentChapter();
-			ortus.api.DebugLog(LogLevel.Trace2, "SetUserWatchPosition: for DVD/Bluray: " + MediaFileAPI.GetMediaFileID(mediafile) + " to Title: " + MediaPlayerAPI.GetDVDCurrentTitle() + " Chapter: " + MediaPlayerAPI.GetDVDCurrentChapter() + " to position: " + wtime);
+			ortus.api.DebugLog(LogLevel.Trace2, "SetUserWatchPosition: for DVD/Bluray: " + MediaFileAPI.GetMediaFileID(mf) + " to Title: " + MediaPlayerAPI.GetDVDCurrentTitle() + " Chapter: " + MediaPlayerAPI.GetDVDCurrentChapter() + " to position: " + wtime);
 		} else
-			ortus.api.DebugLog(LogLevel.Trace2, "SetUserWatchPosition: for: " + MediaFileAPI.GetMediaFileID(mediafile) + " to position: " + wtime);
+			ortus.api.DebugLog(LogLevel.Trace2, "SetUserWatchPosition: for: " + MediaFileAPI.GetMediaFileID(mf) + " to position: " + wtime);
 
-		SQL+= " where userid = " + CurrentUser + " and mediaid = " + MediaFileAPI.GetMediaFileID(mediafile);
+		SQL+= " where userid = " + CurrentUser + " and mediaid = " + mediaid;
 		ortus.api.DebugLog(LogLevel.Trace2, "SetUserWatchPosition: SQL: " + SQL);
 		int rc = ortus.api.executeSQL(SQL);
 		if (rc < 1) {
 			SQL = "insert into sage.usermedia (userid, mediaid, LASTWATCHEDTIME, watched, lastwatchedtimestamp";
-			if ( MediaFileAPI.IsDVD(mediafile) || MediaFileAPI.IsBluRay(mediafile)) {			
-				SQL += ",lastwatchedtitle, lastwatchedtrack) values( " + CurrentUser + "," + MediaFileAPI.GetMediaFileID(mediafile) + "," + wtime + ", true, current_timestamp," + MediaPlayerAPI.GetDVDCurrentTitle() + "," + MediaPlayerAPI.GetDVDCurrentChapter() + ")";
+			if ( MediaFileAPI.IsDVD(mf) || MediaFileAPI.IsBluRay(mf)) {
+				SQL += ",lastwatchedtitle, lastwatchedtrack) values( " + CurrentUser + "," + mediaid + "," + wtime + ", true, current_timestamp," + MediaPlayerAPI.GetDVDCurrentTitle() + "," + MediaPlayerAPI.GetDVDCurrentChapter() + ")";
 
 			} else {
-				SQL += ") values( " + CurrentUser + "," + MediaFileAPI.GetMediaFileID(mediafile) + "," + wtime + ", true, current_timestamp)";
+				SQL += ") values( " + CurrentUser + "," + mediaid + "," + wtime + ", true, current_timestamp)";
 			}
 			ortus.api.DebugLog(LogLevel.Trace2, "SetUserWatchPosition: SQL: " + SQL);
 			rc = ortus.api.executeSQL(SQL);
@@ -266,6 +273,7 @@ public class Identity extends EventListener {
 	}
 	
 	public void ClearUserWatchPosition(Object mediafile, Object userid) {
+                 int mediaid = ortus.media.metadata.utils.GetMediaID(mediafile);
 		int workuserid = 0;
 		if (userid instanceof String) {
 			workuserid = Integer.parseInt((String) userid);
@@ -274,7 +282,7 @@ public class Identity extends EventListener {
 			workuserid = (Integer) userid;
 		}
 
-		ortus.api.executeSQL("delete from sage.usermedia where mediaid = " + MediaFileAPI.GetMediaFileID(mediafile) + " and userid = " + workuserid);
+		ortus.api.executeSQL("delete from sage.usermedia where mediaid = " + mediaid + " and userid = " + workuserid);
 	}
 
 	public long GetUserWatchPosition(Object mediafile) {
@@ -282,6 +290,7 @@ public class Identity extends EventListener {
 	}
 
 	public long GetUserWatchPosition(Object mediafile, Object userid) {
+                int mediaid = ortus.media.metadata.utils.GetMediaID(mediafile);
 		int workuserid = 0;
 		if (userid instanceof String) {
 			workuserid = Integer.parseInt((String) userid);
@@ -289,10 +298,10 @@ public class Identity extends EventListener {
 		if (userid instanceof Integer) {
 			workuserid = (Integer) userid;
 		}
-		List<List> result = ortus.api.executeSQLQueryArray("select lastwatchedtime from sage.usermedia where userid = " + workuserid + " and mediaid = " + MediaFileAPI.GetMediaFileID(mediafile));
+		List<List> result = ortus.api.executeSQLQueryArray("select lastwatchedtime from sage.usermedia where userid = " + workuserid + " and mediaid = " + mediaid);
 		if (result.size() > 0) {
-			ortus.api.DebugLog(LogLevel.Trace2,"GetUserWatchPosition: User: " + workuserid + " position: " +Long.parseLong((String) result.get(0).get(0)));
-			return Long.parseLong((String) result.get(0).get(0));
+			ortus.api.DebugLog(LogLevel.Trace2,"GetUserWatchPosition: User: " + workuserid + " position: " + ortus.util.string.getLong((String) result.get(0).get(0)));
+			return ortus.util.string.getLong((String) result.get(0).get(0));
 		} else {
 			return 0;
 		}
@@ -304,6 +313,7 @@ public class Identity extends EventListener {
 	}
 
 	public long GetUserWatchTime(Object mediafile, Object userid) {
+                int mediaid = ortus.media.metadata.utils.GetMediaID(mediafile);
 		int workuserid = 0;
 		if (userid instanceof String) {
 			workuserid = Integer.parseInt((String) userid);
@@ -311,13 +321,16 @@ public class Identity extends EventListener {
 		if (userid instanceof Integer) {
 			workuserid = (Integer) userid;
 		}
-		List<List> result = ortus.api.executeSQLQueryArray("select DateToEpoch(lastwatchedtimestamp) from sage.usermedia where userid = " + workuserid + " and mediaid = " + MediaFileAPI.GetMediaFileID(mediafile));
-		if (result.size() > 0) {
-			ortus.api.DebugLog(LogLevel.Trace2,"GetUserWatchPosition: User: " + workuserid + " date: " +Long.parseLong((String) result.get(0).get(0)));
-			return Long.parseLong((String) result.get(0).get(0));
-		} else {
-			return 0;
-		}
+		List<List> result = ortus.api.executeSQLQueryArray("select DateToEpoch(lastwatchedtimestamp) from sage.usermedia where userid = " + workuserid + " and mediaid = " + mediaid);
+                if ( result != null) {
+                    if (result.size() > 0) {
+                            ortus.api.DebugLog(LogLevel.Trace2,"GetUserWatchPosition: User: " + workuserid + " date: " + ortus.util.string.getLong((String) result.get(0).get(0)));
+                            return ortus.util.string.getLong((String) result.get(0).get(0));
+                    } else {
+                            return 0;
+                    }
+                } else
+                    return 0;
 	}
 
 	public int GetUserWatchTitle(Object mediafile) {
@@ -325,6 +338,7 @@ public class Identity extends EventListener {
 	}
 
 	public int GetUserWatchTitle(Object mediafile, Object userid) {
+                int mediaid = ortus.media.metadata.utils.GetMediaID(mediafile);
 		int workuserid = 0;
 		if (userid instanceof String) {
 			workuserid = Integer.parseInt((String) userid);
@@ -332,10 +346,10 @@ public class Identity extends EventListener {
 		if (userid instanceof Integer) {
 			workuserid = (Integer) userid;
 		}
-		List<List> result = ortus.api.executeSQLQueryArray("select lastwatchedtitle from sage.usermedia where userid = " + workuserid + " and mediaid = " + MediaFileAPI.GetMediaFileID(mediafile));
+		List<List> result = ortus.api.executeSQLQueryArray("select lastwatchedtitle from sage.usermedia where userid = " + workuserid + " and mediaid = " + mediaid);
 		if (result.size() > 0) {
-			ortus.api.DebugLog(LogLevel.Trace2,"GetUserWatchTitle: User: " + workuserid + " position: " +Long.parseLong((String) result.get(0).get(0)));
-			return Integer.parseInt((String) result.get(0).get(0));
+			ortus.api.DebugLog(LogLevel.Trace2,"GetUserWatchTitle: User: " + workuserid + " position: " + ortus.util.string.getInt((String) result.get(0).get(0)));
+			return ortus.util.string.getInt((String) result.get(0).get(0));
 		} else {
 			return 0;
 		}
@@ -346,6 +360,7 @@ public class Identity extends EventListener {
 	}
 
 	public int GetUserWatchChapter(Object mediafile, Object userid) {
+                int mediaid = ortus.media.metadata.utils.GetMediaID(mediafile);
 		int workuserid = 0;
 		if (userid instanceof String) {
 			workuserid = Integer.parseInt((String) userid);
@@ -353,10 +368,10 @@ public class Identity extends EventListener {
 		if (userid instanceof Integer) {
 			workuserid = (Integer) userid;
 		}
-		List<List> result = ortus.api.executeSQLQueryArray("select lastwatchedtrack from sage.usermedia where userid = " + workuserid + " and mediaid = " + MediaFileAPI.GetMediaFileID(mediafile));
+		List<List> result = ortus.api.executeSQLQueryArray("select lastwatchedtrack from sage.usermedia where userid = " + workuserid + " and mediaid = " + mediaid);
 		if (result.size() > 0) {
-			ortus.api.DebugLog(LogLevel.Trace2,"GetUserWatchChapter: User: " + workuserid + " position: " +Long.parseLong((String) result.get(0).get(0)));
-			return Integer.parseInt((String) result.get(0).get(0));
+			ortus.api.DebugLog(LogLevel.Trace2,"GetUserWatchChapter: User: " + workuserid + " position: " + ortus.util.string.getInt((String) result.get(0).get(0)));
+			return ortus.util.string.getInt((String) result.get(0).get(0));
 		} else {
 			return 0;
 		}
@@ -367,14 +382,15 @@ public class Identity extends EventListener {
 	}
 
 	public boolean IsUserWatched(Object mediafile, Object userid) {
+                int mediaid = ortus.media.metadata.utils.GetMediaID(mediafile);
 		int workuserid = 0;
 		if (userid instanceof String) {
 			workuserid = Integer.parseInt((String) userid);
 		}
 		if (userid instanceof Integer) {
 			workuserid = (Integer) userid;
-		}
-		List<Object> result = ortus.api.executeSQLQuery("select watched from sage.usermedia where userid = " + workuserid + " and mediaid = " + MediaFileAPI.GetMediaFileID(mediafile));
+		}                
+		List<Object> result = ortus.api.executeSQLQuery("select watched from sage.usermedia where userid = " + workuserid + " and mediaid = " + mediaid );
 //		ortus.api.DebugLog(LogLevel.Trace2, "IsUserWatched: User: " + userid + " " + result);
 		if( result.size() > 0 ) {
 			if (result.get(0).equals("TRUE")) {
@@ -391,6 +407,7 @@ public class Identity extends EventListener {
 	}
 
 	public void ClearUserWatched(Object mediafile, Object userid) {
+                int mediaid = ortus.media.metadata.utils.GetMediaID(mediafile);
 		int workuserid = 0;
 		if (userid instanceof String) {
 			workuserid = Integer.parseInt((String) userid);
@@ -398,9 +415,9 @@ public class Identity extends EventListener {
 		if (userid instanceof Integer) {
 			workuserid = (Integer) userid;
 		}
-		int rc = ortus.api.executeSQL("update sage.usermedia set watched = false where userid = " + workuserid + " and mediaid = " + MediaFileAPI.GetMediaFileID(mediafile));
+		int rc = ortus.api.executeSQL("update sage.usermedia set watched = false, lastwatchedtime = 0 where userid = " + workuserid + " and mediaid = " + mediaid);
 		if ( rc < 1)
-			rc = ortus.api.executeSQL("insert into sage.usermedia ( userid, mediaid, watched, lastwatchedtime) values (" + workuserid + "," + MediaFileAPI.GetMediaFileID(mediafile) + ",false,0)");
+			rc = ortus.api.executeSQL("insert into sage.usermedia ( userid, mediaid, watched, lastwatchedtime) values (" + workuserid + "," + mediaid + ",false,0)");
 
 	}
 	public void SetUserWatched(Object mediafile) {
@@ -408,6 +425,7 @@ public class Identity extends EventListener {
 	}
 
 	public void SetUserWatched(Object mediafile, Object userid) {
+                int mediaid = ortus.media.metadata.utils.GetMediaID(mediafile);
 		int workuserid = 0;
 		if (userid instanceof String) {
 			workuserid = Integer.parseInt((String) userid);
@@ -415,9 +433,9 @@ public class Identity extends EventListener {
 		if (userid instanceof Integer) {
 			workuserid = (Integer) userid;
 		}
-		int rc = ortus.api.executeSQL("update sage.usermedia set watched = true where userid = " + workuserid + " and mediaid = " + MediaFileAPI.GetMediaFileID(mediafile));
+		int rc = ortus.api.executeSQL("update sage.usermedia set watched = true, lastwatchedtime = 0 where userid = " + workuserid + " and mediaid = " + mediaid);
 		if ( rc < 1)
-			rc = ortus.api.executeSQL("insert into sage.usermedia ( userid, mediaid, watched, lastwatchedtime) values (" + workuserid + "," + MediaFileAPI.GetMediaFileID(mediafile) + ",true,0)");
+			rc = ortus.api.executeSQL("insert into sage.usermedia ( userid, mediaid, watched, lastwatchedtime) values (" + workuserid + "," + mediaid + ",true,0)");
 
 	}
 

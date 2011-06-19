@@ -4,7 +4,6 @@
  */
 package ortus.onlinescrapper;
 
-import java.io.IOException;
 import ortus.onlinescrapper.themoviedb.ImageItem;
 import ortus.onlinescrapper.tools.database;
 import java.io.File;
@@ -21,20 +20,19 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import ortus.configurationEngine;
 import ortus.onlinescrapper.themoviedb.Movie;
-import ortus.onlinescrapper.themoviedb.SearchResult;
 import ortus.onlinescrapper.themoviedb.TheMovieDB;
 import ortus.onlinescrapper.thetvdb.Actor;
 import ortus.onlinescrapper.thetvdb.Episode;
 import ortus.onlinescrapper.thetvdb.Series;
 import ortus.onlinescrapper.thetvdb.TheTVDB;
 import ortus.onlinescrapper.tools.SageMetadata;
+import ortus.onlinescrapper.tools.urldownload;
 import sagex.api.Configuration;
 import sagex.api.Database;
 import sagex.api.MediaFileAPI;
+import sagex.api.ShowAPI;
 
 /**
  *
@@ -152,11 +150,14 @@ public class api extends ortus.vars {
 		sd.put("total_bypass", total_bypass);
 		sd.put("total_processed", total_processed);
 		sd.put("current_mediaid", current_mediaid);
+//                File mf = MediaFileAPI.GetFileForSegment(MediaFileAPI.GetMediaFileForID(current_mediaid), 0);
+//                sd.put("current_mediapath",mf.getAbsolutePath());
 		sd.put("scan_start_time", scan_start_time);
 		sd.put("scan_end_time", scan_end_time);
 		sd.put("total_music", total_music);
 		sd.put("total_pictures",total_pictures);
 		sd.put("index_running", index_running);
+                sd.put("elapsed_time", GetScrapperElapsedMinutes());
 		sd.put("scantype", st);
 		return sd;
 	}
@@ -358,41 +359,47 @@ public class api extends ortus.vars {
 			validmedia.put(String.valueOf(MediaFileAPI.GetMediaFileID(o)), "valid");
 		}
 
-		List<Object> result = ortus.api.executeSQLQuery("select mediaid, mediatype from sage.media");
+		List<HashMap> result = ortus.api.executeSQLQueryHash("select mediaid, mediatype from sage.media");
 
-		for (Object o : result) {
-			String[] rs = ((String) o).split(",");
-
-			if (validmedia.get(rs[0]) == null) {
+		for (HashMap o : result) {
+			if (validmedia.get(String.valueOf(o.get("MEDIAID"))) == null) {
 				totalclean++;
-				ortus.api.executeSQL("delete from sage.media where mediaid = " + rs[0]);
-				ortus.api.executeSQL("delete from sage.usermedia where mediaid = " + rs[0]);
-				if (rs[1].equals("3")) {
-					ortus.api.executeSQL("delete from sage.episode where episodeid = 999 and mediaid = " + rs[0]);
-					ortus.api.executeSQL("update sage.episode set mediaid = null where mediaid = " + rs[0]);
-				} else {
-					ortus.api.executeSQL("update sage.movies set mediaid = 0 where mediaid = " + rs[0]);
-					ortus.cache.cacheEngine.getInstance().getProvider().Remove(rs[0]);
-				}
+				ortus.api.executeSQL("delete from sage.media where mediaid = " + o.get("MEDIAID"));
+				ortus.api.executeSQL("delete from sage.usermedia where mediaid = " + o.get("MEDIAID"));
+                                ortus.api.executeSQL("delete from sage.episode where episodeid = 999 and mediaid = " + o.get("MEDIAID"));
+                                ortus.api.executeSQL("delete from sage.episodemedia where mediaid = " + o.get("MEDIAID"));
+                                ortus.api.executeSQL("delete from sage.customepisode where mediaid = " + o.get("MEDIAID"));
+                                ortus.api.executeSQL("update sage.episode set mediaid = null where mediaid = " + o.get("MEDIAID"));
+                                ortus.api.executeSQL("delete from sage.fanart where idtype = 'MD' and mediaid = " + o.get("MEDIAID"));
+                                ortus.api.executeSQL("delete from sage.metadata where mediaid = " + o.get("MEDIAID"));
+                                ortus.cache.cacheEngine.getInstance().getProvider().Remove("MD"+o.get("MEDIAID"));
 			}
 		}
 
-		ortus.api.executeSQL("update sage.media set mediatype = 0 where mediatype = 3 and mediaid not in ( select mediaid from sage.episode where mediaid is not null)");
+		ortus.api.executeSQL("update sage.media set mediatype = 0 where mediatype = 3 and mediaid not in ( select mediaid from sage.episodemedia union select mediaid from sage.customepisode)");
 		ortus.api.DebugLog(LogLevel.Debug, "cleanMedia: Completed, removed: " + totalclean);
 
 		return;
 	}
 
 	public static void cleanMediaObject(Object smo) {
-		int mediaid = MediaFileAPI.GetMediaFileID(smo);
-		ortus.api.DebugLog(LogLevel.Debug, "cleanMedia: Starting for MediaID: " + mediaid);
+                int mediaid = ortus.media.metadata.utils.GetMediaID(smo);
+                ortus.api.DebugLog(LogLevel.Debug, "cleanMedia: Starting for MediaID: " + mediaid);
+		
+                if ( mediaid == 0) {
+                    ortus.api.DebugLogTrace("cleanMedia: invalid mediaid");
+                    return;
+                }
 
 		ortus.api.executeSQL("delete from sage.media where mediaid = " + mediaid);
 		ortus.api.executeSQL("delete from sage.usermedia where mediaid = " + mediaid);
 		ortus.api.executeSQL("delete from sage.episode where episodeid = 999 and mediaid = " + mediaid);
+                ortus.api.executeSQL("delete from sage.episodemedia where mediaid = " + mediaid);
+                ortus.api.executeSQL("delete from sage.customepisode where mediaid = " + mediaid);
 		ortus.api.executeSQL("update sage.episode set mediaid = null where mediaid = " + mediaid);
-                ortus.api.executeSQL("update sage.movies set mediaid = 0 where mediaid = " + mediaid);
+                ortus.api.executeSQL("delete from sage.metadata where mediaid = " + mediaid);
 		ortus.api.executeSQL("delete from sage.music where mediaid = " + mediaid);
+                ortus.api.executeSQL("delete from sage.fanart where idtype = 'MD' and mediaid = " + mediaid);
 		ortus.cache.cacheEngine.getInstance().getProvider().Remove(mediaid);
 
 //		ortus.api.executeSQL("update sage.media set mediatype = 0 where mediatype = 3 and mediaid not in ( select mediaid from sage.episode where mediaid is not null)");
@@ -539,6 +546,9 @@ public class api extends ortus.vars {
 		for (Iterator<Object> iter = mfl.iterator(); iter.hasNext();) {
 			try {
 
+                                List<List> cr = ortus.api.executeSQLQueryArray("select count(*) from sage.media");
+                                int smc = Integer.parseInt((String)cr.get(0).get(0));
+                                ortus.api.DebugLogInfo("sage.media count is " + smc);
 				Object obj = iter.next();
 				if (cancel_scan) {
 					cancel_scan = false;
@@ -631,8 +641,14 @@ public class api extends ortus.vars {
 				if (quickscan) {
 					mo.WriteDB();
 				} else {
-					if ( mo.isMusic() || mo.isPicture()) {
-						mo.WriteDB();
+					if ( mo.isMusic()) {
+                                                ortus.api.DebugLog(LogLevel.Info, "indexMedia: type music");
+                                                mo.setFanart(1);
+                                                mo.setMetadata(1);
+                                                mo.WriteDB();
+                                                mo.GetMusicFanart();
+                                        } if ( mo.isPicture()) {
+                                                mo.WriteDB();
 					} else if ( mo.isVideo()) {
 						if (GetMediaMetaData(mo)) {
 							if (mo.isMediaTypeSeries()) {
@@ -706,18 +722,8 @@ public class api extends ortus.vars {
 
 		boolean metadata_found = false;
 
-		ortus.api.DebugLog(LogLevel.Info, "GetMediaMetaData: Starting for: " + MediaFileAPI.GetMediaFileID(mo.getMedia()));
-
-		List<String> regex = null;
-		try {
-			regex = IOUtils.readLines(configurationEngine.getInstance().getJarStream("/ortus/resources/indexmedia.regex"));
-		} catch (IOException ex) {
-			ortus.api.DebugLog(LogLevel.Error,"GetMediaMetaData: Exception: " , ex);
-		}
-		if( regex.size() == 0)
-			ortus.api.DebugLog(LogLevel.Trace,"indexmedia regex is emtpy");
-		else
-			ortus.api.DebugLog(LogLevel.Trace,"indexmedia regex has " + regex.size() + " entries");
+		ortus.api.DebugLog(LogLevel.Debug, "GetMediaMetaData: Starting for: " + MediaFileAPI.GetMediaFileID(mo.getMedia()));
+		
 		List<String> mediaregex = ortus.api.DumpLogFile(ortus.api.GetProperty("ortus/basepath", "") + java.io.File.separator + "Configuration" + java.io.File.separator + "mediamatch.regex");
 
 		if (MediaFileAPI.GetMediaTitle(mo.getMedia()).isEmpty()) {
@@ -741,43 +747,9 @@ public class api extends ortus.vars {
 			ortus.api.DebugLog(LogLevel.Trace, " media not found for " + MediaFileAPI.GetMediaFileID(mo.getMedia()));
 		}
 
-		if (mo.isMediaTypeRecording()) {
-			mo.setLikely_tv(true);
-		} else {
-			String ShowPath = "";
+                getShowTitle(mo);
 
-			if (mf.getName().equals("VIDEO_TS") || mf.getName().equals("BDMV")) {
-				String workname = mf.getParent();
-				mo.setShowtitle(workname.substring(workname.lastIndexOf(java.io.File.separator) + 1));
-			} else {
-				if (mf.getName().contains(".")) {
-					mo.setShowtitle(mf.getName().substring(0, mf.getName().lastIndexOf(".")));
-				} else {
-					mo.setShowtitle(mf.getName());
-				}
-			}
-		}
-
-		for (String rx : regex) {
-//			ortus.api.DebugLog(LogLevel.Trace,"     Series REGEX matching against: " + rx + " for show: " + mo.getShowtitle());
-			Pattern pattern = Pattern.compile(rx);
-			Matcher matcher = pattern.matcher(mo.getShowtitle());
-			if (matcher.matches()) {
-				if (matcher.groupCount() == 3) {
-					mo.setLikely_tv(true);
-					ortus.api.DebugLog(LogLevel.Trace, "Show: " + matcher.group(1));
-					ortus.api.DebugLog(LogLevel.Trace, "Season No: " + matcher.group(2));
-					ortus.api.DebugLog(LogLevel.Trace, "Episode No: " + matcher.group(3));
-					mo.setShowtitle(matcher.group(1));
-					mo.setSeasonno(matcher.group(2));
-					mo.setEpisodeno(matcher.group(3));
-				} else {
-					ortus.api.DebugLog(LogLevel.Trace, "Match found group: " + matcher.groupCount());
-				}
-			}
-		}
-
-                if ( ortus.api.GetSageProperty("ortus/metadata/useproperty","true").equalsIgnoreCase("true")) {
+                if ( ortus.api.GetSageProperty("ortus/metadata/useproperty","false").equalsIgnoreCase("true")) {
                     if (mo.ReadProperty()) {
                             total_match_property++;
                     }
@@ -790,7 +762,7 @@ public class api extends ortus.vars {
 				ortus.api.DebugLog(LogLevel.Trace, "TV Matched");
 			}
 		}
-		if (!metadata_found) {
+		if (!metadata_found && mo.isIsTV() == false) {
 			mo.setMetadatasource("Google");
 			if (MovieSearch(mo, mediaregex)) {
 				metadata_found = true;
@@ -806,7 +778,8 @@ public class api extends ortus.vars {
 		}
 
 		if (!metadata_found) {
-			mo.setMediatype(MediaType.Home);
+                        if ( mo.getMediatype() != MediaType.Recording)
+                            mo.setMediatype(MediaType.Home);
 			mo.WriteDB();
                 } else {
                         if ( ! MediaFileAPI.IsTVFile(mo.getMedia()))
@@ -823,6 +796,397 @@ public class api extends ortus.vars {
 		return metadata_found;
 	}
 
+        public static void getShowTitle(MediaObject mo) {
+//                List<String> regex = null;
+//		try {
+//			regex = IOUtils.readLines(Ortus.getInstance().getJarStream("/ortus/resources/indexmedia.regex"));
+//		} catch (IOException ex) {
+//			ortus.api.DebugLog(LogLevel.Error,"GetMediaMetaData: Exception: " , ex);
+//		}
+//		if( regex.size() == 0)
+//			ortus.api.DebugLog(LogLevel.Trace,"indexmedia regex is emtpy");
+//		else
+//			ortus.api.DebugLog(LogLevel.Trace,"indexmedia regex has " + regex.size() + " entries");
+            String fs = "\\\\";
+            if (java.io.File.separator.equals("/"))
+                fs="/";
+
+            File mf = MediaFileAPI.GetFileForSegment(mo.getMedia(), 0);
+
+            String name = mf.getAbsolutePath();
+            String title = "";
+            String year = "";
+            String episodetitle = "";
+            String seasonno = "";
+            String episodeno = "";
+            ortus.api.DebugLogTrace("Matching Title: " + name);
+
+            /*
+            */
+            Pattern pattern = Pattern.compile(".*"+fs+"(.*)\\..*$");
+            Matcher matcher = pattern.matcher(name);
+
+            if( matcher.matches()) {
+                ortus.api.DebugLogTrace("Filter 1");
+                ortus.api.DebugLogTrace("Title: " + matcher.group(1));
+                title = matcher.group(1);
+            }
+
+            if (mo.isMediaTypeRecording()) {
+                    ortus.api.DebugLogTrace(" Is a recording");
+                    mo.setLikely_tv(true);
+                    title = ShowAPI.GetShowTitle(mo.getMedia());
+                    episodetitle= ShowAPI.GetShowEpisode(mo.getMedia());
+            }
+            /*
+             *   movie title(2009).mkv
+            */
+            pattern = Pattern.compile(".*"+fs+"(.*)\\((\\d+)\\)\\..*$");
+            matcher = pattern.matcher(name);
+
+            if( matcher.matches()) {
+                ortus.api.DebugLogTrace("Filter 2");
+                ortus.api.DebugLogTrace("Title: " + matcher.group(1));
+                ortus.api.DebugLogTrace("Year: " + matcher.group(2));
+                title = matcher.group(1);
+                year = matcher.group(2);
+            }
+            /*
+             * DVD
+             */
+            pattern = Pattern.compile(".*"+fs+"(.*)"+fs+"VIDEO_TS$");
+            matcher = pattern.matcher(name);
+
+            if( matcher.matches()) {
+                ortus.api.DebugLogTrace("Filter 3");
+                ortus.api.DebugLogTrace("Title: " + matcher.group(1));
+                title = matcher.group(1);
+            }
+
+            /*
+             * DVD (2009)
+             */
+            pattern = Pattern.compile(".*"+fs+"(.*)\\((\\d+)\\)"+fs+"VIDEO_TS$");
+            matcher = pattern.matcher(name);
+
+            if( matcher.matches()) {
+                ortus.api.DebugLogTrace("Filter 4");
+                ortus.api.DebugLogTrace("Title: " + matcher.group(1));
+                ortus.api.DebugLogTrace("Year: " + matcher.group(2));
+                title = matcher.group(1);
+                year = matcher.group(2);
+            }
+
+            /*
+             * Bluray
+             */
+            pattern = Pattern.compile(".*"+fs+"(.*)"+fs+"BDMV$");
+            matcher = pattern.matcher(name);
+
+            if( matcher.matches()) {
+                ortus.api.DebugLogTrace("Title: " + matcher.group(1));
+                title = matcher.group(1);
+            }
+            /*
+             * bluray (2009)
+             */
+            pattern = Pattern.compile(".*"+fs+"(.*)\\((\\d+)\\)"+fs+"BDMV$");
+            matcher = pattern.matcher(name);
+
+            if( matcher.matches()) {
+                ortus.api.DebugLogTrace("Filter 6");
+                ortus.api.DebugLogTrace("Title: " + matcher.group(1));
+                ortus.api.DebugLogTrace("Year: " + matcher.group(2));
+                title = matcher.group(1);
+                year = matcher.group(2);
+            }
+
+
+            /*
+             * Plex
+             */
+
+            /*
+             *   Plex one movietitle\somename.mkv
+             */
+    //        name = "\\\\server\\dir\\dir\\Movie Title\\moviefile.mkv";
+//            pattern = Pattern.compile(".*"+fs+"(.*)"+fs+"(.*)$");
+//            matcher = pattern.matcher(name);
+//
+//            if( matcher.matches()) {
+//                ortus.api.DebugLogTrace("Filter 7");
+//                ortus.api.DebugLogTrace("Title: " + matcher.group(1));
+//                title = matcher.group(1);
+//            }
+
+            pattern = Pattern.compile(".*"+fs+"(.*)\\((.*)\\).*"+fs+"(.*)$");
+            matcher = pattern.matcher(name);
+
+            if( matcher.matches()) {
+                ortus.api.DebugLogTrace("Filter 8");
+                ortus.api.DebugLogTrace("Title: " + matcher.group(1));
+                ortus.api.DebugLogTrace("Year: " + matcher.group(2));
+                title = matcher.group(1);
+                year = matcher.group(2);
+            }
+
+            /*
+             * TV Series
+             */
+            pattern = Pattern.compile(".*"+fs+ "(.*)[Ss](\\d+).*[Ee](\\d+).*$");
+            matcher = pattern.matcher(name);
+
+            if( matcher.matches()) {
+                ortus.api.DebugLogTrace("Filter 9");
+                if (matcher.group(1).replaceAll("\\.", " ").length() > 0)
+                    ortus.api.DebugLogTrace("Title: " + matcher.group(1).replaceAll("\\.", " "));
+                ortus.api.DebugLogTrace("Season: " + matcher.group(2));
+                ortus.api.DebugLogTrace("Episode: " + matcher.group(3));
+                if (matcher.group(1).replaceAll("\\.", " ").length() > 0)
+                    title = matcher.group(1);
+                seasonno = matcher.group(2);
+                episodeno = matcher.group(3);
+                mo.setLikely_tv(true);
+                mo.setIsTV(true);
+            }
+
+            pattern = Pattern.compile(".*"+fs+ "(.*)\\.(\\d{4,})\\.[Ss](\\d+).*[Ee](\\d+).*$");
+            matcher = pattern.matcher(name);
+
+            if( matcher.matches()) {
+                ortus.api.DebugLogTrace("Filter 9b");
+                if (matcher.group(1).replaceAll("\\.", " ").length() > 0)
+                    ortus.api.DebugLogTrace("Title: " + matcher.group(1).replaceAll("\\.", " "));
+                ortus.api.DebugLogTrace("Year: " + matcher.group(2));
+                ortus.api.DebugLogTrace("Season: " + matcher.group(3));
+                ortus.api.DebugLogTrace("Episode: " + matcher.group(4));
+                if (matcher.group(1).replaceAll("\\.", " ").length() > 0)
+                    title = matcher.group(1);
+                year = matcher.group(2);
+                seasonno = matcher.group(3);
+                episodeno = matcher.group(4);
+                mo.setLikely_tv(true);
+                mo.setIsTV(true);
+            }
+
+            pattern = Pattern.compile(".*"+fs+"(.*) - [Ss](\\d+)[Ee](\\d+) - (.*).*\\..*$");
+            matcher = pattern.matcher(name);
+
+            if( matcher.matches()) {
+                ortus.api.DebugLogTrace("Filter 10");
+                ortus.api.DebugLogTrace("Title: " + matcher.group(1));
+                ortus.api.DebugLogTrace("Season: " + matcher.group(2));
+                ortus.api.DebugLogTrace("Episode: " + matcher.group(3));
+                ortus.api.DebugLogTrace("Episode Title: " + matcher.group(4));
+                title = matcher.group(1);
+                seasonno = matcher.group(2);
+                episodeno = matcher.group(3);
+                episodetitle = matcher.group(4);
+                mo.setLikely_tv(true);
+                mo.setIsTV(true);
+            }
+
+            pattern = Pattern.compile(".*"+fs+"(.*)[Ss][Ee][Aa][Ss][Oo][Nn] (\\d+) [Ee][Pp][Ii][Ss][Oo][Dd][Ee] (\\d+).*$");
+            matcher = pattern.matcher(name);
+
+            if( matcher.matches()) {
+                ortus.api.DebugLogTrace("Filter 11");
+                ortus.api.DebugLogTrace("Title: " + matcher.group(1));
+                ortus.api.DebugLogTrace("Season: " + matcher.group(2));
+                ortus.api.DebugLogTrace("Episode: " + matcher.group(3));
+                title = matcher.group(1);
+                seasonno = matcher.group(2);
+                episodeno = matcher.group(3);
+                mo.setIsTV(true);
+            }
+
+           pattern = Pattern.compile(".*"+fs+"(.*)"+fs+".*Season (.*)"+fs+"(\\d+)\\. (.*)\\..*$");
+            matcher = pattern.matcher(name);
+
+            if( matcher.matches()) {
+                ortus.api.DebugLogTrace("Filter 13");
+                ortus.api.DebugLogTrace("Title: " + matcher.group(1));
+                ortus.api.DebugLogTrace("Season: " + matcher.group(2));
+                ortus.api.DebugLogTrace("Episode: " + matcher.group(3));
+                ortus.api.DebugLogTrace("Episode Title: " + matcher.group(4));
+                title = matcher.group(1);
+                seasonno = matcher.group(2);
+                episodeno = matcher.group(3);
+                episodetitle = matcher.group(4);
+                mo.setLikely_tv(true);
+                mo.setIsTV(true);
+            }
+
+            pattern = Pattern.compile(".*"+fs+"(.*)"+fs+".*Season (.*)"+fs+"(\\d+) - (.*)\\..*$");
+            matcher = pattern.matcher(name);
+
+            if( matcher.matches()) {
+                ortus.api.DebugLogTrace("Filter 13b");
+                ortus.api.DebugLogTrace("Title: " + matcher.group(1));
+                ortus.api.DebugLogTrace("Season: " + matcher.group(2));
+                ortus.api.DebugLogTrace("Episode: " + matcher.group(3));
+                ortus.api.DebugLogTrace("Episode Title: " + matcher.group(4));
+                title = matcher.group(1);
+                seasonno = matcher.group(2);
+                episodeno = matcher.group(3);
+                episodetitle = matcher.group(4);
+                mo.setLikely_tv(true);
+                mo.setIsTV(true);
+            }
+
+            pattern = Pattern.compile(".*"+fs+"(.*)"+fs+".*Season (.*)"+fs+"(\\d{3,}?) - (.*)\\..*$");
+            matcher = pattern.matcher(name);
+
+            if( matcher.matches()) {
+                ortus.api.DebugLogTrace("Filter 12");
+                ortus.api.DebugLogTrace("Title: " + matcher.group(1));
+                String season=null;
+                String episode=null;
+                if ( matcher.group(3).length() == 3) {
+                    season = matcher.group(3).substring(0,1);
+                    episode = matcher.group(3).substring(1,3);
+                } else if ( matcher.group(3).length() == 4) {
+                    season = matcher.group(3).substring(0,2);
+                    episode = matcher.group(3).substring(2,4);
+                }
+
+                ortus.api.DebugLogTrace("Season: " + season);
+                ortus.api.DebugLogTrace("Episode: " + episode);
+                ortus.api.DebugLogTrace("Episode Title: " + matcher.group(4));
+                title = matcher.group(1);
+                seasonno = season;
+                episodeno = episode;
+                episodetitle = matcher.group(4);
+                mo.setLikely_tv(true);
+                mo.setIsTV(true);
+            }
+
+            pattern = Pattern.compile(".*"+fs+"(.*) (\\d+)x(\\d+) - (.*)\\..*$");
+            matcher = pattern.matcher(name);
+
+            if( matcher.matches()) {
+                ortus.api.DebugLogTrace("Filter 14");
+                ortus.api.DebugLogTrace("Title: " + matcher.group(1));
+                ortus.api.DebugLogTrace("Season: " + matcher.group(2));
+                ortus.api.DebugLogTrace("Episode: " + matcher.group(3));
+                ortus.api.DebugLogTrace("Episode Title: " + matcher.group(4));
+                title = matcher.group(1);
+                seasonno = matcher.group(2);
+                episodeno = matcher.group(3);
+                episodetitle = matcher.group(4);
+                mo.setLikely_tv(true);
+            }
+
+            pattern = Pattern.compile(".*"+fs+".*\\.(.*)-(\\d+)x(\\d+)-(.*)\\..*$");
+            matcher = pattern.matcher(name);
+
+            if( matcher.matches()) {
+                ortus.api.DebugLogTrace("Filter 14b");
+                ortus.api.DebugLogTrace("Title: " + matcher.group(1));
+                ortus.api.DebugLogTrace("Season: " + matcher.group(2));
+                ortus.api.DebugLogTrace("Episode: " + matcher.group(3));
+                ortus.api.DebugLogTrace("Episode Title: " + matcher.group(4));
+                title = matcher.group(1);
+                seasonno = matcher.group(2);
+                episodeno = matcher.group(3);
+                episodetitle = matcher.group(4);
+                mo.setLikely_tv(true);
+                mo.setIsTV(true);
+            }
+
+            pattern = Pattern.compile(".*"+fs+"(.*)\\.(\\d+)x(\\d+)\\.(.*)\\..*$");
+            matcher = pattern.matcher(name);
+
+            if( matcher.matches()) {
+                ortus.api.DebugLogTrace("Filter 15");
+                ortus.api.DebugLogTrace("Title: " + matcher.group(1));
+                ortus.api.DebugLogTrace("Season: " + matcher.group(2));
+                ortus.api.DebugLogTrace("Episode: " + matcher.group(3));
+                title = matcher.group(1);
+                seasonno = matcher.group(2);
+                episodeno = matcher.group(3);
+                mo.setLikely_tv(true);
+                mo.setIsTV(true);
+            }
+
+            pattern = Pattern.compile(".*"+fs+"(.*)\\.(\\d+)\\.pdtv-lol (.*)\\..*$");
+            matcher = pattern.matcher(name);
+
+            if( matcher.matches()) {
+                ortus.api.DebugLogTrace("Filter 16");
+                ortus.api.DebugLogTrace("Title: " + matcher.group(1));
+                String season=null;
+                String episode=null;
+                if ( matcher.group(2).length() == 3) {
+                    season = matcher.group(2).substring(0,1);
+                    episode = matcher.group(2).substring(1,3);
+                } else if ( matcher.group(2).length() == 4) {
+                    season = matcher.group(2).substring(0,2);
+                    episode = matcher.group(2).substring(2,4);
+                }
+                ortus.api.DebugLogTrace("Season: " + season);
+                ortus.api.DebugLogTrace("Episode: " + episode);
+                ortus.api.DebugLogTrace("Episode Title: " + matcher.group(3));
+                title = matcher.group(1);
+                seasonno = season;
+                episodeno = episode;
+                episodetitle = matcher.group(3);
+                mo.setLikely_tv(true);
+                mo.setIsTV(true);
+            }
+
+            title=title.replaceAll("\\."," ").trim();
+            title=title.replaceAll("_"," ").trim();
+            title=title.replaceAll("\\+"," ").trim();
+            episodetitle=episodetitle.replaceAll("\\."," ").trim();
+
+
+            ortus.api.DebugLogTrace("Final Title: " + title);
+            ortus.api.DebugLogTrace("Final Year: " + year);
+            ortus.api.DebugLogTrace("Final Season: " + seasonno);
+            ortus.api.DebugLogTrace("Final Episode: " + episodeno);
+            ortus.api.DebugLogTrace("Final Episode Title: " + episodetitle);
+            
+            mo.setShowtitle(title);
+            mo.setEpisodetitle(episodetitle);
+            mo.setSeasonno(seasonno);
+            mo.setEpisodeno(episodeno);
+            mo.setYear(year);
+//		} else {
+//			String ShowPath = "";
+//
+//			if (mf.getName().equals("VIDEO_TS") || mf.getName().equals("BDMV")) {
+//				String workname = mf.getParent();
+//				mo.setShowtitle(workname.substring(workname.lastIndexOf(java.io.File.separator) + 1));
+//			} else {
+//				if (mf.getName().contains(".")) {
+//					mo.setShowtitle(mf.getName().substring(0, mf.getName().lastIndexOf(".")));
+//				} else {
+//					mo.setShowtitle(mf.getName());
+//				}
+//			}
+//		}
+//
+//		for (String rx : regex) {
+////			ortus.api.DebugLog(LogLevel.Trace,"     Series REGEX matching against: " + rx + " for show: " + mo.getShowtitle());
+//			Pattern pattern = Pattern.compile(rx);
+//			Matcher matcher = pattern.matcher(mo.getShowtitle());
+//			if (matcher.matches()) {
+//				if (matcher.groupCount() == 3) {
+//					mo.setLikely_tv(true);
+//					ortus.api.DebugLog(LogLevel.Trace, "Show: " + matcher.group(1));
+//					ortus.api.DebugLog(LogLevel.Trace, "Season No: " + matcher.group(2));
+//					ortus.api.DebugLog(LogLevel.Trace, "Episode No: " + matcher.group(3));
+//					mo.setShowtitle(matcher.group(1));
+//					mo.setSeasonno(matcher.group(2));
+//					mo.setEpisodeno(matcher.group(3));
+//				} else {
+//					ortus.api.DebugLog(LogLevel.Trace, "Match found group: " + matcher.groupCount());
+//				}
+//			}
+//		}
+        }
+        
 	public static void AutoFileMatch(Object smo) {
 		boolean media_found = false;
 		int retry_loop = 0;
@@ -843,6 +1207,7 @@ public class api extends ortus.vars {
 					mo.setFanart(1);
 					mo.setMetadata(1);
 					mo.WriteDB();
+                                        mo.GetMusicFanart();
 
 				}
 
@@ -884,10 +1249,20 @@ public class api extends ortus.vars {
 		ortus.api.DebugLog(LogLevel.Trace, "TVSearch: title " + mo.getShowtitle() + " episode: " + mo.getEpisodetitle());
 		if ( ! mo.getSeasonno().isEmpty())
 			ortus.api.DebugLog(LogLevel.Trace, " Season: " + mo.getSeasonno() + " Episode: " + mo.getEpisodeno());
+
 		String ortustvdbpath = ortus.api.GetProperty("ortus/basepath", "") + java.io.File.separator + "tvdb" + java.io.File.separator;
+
 		boolean series_found = false;
 
 		TheTVDB tvdb = new TheTVDB();
+
+                if ( mo.getTvdbid() == null) {
+                    HashMap x = database.GetCacheMetadata("tvdb",mo);
+                    if ( x.get("title") != null) {
+                        mo.setShowtitle((String)x.get("title"));
+                        mo.setTvdbid((String)x.get("id"));
+                    }
+                }
 
 		if (mo.getTvdbid() == null) {
 			HashMap<String, Series> tv = new HashMap<String, Series>();
@@ -913,14 +1288,14 @@ public class api extends ortus.vars {
 				}
 			}
 
-			HashMap<String, SearchResult> logmatch = new HashMap<String, SearchResult>();
-			for (Object tt : tk) {
-				logmatch.put((String) tt, new SearchResult((String) tt,""));
-			}
-			if (logmatch.isEmpty()) {
-				logmatch.put("Not Found", new SearchResult("Not Found",""));
-			}
-			database.LogFind(0, MediaFileAPI.GetMediaFileID(mo.getMedia()), mo.getShowtitle(), logmatch);
+//			HashMap<String, SearchResult> logmatch = new HashMap<String, SearchResult>();
+//			for (Object tt : tk) {
+//				logmatch.put((String) tt, new SearchResult((String) tt,""));
+//			}
+//			if (logmatch.isEmpty()) {
+//				logmatch.put("Not Found", new SearchResult("Not Found",""));
+//			}
+//			database.LogFind(0, MediaFileAPI.GetMediaFileID(mo.getMedia()), mo.getShowtitle(), logmatch);
 		}
 
 		if (mo.getTvdbid() != null) {
@@ -944,7 +1319,9 @@ public class api extends ortus.vars {
 					for (Episode ce : episodes) {
 						database.WriteEpisodetoDB(ce, current.getSeriesName());
 					}
-				}
+				} else {
+                                    mo.setFanart(0);
+                                }
 			}
 			if (mo.getMetadata() == 2 || !mo.isMetadatafound()) {
 				ortus.api.DebugLog(LogLevel.Trace, "metadata will be added to the db");
@@ -969,26 +1346,26 @@ public class api extends ortus.vars {
 		return series_found;
 	}
 
-	public static int ManualMovieSearch(Object mediafile, String title) {
-		manual_index_running = true;
-		ortus.api.DebugLog(LogLevel.Trace, "Manual Movie Search: title: " + title);
-
-		int total_matches = 0;
-		HashMap<String, SearchResult> movies;
-
-		TheMovieDB tmdb = new TheMovieDB();
-		movies = tmdb.Search(title);
-		total_matches += movies.size();
-		database.LogFind(1, MediaFileAPI.GetMediaFileID(mediafile), title, movies);
-		Object[] mk = movies.keySet().toArray();
-		for (Object mt : mk) {
-			tmdb.GetDetail((String) movies.get(mt).getMetadatakey());
-		}
-
-		manual_index_running = false;
-
-		return total_matches;
-	}
+//	public static int ManualMovieSearch(Object mediafile, String title) {
+//		manual_index_running = true;
+//		ortus.api.DebugLog(LogLevel.Trace, "Manual Movie Search: title: " + title);
+//
+//		int total_matches = 0;
+//		HashMap<String, Movie> movies;
+//
+//		TheMovieDB tmdb = new TheMovieDB();
+//		movies = tmdb.Search(title);
+//		total_matches += movies.size();
+////		database.LogFind(1, MediaFileAPI.GetMediaFileID(mediafile), title, movies);
+//		Object[] mk = movies.keySet().toArray();
+//		for (Object mt : mk) {
+//			tmdb.GetDetail((String) movies.get(mt).getMetadatakey());
+//		}
+//
+//		manual_index_running = false;
+//
+//		return total_matches;
+//	}
 
         public static List<HashMap> LiveSearch(String scope, String title) {
 		manual_index_running = true;
@@ -998,18 +1375,20 @@ public class api extends ortus.vars {
 		int total_matches = 0;
 
                 if ( scope.equalsIgnoreCase("movie") || scope.equalsIgnoreCase("both")) {
-                    HashMap<String, SearchResult> movies;
+                    HashMap<String, Movie> movies;
 
                     TheMovieDB tmdb = new TheMovieDB();
-                    movies = tmdb.Search(title);
+                    movies = tmdb.Search(title,"");
                     Object[] mk = movies.keySet().toArray();
                     for ( Object x : mk) {
-                        HashMap entry = new HashMap();
-                        entry.put("key", movies.get((String)x).getMetadatakey());
-                        entry.put("source","tmdb");
-                        entry.put("title", movies.get((String)x).getTitle());
-                        entry.put("year", movies.get((String)x).getDate());
-                        entry.put("description", movies.get((String)x).getDescription());
+                        HashMap entry = movies.get((String)x).toHash();
+                        entry.put("name", x);
+                        if ( entry.get("metadataid") != null) {
+                            if ( ((String)entry.get("metadataid")).startsWith("TM"))
+                                entry.put("source","tmdb");
+                            else
+                                entry.put("source","imdb");
+                        }
                         results.add(entry);
                     }
                     total_matches += movies.size();
@@ -1023,11 +1402,13 @@ public class api extends ortus.vars {
                     Object[] mk = series.keySet().toArray();
                     for ( Object x : mk) {
                         HashMap entry = new HashMap();
-                        entry.put("key",series.get((String)x).getId());
+                        entry.put("metadataid","TVDB" + series.get((String)x).getId());
+                        entry.put("tvdbid", series.get((String)x).getId());
                         entry.put("source", "tvdb");
-                        entry.put("title",series.get((String)x).getSeriesName());
-                        entry.put("year", series.get((String)x).getFirstAired());
-                        entry.put("description", series.get((String)x).getOverview());
+                        entry.put("name",series.get((String)x).getSeriesName());
+                        entry.put("releasedate", series.get((String)x).getFirstAired());
+                        entry.put("overview", series.get((String)x).getOverview());
+                        entry.put("certification", series.get((String)x).getRating());
                         results.add(entry);
                     }
                     total_matches += series.size();
@@ -1038,47 +1419,169 @@ public class api extends ortus.vars {
 		return results;
 	}
 
-        public static void LiveSearchStore(HashMap entry) {
+        public static List<HashMap> LiveSearchEpisode(HashMap entry) {
+		ortus.api.DebugLog(LogLevel.Trace, "LiveSearchEpisode: SeriesID: " + entry.get("tvdbid"));
+                String ortustvdbpath = ortus.api.GetProperty("ortus/basepath", "") + java.io.File.separator + "tvdb" + java.io.File.separator;
+                String cleanName = ortustvdbpath + ortus.util.string.ScrubFileName((String)entry.get("name"));
+                List<HashMap> results = new ArrayList<HashMap>();
+		int total_matches = 0;
 
-                ortus.api.DebugLog(LogLevel.Trace,"LiveSearchStore: Storing key: " + entry.get("key"));
-                if ( entry.get("key") == null || entry.get("title") == null || ! ((String)entry.get("source")).equalsIgnoreCase("tvdb")) {
+                List<Episode> episodes;
+
+                TheTVDB tvdb = new TheTVDB();
+                tvdb.GetSeriesXML((String)entry.get("tvdbid"), cleanName);
+                episodes = tvdb.getEpisodes(cleanName);
+
+                for ( Episode e : episodes) {
+                    HashMap x = e.toHash();
+                    String sep = "S";
+                    if ( e.getSeasonNumber() < 10)
+                        sep+="0";
+                    sep+=String.valueOf(e.getSeasonNumber());
+                    sep+="E";
+                    if ( e.getEpisodeNumber() < 10)
+                        sep+="0";
+                    sep+=String.valueOf(e.getEpisodeNumber());
+                    x.put("seasonepisode",sep);
+                    x.put("seriesname",entry.get("name"));
+                    results.add(x);
+                }
+		return results;
+	}
+
+        public static void LiveSearchStore(Object mediafile, HashMap entry) {
+                final int mediaid = ortus.media.metadata.utils.GetMediaID(mediafile);
+                ortus.api.DebugLog(LogLevel.Trace,"LiveSearchStore: Saving metadata for " + mediaid + " key: " + entry.get("metadataid"));
+                if ( entry.get("metadataid") == null || entry.get("mediaid") == null ) {
                     ortus.api.DebugLog(LogLevel.Error, "LiveSearchStore: Error, key is not valid");
                     return;
                 }
 
-                if ( ((String)entry.get("source")).equalsIgnoreCase("tvdb")) {
-                    boolean xmlexist = false;
-                    ortus.api.DebugLog(LogLevel.Trace, "LiveSearchStore: Key: " + entry.get("key"));
-                    String ortustvdbpath = ortus.api.GetProperty("ortus/basepath", "") + java.io.File.separator + "tvdb" + java.io.File.separator;
-                    boolean series_found = false;
+                for ( Object x : entry.keySet()) {
+                    ortus.api.DebugLogTrace("Key: " + x + "  Value: " + entry.get(x));
+                }
 
-                    TheTVDB tvdb = new TheTVDB();
+                MediaObject temp = new MediaObject(MediaFileAPI.GetMediaFileForID(mediaid));
+                getShowTitle(temp);
 
-                    tvdb.GetSeriesXML((String)entry.get("key"), ortustvdbpath + entry.get("title"));
+                ortus.api.DebugLogTrace("checking source");
+                
+                if ( ((String)entry.get("source")).startsWith("episode")) {
+                    try {
+                        boolean xmlexist = false;
+                        ortus.api.DebugLog(LogLevel.Trace, "LiveSearchStore: Matching: Series: " + entry.get("seriesname") + " Episode: " + entry.get("name"));
+                        final String ortustvdbpath = ortus.api.GetProperty("ortus/basepath", "") + java.io.File.separator + "tvdb" + java.io.File.separator;
+                        boolean series_found = false;
 
-                    List<Episode> episodes = tvdb.getEpisodes(ortustvdbpath + entry.get("title"));
-                    Series current = tvdb.getSeries(ortustvdbpath + entry.get("title"));
-                    List<Actor> actors = tvdb.getActors(ortustvdbpath + entry.get("title"));
-                    String si = current.getId();
-                    if (!si.isEmpty()) {
-                            List<Object> result = ortus.api.executeSQLQuery("select seriesid from sage.series where seriesid = " + si);
-                            if (result.size() <= 0) {
-                                    ortus.api.DebugLog(LogLevel.Trace, "Load Series into the db");
-                                    database.WriteSeriestoDB(current, actors);
+                        final TheTVDB tvdb = new TheTVDB();
 
-                                    for (Episode ce : episodes) {
-                                            database.WriteEpisodetoDB(ce, current.getSeriesName());
-                                    }
-                            }
-                    }
-//                    tvdb.GetSeriesFanart(null, ortustvdbpath, si, xmlexist);
-                } else {
-                    TheMovieDB tmdb = new TheMovieDB();
-                    Movie movie = tmdb.GetDetail((String)entry.get("key"));
-                    if ( movie != null) {
-                        if ( movie.isMetadatafound()) {
-                            movie.WriteDB();
+                        List<Episode> episodes = tvdb.getEpisodes(ortustvdbpath + entry.get("seriesname"));
+                        String cleanName = ortustvdbpath + ortus.util.string.ScrubFileName((String)entry.get("seriesname"));
+                        Series current = tvdb.getSeries(cleanName);
+                        List<Actor> actors = tvdb.getActors(cleanName);
+                        String si = current.getId();
+                        if (!si.isEmpty()) {                                
+                                List<Object> result = ortus.api.executeSQLQuery("select seriesid from sage.series where seriesid = " + si);
+                                if (result.size() <= 0) {
+                                        series_found = true;
+                                        ortus.api.DebugLog(LogLevel.Trace, "Load Series into the db");
+                                        database.WriteSeriestoDB(current, actors);
+
+                                        for (Episode ce : episodes) {
+                                                database.WriteEpisodetoDB(ce, current.getSeriesName());
+                                        }
+                                }
                         }
+                        final MediaObject mo = new MediaObject();
+                        mo.setMedia(MediaFileAPI.GetMediaFileForID(mediaid));
+                        mo.setShowtitle((String)entry.get("seriesname"));
+                        mo.setEpisodetitle((String)entry.get("name"));
+                        mo.setSeriesID(String.valueOf(entry.get("seriesid")));
+                        mo.setEpisodeID(String.valueOf(entry.get("episodeid")));
+                        mo.setMediatype(MediaType.Series);
+
+                        database.UpdateEpisodeMediaID(mo, current);
+
+                        database.cacheMetadata("tvdb", temp.getShowtitle(), mo.getShowtitle(), current.getId());
+                        
+                        mo.WriteDB();
+                        if ( series_found) {
+                             if ( (Boolean)entry.get("fanartdownload") == true) {
+                                    if ( (Boolean)entry.get("fanartdownloadbackground") == true ) {
+                                         Thread fadt = new Thread() {
+                                             public void run() {
+                                                tvdb.GetSeriesFanart(mo, ortustvdbpath, mo.getShowtitleFiltered(), false);
+                                                ortus.mq.api.fireMQMessage(ortus.mq.vars.MsgPriority.High,ortus.mq.vars.EvenType.Broadcast,"ReloadMediaCache", new Object[] { "MD"+mediaid } );
+                                             }
+                                         };
+                                         fadt.start();
+                                    } else {
+                                        tvdb.GetSeriesFanart(mo, ortustvdbpath, mo.getShowtitleFiltered(), false);
+                                    }
+                             }
+                        }
+                        ortus.mq.api.fireMQMessage(ortus.mq.vars.MsgPriority.High,ortus.mq.vars.EvenType.Broadcast,"ReloadMediaCache", new Object[] { "MD"+mediaid } );
+                     } catch ( Exception e) {
+                        ortus.api.DebugLog(LogLevel.Error, "LiveSearchStore: Exception", e);
+                    }
+                } else {
+                    try {
+                        ortus.api.DebugLogTrace("LiveSearchStore: Saving metadata for movie");
+                        TheMovieDB tmdb = new TheMovieDB();
+
+                        String mkey;
+                        if ( ((String)entry.get("metadataid")).startsWith("TM")) {
+                            mkey = "themoviedb:" + ((String)entry.get("metadataid")).replace("TM", "");
+                        } else {
+                              mkey = "imdb:" + ((String)entry.get("metadataid")).replace("IM", "");
+                        }
+
+                        Movie movie = tmdb.GetDetail(mkey);
+                        if ( movie != null) {
+                            ortus.api.DebugLogTrace("LiveSearchStore: Found Movie");
+                            if ( movie.isMetadatafound()) {
+                                movie.setMediaid(mediaid);
+                                final MediaObject mo = new MediaObject(MediaFileAPI.GetMediaFileForID(mediaid));
+                                mo.setMediatype(MediaType.Movie);
+                                mo.setMovie(movie);
+                                ortus.api.DebugLogTrace("LiveSearchStore: Storing");
+                                movie.WriteDB();
+                                mo.WriteDB();
+
+                                database.cacheMetadata("tmdb", temp.getShowtitle(), mo.getShowtitle(), movie.getTmdbid());
+
+                                ortus.api.DebugLogTrace("value: " + entry.get("sagemetadataupdate"));
+                                if ( (Boolean)entry.get("sagemetadataupdate") == true)
+                                     if ( SageMetadata.createShow(mo) )
+                                         ortus.api.DebugLog(LogLevel.Info, "GetMediaMetaData: Modified Wiz.bin with metadata");
+                                ortus.api.DebugLogTrace("value: " + entry.get("writeproperty"));
+                                if ( (Boolean)entry.get("writeproperty") == true) {
+                                    mo.WriteProperty();
+                                }
+                                
+                                if ( (Boolean)entry.get("fanartdownload") == true) {
+                                    if ( (Boolean)entry.get("fanartdownloadbackground") == true ) {
+                                         Thread fadt = new Thread() {
+                                             public void run() {
+                                                  ortus.api.DebugLog(ortus.vars.LogLevel.Debug, "fanartDownloadThread: Starting for ID:" + mediaid);
+                                                  mo.DownloadImages("Movies" + java.io.File.separator + ortus.util.string.ScrubFileName(mo.getShowtitle()));
+                                                  mo.DownloadCastImages("Cast");
+                                                  ortus.mq.api.fireMQMessage(ortus.mq.vars.MsgPriority.High,ortus.mq.vars.EvenType.Broadcast,"ReloadMediaCache", new Object[] { "MD"+mediaid } );
+                                                  ortus.api.DebugLog(ortus.vars.LogLevel.Debug, "fanartDownloadThread: Completed for ID:" + mediaid);
+                                             }
+                                         };
+                                         fadt.start();
+                                    } else {
+                                         mo.DownloadImages("Movies" + java.io.File.separator + ortus.util.string.ScrubFileName(mo.getShowtitle()));
+                                         mo.DownloadCastImages("Cast");
+                                         ortus.mq.api.fireMQMessage(ortus.mq.vars.MsgPriority.High,ortus.mq.vars.EvenType.Broadcast,"ReloadMediaCache", new Object[] { "MD"+mediaid } );
+                                    }
+                                }
+                            }
+                            ortus.api.DebugLogTrace("LiveSearchStore: Done");
+                        }
+                    } catch ( Exception e) {
+                        ortus.api.DebugLog(LogLevel.Error, "LiveSearchStore: Exception", e);
                     }
                 }
 
@@ -1137,60 +1640,68 @@ public class api extends ortus.vars {
 		}
 	}
 
-	public static boolean ManualMovieMatch(Object mediafile, Object scrapperid, Object download_fanart) {
-		boolean dwn_fanart = false;
-		if (download_fanart instanceof String) {
-			dwn_fanart = Boolean.parseBoolean((String) download_fanart);
-		}
-		if (download_fanart.getClass().getName().equalsIgnoreCase("java.lang.Boolean")) {
-			dwn_fanart = (Boolean) download_fanart;
-		}
-
-		ortus.api.DebugLog(LogLevel.Trace, "ManualMovieMatch: " + scrapperid + " mediaid: " + MediaFileAPI.GetMediaFileID(mediafile) + " Fanart: " + dwn_fanart);
-		String scrapperkey = "";
-		List<List> result = ortus.api.executeSQLQueryArray("select foundkey from sage.scrapperlog where scrapperid = " + scrapperid);
-		if (result.size() == 1) {
-			scrapperkey = (String) result.get(0).get(0);
-		} else {
-			return false;
-		}
-
-		result = ortus.api.executeSQLQueryArray("select mediagroup from allmedia where mediaid = " + MediaFileAPI.GetMediaFileID(mediafile));
-		Movie movie = new TheMovieDB().GetDetail(scrapperkey);
-		movie.setMediatype(2);
-		movie.setMediagroup(Integer.parseInt((String) result.get(0).get(0)));
-		movie.setMetadatafound(true);
-                movie.setMediaid(MediaFileAPI.GetMediaFileID(mediafile));
-		movie.WriteDB();
-		if (dwn_fanart) {
-			movie.DownloadImages(mediafile, "Movies" + java.io.File.separator + ortus.util.scrubString.ScrubFileName(movie.getName()));
-		}
-		MediaObject mo = new MediaObject(mediafile);
-		mo.setMovie(movie);
-		String[] skp = scrapperkey.split(":");
-		if (skp[0].equalsIgnoreCase("imdb")) {
-			mo.setImdbid(skp[1]);
-		} else {
-			mo.setTmdbid(skp[1]);
-		}
-		mo.WriteProperty();
-		ortus.cache.cacheEngine.getInstance().ReLoadCache("MD"+ mediafile);
-
-		return true;
-	}
-
+//	public static boolean ManualMovieMatch(Object mediafile, Object scrapperid, Object download_fanart) {
+//		boolean dwn_fanart = false;
+//		if (download_fanart instanceof String) {
+//			dwn_fanart = Boolean.parseBoolean((String) download_fanart);
+//		}
+//		if (download_fanart.getClass().getName().equalsIgnoreCase("java.lang.Boolean")) {
+//			dwn_fanart = (Boolean) download_fanart;
+//		}
+//
+//		ortus.api.DebugLog(LogLevel.Trace, "ManualMovieMatch: " + scrapperid + " mediaid: " + MediaFileAPI.GetMediaFileID(mediafile) + " Fanart: " + dwn_fanart);
+//		String scrapperkey = "";
+//		List<List> result = ortus.api.executeSQLQueryArray("select foundkey from sage.scrapperlog where scrapperid = " + scrapperid);
+//		if (result.size() == 1) {
+//			scrapperkey = (String) result.get(0).get(0);
+//		} else {
+//			return false;
+//		}
+//
+//		result = ortus.api.executeSQLQueryArray("select mediagroup from allmedia where mediaid = " + MediaFileAPI.GetMediaFileID(mediafile));
+//		Movie movie = new TheMovieDB().GetDetail(scrapperkey);
+//		movie.setMediatype(2);
+//		movie.setMediagroup(Integer.parseInt((String) result.get(0).get(0)));
+//		movie.setMetadatafound(true);
+//                movie.setMediaid(MediaFileAPI.GetMediaFileID(mediafile));
+//		movie.WriteDB();
+//		if (dwn_fanart) {
+//			movie.DownloadImages(mediafile, "Movies" + java.io.File.separator + ortus.util.string.ScrubFileName(movie.getName()));
+//		}
+//		MediaObject mo = new MediaObject(mediafile);
+//		mo.setMovie(movie);
+//		String[] skp = scrapperkey.split(":");
+//		if (skp[0].equalsIgnoreCase("imdb")) {
+//			mo.setImdbid(skp[1]);
+//		} else {
+//			mo.setTmdbid(skp[1]);
+//		}
+//		mo.WriteProperty();
+//		ortus.cache.cacheEngine.getInstance().ReLoadCache("MD"+ mediafile);
+//
+//		return true;
+//	}
+//
 	public static boolean MovieSearch(MediaObject mo, List<String> mediaregex) {
 
 		ortus.api.DebugLog(LogLevel.Trace, "MovieSearch: ShowTitle: " + mo.getShowtitle());
 		TheMovieDB tmdb = new TheMovieDB();
 		boolean movie_found = false;
 
+                if ( mo.getTmdbid() == null) {
+                    HashMap x = database.GetCacheMetadata("tmdb",mo);
+                    if ( x.get("title") != null) {
+                        mo.setShowtitle((String)x.get("title"));
+                        mo.setTmdbid((String)x.get("id"));
+                    }
+                }
+
 		if (mo.getTmdbid() == null && mo.getImdbid() == null) {
-			tmdb.SetSearchLimit(5);
+			tmdb.SetSearchLimit(5);                  
+                       
+			HashMap<String, Movie> movies = tmdb.Search(mo.getShowtitle(),mo.getYear());
 
-			HashMap<String, SearchResult> movies = tmdb.Search(mo.getShowtitle());
-
-			database.LogFind(mo.getScantype(), MediaFileAPI.GetMediaFileID(mo.getMedia()), mo.getShowtitle(), movies);
+//			database.LogFind(mo.getScantype(), MediaFileAPI.GetMediaFileID(mo.getMedia()), mo.getShowtitle(), movies);
 
 			Object[] mk = movies.keySet().toArray();
 			for (Object mt : mk) {
@@ -1224,7 +1735,7 @@ public class api extends ortus.vars {
 				movie = tmdb.GetDetail("imdb:" + mo.getImdbid());
 				mo.setMetadatasource("IMDB");
 			}
-                        
+
                         if ( movie.isMetadatafound()) {
                             movie_found = true;
                             mo.setMediatype(MediaType.Movie);
@@ -1237,7 +1748,7 @@ public class api extends ortus.vars {
                                     movie.WriteDB();
                             }
                             if (mo.getFanart() > 0) {
-                                    mo.DownloadImages("Movies" + java.io.File.separator + ortus.util.scrubString.ScrubFileName(mo.getShowtitle()));
+                                    mo.DownloadImages("Movies" + java.io.File.separator + ortus.util.string.ScrubFileName(mo.getShowtitle()));
                                     mo.DownloadCastImages("Cast");
                             }
                         }
@@ -1250,6 +1761,196 @@ public class api extends ortus.vars {
 //    }
 
 		return movie_found;
+	}
+
+        public static void GetMissingFanart(final HashMap entry) {
+
+                Thread mfat = new Thread() {
+                    public void run() {
+                        int mediaid = (Integer)entry.get("mediaid");
+                        ortus.api.DebugLog(LogLevel.Trace, "Fanart: Downloading missing fanart for id: " + mediaid);
+                        int mediatype = ortus.api.GetMediaType(MediaFileAPI.GetMediaFileForID(mediaid));
+
+                        if ( mediatype == 3) {
+                           List<HashMap> result = ortus.api.executeSQLQueryHash("select f.*, s.title from sage.fanart as f, sage.series as s, sage.episode as e where ( low_file is null or medium_file is null or high_file is null )  and f.mediaid = e.mediaid and e.seriesid = s.seriesid and f.mediaid = " + mediaid);
+
+//                            int fanart_limit = Integer.parseInt(ortus.api.GetSageProperty("ortus/fanart/download_limit", "4"));
+
+                            ortus.api.DebugLog(LogLevel.Trace, "Fanart: found " + result.size() + " missing fanart records");
+
+                            int media_fanart_count = 0;
+                            for (HashMap fanart : result) {
+                                    media_fanart_count++;
+//                                   ortus.image.util.scale(dest+filename,185,254,dest+"med-"+filename);
+                       
+                                            ImageItem ii = null;
+                                            if ( fanart.get("LOW_FILE") == null ) {
+                                                ii = new ImageItem(mediaid,(String) fanart.get("IDTYPE"),(String)fanart.get("TYPE"), "thumb", (String) fanart.get("LOW_URL"),(String)fanart.get("METADATAID"),Integer.parseInt((String)fanart.get("LOW_WIDTH")),Integer.parseInt((String)fanart.get("LOW_HEIGHT")));
+                                                ii.getImage("TV" + java.io.File.separator + ortus.util.string.ScrubFileName((String) fanart.get("TITLE")));
+                                            }
+                                            if ( fanart.get("MEDIUM_FILE") == null) {
+                                                ii = new ImageItem(mediaid,(String) fanart.get("IDTYPE"),(String)fanart.get("TYPE"), "mid", (String) fanart.get("MEDIUM_URL"),(String)fanart.get("METADATAID"),Integer.parseInt((String)fanart.get("MEDIUM_WIDTH")),Integer.parseInt((String)fanart.get("MEDIUM_HEIGHT")));
+                                                ii.getImage("TV" + java.io.File.separator + ortus.util.string.ScrubFileName((String) fanart.get("TITLE")));
+                                            }
+                                            if ( fanart.get("HIGH_FILE") == null ) {
+                                                ii = new ImageItem(mediaid,(String) fanart.get("IDTYPE"),(String)fanart.get("TYPE"), "original", (String) fanart.get("HIGH_URL"),(String)fanart.get("METADATAID"),Integer.parseInt((String)fanart.get("HIGH_WIDTH")),Integer.parseInt((String)fanart.get("HIGH_HEIGHT")));
+                                                ii.getImage("TV" + java.io.File.separator + ortus.util.string.ScrubFileName((String) fanart.get("TITLE")));
+                                            }
+
+                            }
+                        } else {
+                            List<HashMap> result = ortus.api.executeSQLQueryHash("select f.*, m.name from sage.fanart as f, sage.metadata as m where ( low_file is null or medium_file is null or high_file is null )  and f.mediaid = m.mediaid and f.mediaid = " + mediaid);
+
+//                            int fanart_limit = Integer.parseInt(ortus.api.GetSageProperty("ortus/fanart/download_limit", "4"));
+
+                            ortus.api.DebugLog(LogLevel.Trace, "Fanart: found " + result.size() + " missing fanart records");
+
+                            int media_fanart_count = 0;
+                            for (HashMap fanart : result) {
+                                    media_fanart_count++;
+//                                    if (media_fanart_count <= fanart_limit) {
+                                            ImageItem ii = null;
+                                            if ( fanart.get("LOW_FILE") == null) {
+                                                ii = new ImageItem(mediaid,(String) fanart.get("IDTYPE"),(String)fanart.get("TYPE"), "thumb", (String) fanart.get("LOW_URL"),(String)fanart.get("METADATAID"),Integer.parseInt((String)fanart.get("LOW_WIDTH")),Integer.parseInt((String)fanart.get("LOW_HEIGHT")));
+                                                ii.getImage("Movies" + java.io.File.separator + ortus.util.string.ScrubFileName((String) fanart.get("NAME")));
+                                            }
+                                            if ( fanart.get("MEDIUM_FILE") == null) {
+                                                ii = new ImageItem(mediaid,(String) fanart.get("IDTYPE"),(String)fanart.get("TYPE"), "mid", (String) fanart.get("MEDIUM_URL"),(String)fanart.get("METADATAID"),Integer.parseInt((String)fanart.get("MEDIUM_WIDTH")),Integer.parseInt((String)fanart.get("MEDIUM_HEIGHT")));
+                                                ii.getImage("Movies" + java.io.File.separator + ortus.util.string.ScrubFileName((String) fanart.get("NAME")));
+                                            }
+                                            if ( fanart.get("HIGH_FILE") == null) {
+                                                ii = new ImageItem(mediaid,(String) fanart.get("IDTYPE"),(String)fanart.get("TYPE"), "original", (String) fanart.get("HIGH_URL"),(String)fanart.get("METADATAID"),Integer.parseInt((String)fanart.get("HIGH_WIDTH")),Integer.parseInt((String)fanart.get("HIGH_HEIGHT")));
+                                                ii.getImage("Movies" + java.io.File.separator + ortus.util.string.ScrubFileName((String) fanart.get("NAME")));
+                                            }
+//                                    }
+                            }
+                        }
+
+                        ortus.mq.api.fireMQMessage(ortus.mq.vars.MsgPriority.High,ortus.mq.vars.EvenType.Broadcast,"ReloadMediaCache", new Object[] { "MD"+mediaid } );
+                        
+                        ortus.api.DebugLogTrace("Fanart: Downloading missing fanart completed for id: " + mediaid);
+                    }
+                };
+
+                mfat.start();
+	}
+
+        public static void GetMissingFanartForID(final HashMap entry) {
+
+                ortus.api.DebugLog(LogLevel.Trace, "Fanart: Downloading fanart for id: " + entry.get("id"));
+                int mediaid = 0;
+               if ( (Integer)entry.get("mediatype") == 3 ) {
+                   List<HashMap> result = ortus.api.executeSQLQueryHash("select f.*, s.title from sage.fanart as f, sage.series as s where f.mediaid = s.seriesid and f.id = " + entry.get("id"));
+
+                    int media_fanart_count = 0;
+                    for (HashMap fanart : result) {
+                        ortus.api.DebugLogTrace("HIGH_FILE: " + fanart.get("LOW_FILE"));
+                        mediaid = Integer.parseInt((String)fanart.get("MEDIAID"));
+                        ImageItem ii = null;
+
+                        String url = (String)fanart.get("HIGH_URL");
+			String dest = ((String)fanart.get("HIGH_FILE")).substring(0,((String)fanart.get("HIGH_FILE")).lastIndexOf("/"));     
+                        String type = dest.substring(((String)fanart.get("HIGH_FILE")).lastIndexOf("/"));
+                        if ( type.contains("episode"))
+                            type = "Episode";
+			String filename = ((String)fanart.get("HIGH_FILE")).substring(((String)fanart.get("HIGH_FILE")).lastIndexOf("/"));
+
+                        urldownload.fileUrl(url, filename, dest);
+                        database.WriteTVFanart(Integer.parseInt((String)fanart.get("MEDIAID")),String.valueOf(entry.get("id")),"high",(String)fanart.get("TYPE"), url, (String)fanart.get("HIGH_FILE"));
+                        ortus.image.util.scale(dest+filename,780,439,dest+"med-"+filename);
+                        database.WriteTVFanart(Integer.parseInt((String)fanart.get("MEDIAID")),String.valueOf(entry.get("id")),"medium",(String)fanart.get("TYPE"), url, (String)fanart.get("MEDIUM_FILE"));
+                        ortus.image.util.scale(dest+filename,300,169,dest+"thmb-"+filename);
+                        database.WriteTVFanart(Integer.parseInt((String)fanart.get("MEDIAID")),String.valueOf(entry.get("id")),"low",(String)fanart.get("TYPE"), url, (String)fanart.get("LOW_FILE"));
+                    }
+                } else {
+                    List<HashMap> result = ortus.api.executeSQLQueryHash("select f.*, m.name from sage.fanart as f, sage.metadata as m where f.mediaid = m.mediaid and f.id = " + entry.get("id"));
+
+                    int fanart_limit = Integer.parseInt(ortus.api.GetSageProperty("ortus/fanart/download_limit", "4"));
+
+                    ortus.api.DebugLog(LogLevel.Trace, "Fanart: found " + result.size() + " missing fanart records; download limit: : " + fanart_limit);
+
+                    for (HashMap fanart : result) {
+                        mediaid = Integer.parseInt((String)fanart.get("MEDIAID"));
+                        ortus.api.DebugLogTrace("Processing: " + fanart.get("LOW_URL"));
+                        ImageItem ii = null;
+                        ii = new ImageItem(Integer.parseInt((String)fanart.get("MEDIAID")),(String) fanart.get("IDTYPE"),(String)fanart.get("TYPE"), "thumb", (String) fanart.get("LOW_URL"),(String)fanart.get("METADATAID"),Integer.parseInt((String)fanart.get("LOW_WIDTH")),Integer.parseInt((String)fanart.get("LOW_HEIGHT")));
+                        ii.getImage("Movies" + java.io.File.separator + ortus.util.string.ScrubFileName((String) fanart.get("NAME")));
+                        ii = new ImageItem(Integer.parseInt((String)fanart.get("MEDIAID")),(String) fanart.get("IDTYPE"),(String)fanart.get("TYPE"), "mid", (String) fanart.get("MEDIUM_URL"),(String)fanart.get("METADATAID"),Integer.parseInt((String)fanart.get("MEDIUM_WIDTH")),Integer.parseInt((String)fanart.get("MEDIUM_HEIGHT")));
+                        ii.getImage("Movies" + java.io.File.separator + ortus.util.string.ScrubFileName((String) fanart.get("NAME")));
+                        ii = new ImageItem(Integer.parseInt((String)fanart.get("MEDIAID")),(String) fanart.get("IDTYPE"),(String)fanart.get("TYPE"), "original", (String) fanart.get("HIGH_URL"),(String)fanart.get("METADATAID"),Integer.parseInt((String)fanart.get("HIGH_WIDTH")),Integer.parseInt((String)fanart.get("HIGH_HEIGHT")));
+                        ii.getImage("Movies" + java.io.File.separator + ortus.util.string.ScrubFileName((String) fanart.get("NAME")));
+                    }
+                }
+
+                ortus.mq.api.fireMQMessage(ortus.mq.vars.MsgPriority.High,ortus.mq.vars.EvenType.Broadcast,"ReloadMediaCache", new Object[] { "MD" + mediaid } );
+
+                ortus.api.DebugLogTrace("Fanart: Downloading missing fanart completed for id: " + entry.get("id"));
+	}
+        
+        public static void DeleteFanartForID(final HashMap entry) {
+
+                ortus.api.DebugLog(LogLevel.Trace, "DeleteFanartForID: Removing fanart for id: " + entry.get("id"));
+                List<HashMap> result = ortus.api.executeSQLQueryHash("select f.* from sage.fanart as f where f.id = " + entry.get("id"));
+                for (HashMap fanart : result) {
+                    List<String> rmFiles = new ArrayList();
+                    rmFiles.add(ortus.api.GetFanartFolder() + java.io.File.separator + fanart.get("LOW_FILE"));
+                    rmFiles.add(ortus.api.GetFanartFolder() + java.io.File.separator + fanart.get("MEDIUM_FILE"));
+                    rmFiles.add(ortus.api.GetFanartFolder() + java.io.File.separator + fanart.get("HIGH_FILE"));
+                    for ( String filename : rmFiles) {
+                        ortus.api.DebugLogTrace("Removing fanart file: " + filename);
+                        try {
+                            File x = new File(filename);
+                            if ( x.exists())
+                                x.delete();
+                        } catch( Exception e) {
+                            ortus.api.DebugLogError("DeleteFanartForID: Exception",e);
+                        }
+                    }
+                }
+                ortus.api.executeSQL("update sage.fanart set low_file = null, low_imagesize = 0, low_width = 0, low_height = 0, medium_file = null, medium_imagesize = 0, medium_width = 0, medium_height = 0, high_file = null, high_imagesize = 0, high_width = 0, high_height = 0 where id = " + entry.get("id"));
+
+                ortus.mq.api.fireMQMessage(ortus.mq.vars.MsgPriority.High,ortus.mq.vars.EvenType.Broadcast,"ReloadMediaCache", new Object[] { "MD" + entry.get("mediaid") } );
+
+                ortus.api.DebugLogTrace("Fanart: Deleting fanart completed for id: " + entry.get("id"));
+	}
+        public static void DeleteAllFanart(final HashMap entry) {
+
+                 Thread mfat = new Thread() {
+                    public void run() {
+                        int mediaid = (Integer)entry.get("mediaid");
+                        ortus.api.DebugLog(LogLevel.Trace, "DeleteFanartForID: Removing fanart for mediaid: " + mediaid);
+                        int mediatype = ortus.api.GetMediaType(MediaFileAPI.GetMediaFileForID(mediaid));
+                        List<HashMap> result;
+                        if ( mediatype == 3 )
+                            result = ortus.api.executeSQLQueryHash("select f.* from sage.fanart as f, sage.episode as e where f.idtype = 'SR' and f.mediaid = e.mediaid and e.mediaid = " + entry.get("mediaid"));
+                        else
+                            result = ortus.api.executeSQLQueryHash("select f.* from sage.fanart as f where f.idtype = 'MD' and f.mediaid = " + mediaid);
+
+                        for (HashMap fanart : result) {
+                            List<String> rmFiles = new ArrayList();
+                            rmFiles.add(ortus.api.GetFanartFolder() + java.io.File.separator + fanart.get("LOW_FILE"));
+                            rmFiles.add(ortus.api.GetFanartFolder() + java.io.File.separator + fanart.get("MEDIUM_FILE"));
+                            rmFiles.add(ortus.api.GetFanartFolder() + java.io.File.separator + fanart.get("HIGH_FILE"));
+                            for ( String filename : rmFiles) {
+                                ortus.api.DebugLogTrace("Removing fanart file: " + filename);
+                                try {
+                                    File x = new File(filename);
+                                    if ( x.exists())
+                                        x.delete();
+                                } catch( Exception e) {
+                                    ortus.api.DebugLogError("DeleteFanartForID: Exception",e);
+                                }
+                            }
+                            ortus.api.executeSQL("update sage.fanart set low_file = null, low_imagesize = 0, low_width = 0, low_height = 0, medium_file = null, medium_imagesize = 0, medium_width = 0, medium_height = 0, high_file = null, high_imagesize = 0, high_width = 0, high_height = 0 where id = " + fanart.get("ID"));
+                         }
+
+                        ortus.mq.api.fireMQMessage(ortus.mq.vars.MsgPriority.High,ortus.mq.vars.EvenType.Broadcast,"ReloadMediaCache", new Object[] { "MD" + entry.get("mediaid") } );
+
+                        ortus.api.DebugLogTrace("Fanart: Deleting fanart completed for id: " + entry.get("id"));
+                     }
+                };
+                
+                mfat.start();
 	}
 
 	public static void GetMissingFanart() {
@@ -1267,7 +1968,7 @@ public class api extends ortus.vars {
 		total_series_match = 0;
 
 		ortus.api.DebugLog(LogLevel.Trace, "Fanart: Downloadming missing fanart");
-		List<List> result = ortus.api.executeSQLQueryArray("select f.metadataid, f.type, f.url, m.name from sage.fanart as f, sage.movies as m where m.metadataid = f.metadataid and file is null union select f.metadataid, f.type, f.url, s.title from sage.fanart as f, sage.series as s where concat('SR',s.seriesid) = f.metadataid and file is null");
+		List<List> result = ortus.api.executeSQLQueryArray("select f.mediaid, f.idtype, f.type, f.url, m.name from sage.fanart as f where file is null");
 
 		total_queue = result.size();
 		ortus.api.DebugLog(LogLevel.Trace, "Fanart: found " + result.size() + " missing fanart records");
@@ -1294,8 +1995,8 @@ public class api extends ortus.vars {
 				if (cancel_scan) {
 					break;
 				}
-				ImageItem ii = new ImageItem((String)fanart.get(0),(String) fanart.get(1), "0", (String) fanart.get(2));
-				ii.getImage(medtype + java.io.File.separator + ortus.util.scrubString.ScrubFileName((String) fanart.get(3)));
+				ImageItem ii = new ImageItem(Integer.parseInt((String)fanart.get(0)),(String) fanart.get(1),(String)fanart.get(2), "0", (String) fanart.get(2),"",0,0);
+				ii.getImage(medtype + java.io.File.separator + ortus.util.string.ScrubFileName((String) fanart.get(3)));
 			} else {
 				total_bypass++;
 			}
@@ -1335,7 +2036,7 @@ public class api extends ortus.vars {
 //
 //		for (Object o : mfl) {
 //			total_processed++;
-//			String Title = ortus.util.scrubString.ScrubFileName(ortus.api.GetMediaTitle(o));
+//			String Title = ortus.util.string.ScrubFileName(ortus.api.GetMediaTitle(o));
 //			ortus.api.DebugLog(LogLevel.Trace, "Scanning for fanart for: " + Title);
 //			File fanartBackgrounds = new File(ortus.api.GetFanartFolder() + java.io.File.separator + "Movies" + java.io.File.separator + Title + java.io.File.separator + "Backgrounds");
 //			if (fanartBackgrounds.isDirectory()) {
@@ -1510,7 +2211,7 @@ public class api extends ortus.vars {
 		String cleantitle = ortus.util.string.CleanStringExtreme(title);
 
 		ortus.api.DebugLog(LogLevel.Trace, "title: <" + title + ">   cleantitle: <" + cleantitle + ">   Provider title: <" + TMDBtitle + ">   clean Provider title: <" + cleanTMDBtitle + ">");
-		if (cleanTMDBtitle.equals(cleantitle)) {
+		if (cleanTMDBtitle.equalsIgnoreCase(cleantitle)) {
 			return true;
 		} else {
 			int matchfound = 0;

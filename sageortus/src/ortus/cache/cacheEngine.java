@@ -20,6 +20,7 @@ import ortus.media.metadata.item.IItem;
 import ortus.mq.EventListener;
 import ortus.mq.OrtusEvent;
 import ortus.vars.LogLevel;
+import sagex.api.Configuration;
 import sagex.api.MediaFileAPI;
 
 /**
@@ -44,12 +45,16 @@ public class cacheEngine extends EventListener {
 		super();
 		ortus.api.DebugLog(LogLevel.Debug,"cacheEngine: Loading Instance");
 
-		if ( ortus.api.GetProperty("cache", "JCS").equals("JCS"))
+		if ( Configuration.GetServerProperty("ortus/cache", "JCS").equals("JCS"))
 			icp = new cacheProviderJCS();
-		else
+		else if ( Configuration.GetServerProperty("ortus/cache", "JCS").equalsIgnoreCase("memcached"))
+                        icp = new cacheProviderMemcached();
+		else if ( Configuration.GetServerProperty("ortus/cache", "JCS").equalsIgnoreCase("ehcache"))
+                        icp = new cacheProviderEHCache();
+
+                else
 			icp = new cacheProviderOrtus();
 
-//		ortus.EventBus.eventEngine.getInstance().registerListener(this);
 	}
 
 	public IcacheProvider getProvider() {
@@ -68,19 +73,28 @@ public class cacheEngine extends EventListener {
         
 	@OrtusEvent("PreloadCache")
 	public void PreLoadCache() {
+            int total = 0;
+            int count = 0;
             try {
                 long t0 = System.currentTimeMillis();
-		ortus.api.DebugLog(LogLevel.Debug,"cacheEngine: Preloading Cache");
+		ortus.api.DebugLog(LogLevel.Info,"cacheEngine: Preloading Cache");
 		List<List> result = ortus.api.executeSQLQueryArray("select mediaid from allmedia where mediatype in (0,1,2,3,4)");
 		if ( result.size() > 0) {
         		for ( int x = 0; x < result.size();x++) {
+                            count++;
+                            total++;
                             ortus.media.metadata.item.Media im = ortus.media.metadata.metadataEngine.getInstance().getProvider().GetMetadataMedia(result.get(x).get(0));
+
 //                            ortus.api.DebugLogTrace("Cache Loading: <MD" + result.get(x).get(0) +">");
                             icp.Put("MD"+result.get(x).get(0),im);
+                            if ( count > 100) {
+                                count=0;
+                                ortus.api.DebugLog(LogLevel.Debug,"...cache loaded another 100...total: " + total);
+                            }
 			}
 		}
                 long t1 = System.currentTimeMillis() - t0;
-		ortus.api.DebugLog(LogLevel.Debug,"cacheEngine: Preloaded " + result.size() + " items in " + t1 + " ms");
+		ortus.api.DebugLog(LogLevel.Info,"cacheEngine: Preloaded " + result.size() + " items in " + t1 + " ms");
             } catch(Exception e) {
                 ortus.api.DebugLog(LogLevel.Error,"PreLoadCache: Exception:",e);
             }
@@ -123,6 +137,9 @@ public class cacheEngine extends EventListener {
                         ii = ortus.media.metadata.metadataEngine.getInstance().getProvider().GetMetadataSeries(ortus.media.metadata.metadataEngine.getInstance().getProvider().GetMetadataKeyValue((String)mediakey));
                     }
                 }
+
+                if ( ii != null)
+                    icp.Put(mediakey,ii);
 
 		return ii;
 	}

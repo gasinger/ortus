@@ -8,6 +8,7 @@ package ortus.onlinescrapper.themoviedb;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
@@ -31,7 +32,7 @@ public class Movie implements Serializable {
     private Integer votes;
     private float rating;
     private String tagline;
-    private String certification;
+    private String certification = "Unknown";
     private String releasedate;
     private Integer runtime;
     private long budget;
@@ -63,13 +64,46 @@ public class Movie implements Serializable {
 	metadatasource="Sage";
     }
 
-    public Movie(String metadataid) {
-        this.metadataid = metadataid;
+    public Movie(String title) {
+        this.name = title;
     }
 
     public Movie(String metadataid, int mediaid) {
         this.metadataid = metadataid;
         this.mediaid = mediaid;
+    }
+
+    public  HashMap toHash() {
+
+        HashMap result = new HashMap();
+        result.put("metadataid",  metadataid);
+        result.put("mediaid",mediaid);
+        result.put("type",Type);
+        result.put("tmdbid",tmdbid);
+        result.put("imdbid", imdbid);
+        result.put("orginalname",originalname);
+        result.put("name", name);
+        result.put("alternatename",alternatename);
+        result.put("url",url);
+        result.put("votes", votes);
+        result.put("rating",rating);
+        result.put("tagline",tagline);
+        result.put("certification", certification);
+        result.put("releasedate", releasedate);
+        result.put("runtime", runtime);
+        result.put("budget", budget);
+        result.put("revenue", revenue);
+        result.put("homepage", homepage);
+        result.put("trailer", trailer);
+        result.put("overview", overview);
+        result.put("metadatasource", metadatasource);
+        result.put("path",Path);
+        result.put("genre", genres);
+        if ( images.size() > 0)
+            result.put("fanart_poster", images.get(0).GetUrl());
+ //       result.put("cast",cast);
+
+        return result;
     }
 
     public String getMetadataid() {
@@ -78,6 +112,7 @@ public class Movie implements Serializable {
 
     public void setMetadataid(String metadataid) {
         this.metadataid = metadataid;
+        ortus.api.DebugLogTrace("Settign mediaid to " + this.mediaid);
     }
 
     public int getMediaid() {
@@ -298,14 +333,14 @@ public class Movie implements Serializable {
     public List<ImageItem> GetImages() {
         return images;
     }
-    public void AddImage(String type, String size, String url ) {
-        images.add(new ImageItem(metadataid, type, size,url));
+    public void AddImage(String type, String size, String url, String metadataid, int width, int height ) {
+        images.add(new ImageItem(mediaid, "MD",type, size,url, metadataid, width, height));
     }
 
     public List<CastItem> GetCast() {
         return cast;
     }
-    public void AddCast(String id, String name, String job, String character) {
+    public void AddCast(int id, String name, String job, String character) {
         cast.add(new CastItem(id, name,job,character));
     }
 
@@ -320,6 +355,7 @@ public class Movie implements Serializable {
 
         ortus.api.DebugLog(LogLevel.Trace2, "DownloadImages to: " + destination + " Limit: " + fanart_limit);
         for( ImageItem ii : images ) {
+            ii.setId(mediaid);
             if ( ii.IsBackgrounds()) {
                 if( ii.IsOriginal())
                     bgfa++;
@@ -334,6 +370,7 @@ public class Movie implements Serializable {
             }
             ii.getImage(destination);
         }
+
     }
 
     public void DownloadCastImages(Object mediafile, String destination) {
@@ -378,31 +415,31 @@ public class Movie implements Serializable {
         QueryRunner qr = new QueryRunner();
 
         try {
-            int updatecount = qr.update(conn,"update sage.movies set mediaid=?, tmdbid=?, imdbid=? , original_name=? , name=?, alternate_name=? , url=? , votes=?, rating=? , tagline=? , certification=? , releasedate=?, runtime=?,budget=?,revenue=?,homepage=? , trailer=? , overview=? , metadatasource=? where metadataid = ?",
-                    mediaid,tmdbid,imdbid, getOriginalname(),name, getAlternatename(),url,votes,rating,tagline,certification,releasedate,runtime,budget,revenue,homepage,trailer,overview,metadatasource,metadataid);
+            int updatecount = qr.update(conn,"update sage.metadata set mediaid=?, tmdbid=?, imdbid=? , original_name=? , name=?, alternate_name=? , url=? , votes=?, rating=? , tagline=? , certification=? , releasedate=?, runtime=?,budget=?,revenue=?,homepage=? , trailer=? , overview=? , metadatasource=? where mediaid = ?",
+                    mediaid,tmdbid,imdbid, getOriginalname(),name, getAlternatename(),url,votes,rating,tagline,certification,releasedate,runtime,budget,revenue,homepage,trailer,overview,metadatasource,mediaid);
             if ( updatecount == 0) {
-                updatecount = qr.update(conn,"INSERT INTO sage.movies (metadataid, mediaid, tmdbid, imdbid , original_name , name, alternate_name , url , votes, rating , tagline , certification , releasedate, runtime,budget,revenue,homepage , trailer , overview , metadatasource ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                    metadataid,mediaid,tmdbid,imdbid, getOriginalname(),name, getAlternatename(),url,votes,rating,tagline,certification,releasedate,runtime,budget,revenue,homepage,trailer,overview,metadatasource);
+                updatecount = qr.update(conn,"INSERT INTO sage.metadata (mediaid, tmdbid, imdbid , original_name , name, alternate_name , url , votes, rating , tagline , certification , releasedate, runtime,budget,revenue,homepage , trailer , overview , metadatasource ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                    mediaid,tmdbid,imdbid, getOriginalname(),name, getAlternatename(),url,votes,rating,tagline,certification,releasedate,runtime,budget,revenue,homepage,trailer,overview,metadatasource);
             }
 
-            updatecount = qr.update(conn,"delete from sage.fanart where metadataid = ?", metadataid);
-            updatecount = qr.update(conn,"delete from sage.genre where metadataid = ?", metadataid);
-            updatecount = qr.update(conn,"delete from sage.cast where metadataid = ?", metadataid);
+            updatecount = qr.update(conn,"delete from sage.fanart where mediaid = ? and idtype = 'MD'", mediaid);
+            updatecount = qr.update(conn,"delete from sage.genre where mediaid = ?", mediaid);
+            updatecount = qr.update(conn,"delete from sage.cast where mediaid = ?", mediaid);
             
             for ( ImageItem ii : images ) {
+                ii.setId(mediaid);
                 ii.WriteImageDB();
             }
 
             for ( String g : genres ) {
-                updatecount = qr.update(conn,"insert into sage.genre ( metadataid, name) values (?,?)", metadataid, g);
+                updatecount = qr.update(conn,"insert into sage.genre ( mediaid, name) values (?,?)", mediaid, g);
             }
             for (CastItem ci : cast) {
                 ci.WriteToDB(metadataid);
-                updatecount = qr.update(conn, "insert into sage.cast (metadataid, personid, name, job,character) values ( ?,?,?,?,?)", metadataid, tmdbid,ci.GetName(),ci.GetJob(),ci.GetCharacter());
+                updatecount = qr.update(conn, "insert into sage.cast (mediaid, personid, name, job,character) values ( ?,?,?,?,?)", mediaid, ci.GetId(),ci.GetName(),ci.GetJob(),ci.GetCharacter());
             }
         } catch ( Exception e) {
-            ortus.api.DebugLog(LogLevel.Error,"WriteDB: Exception: " + e);
-            e.printStackTrace();
+            ortus.api.DebugLog(LogLevel.Error,"WriteDB: Exception: ",e);
         } finally { 
              try { DbUtils.close(conn); } catch(Exception e) {}
         }
@@ -479,6 +516,16 @@ public class Movie implements Serializable {
     public void setMetadatafound(boolean metadatafound) {
         this.metadatafound = metadatafound;
     }
+
+    public String getMetadatakey() {
+        if (tmdbid != null) {
+                return "themoviedb:" + tmdbid;
+        } else if ( imdbid != null) {
+            return "imdb: " + imdbid;
+        } else
+            return "";
+    }
+
 
 //    public boolean ReadProperty(Object mediafile) {
 //        Properties mp = new Properties();

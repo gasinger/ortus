@@ -168,7 +168,7 @@ public class downloadTask implements Runnable {
 			outStream = new BufferedOutputStream(new FileOutputStream(getFilename().trim()));
 
 			buf = new byte[size];
-			ortus.api.DebugLog(LogLevel.Trace2, "Staring download: " + getUrl());
+			ortus.api.DebugLog(LogLevel.Trace2, "Starting download: " + getUrl());
 
 			while ((ByteRead = is.read(buf)) != -1) {
 				if ( dodownload == false) {

@@ -28,23 +28,24 @@ public class GoogleProvider extends ortus.vars {
         return ProviderName;
     }
 
- public HashMap<String,SearchResult> Search(String title, int limit) {
+ public List<Movie> Search(String title, int limit) {
 		int search_count = 0;
 		long t0 = System.currentTimeMillis();
 		ortus.api.DebugLog(LogLevel.Info, ProviderName + " : Search for title: " + CleanName(title));
-		HashMap<String, SearchResult> resultTitles = new HashMap<String, SearchResult>();
+		List<Movie> resultTitles = new ArrayList<Movie>();
 
 		String html = SearchGoogle("themoviedb " + title);
 		List<HashMap> result = getTitleAhref(html);
 		for (HashMap y : result) {
-			if ( y.get("tmdbid") == null)
+			if ( y.get("tmdbid") == null || ((String)y.get("tmdbid")).isEmpty())
 				continue;
 			search_count++;
-			SearchResult sr = new SearchResult(ortus.util.string.decodeString((String) y.get("title")),"themoviedb:" + y.get("tmdbid"));
+			Movie movie = new Movie(ortus.util.string.decodeString((String) y.get("title")));
+                        movie.setTmdbid((String)y.get("tmdbid"));
 			if ( y.get("year") != null)
-				sr.setDate((String)y.get("year"));
-			ortus.api.DebugLog(LogLevel.Info, ProviderName + " :  Found: " + sr.toString());
-			resultTitles.put(ortus.util.string.decodeString((String) y.get("title")), sr);
+				movie.setReleasedate((String)y.get("year"));
+			ortus.api.DebugLog(LogLevel.Info, ProviderName + " :  Found: " + movie.getName());
+			resultTitles.add(movie);
 			if (search_count > limit) {
 				break;
 			}
@@ -53,14 +54,15 @@ public class GoogleProvider extends ortus.vars {
 		html = SearchGoogle("imdb " + title);
 		result = getTitleAhref(html);
 		for (HashMap y : result) {
-			if ( y.containsKey("imdb"))
+			if ( y.get("imdb") == null || ((String)y.get("imdb")).isEmpty())
 				continue;
 			search_count++;
-			SearchResult sr = new SearchResult(ortus.util.string.decodeString((String) y.get("title")),"imdb:" + y.get("imdbid"));
+			Movie movie = new Movie(ortus.util.string.decodeString((String) y.get("title")));
+                        movie.setImdbid((String)y.get("imdbid"));
 			if ( y.get("year") != null)
-				sr.setDate((String)y.get("year"));
-			ortus.api.DebugLog(LogLevel.Info, ProviderName + " :  Found: " + sr.toString());
-			resultTitles.put(ortus.util.string.decodeString((String) y.get("title")), sr);
+				movie.setReleasedate((String)y.get("year"));
+			ortus.api.DebugLog(LogLevel.Info, ProviderName + " :  Found: " + movie.getName());
+			resultTitles.add(movie);
 			if (search_count > limit) {
 				break;
 			}

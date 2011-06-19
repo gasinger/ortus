@@ -7,8 +7,11 @@ package ortus.util;
 
 import java.util.HashMap;
 import java.io.File;
+import java.io.FileFilter;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import ortus.media.OrtusMedia;
 
 import sagex.api.MediaFileAPI;
@@ -36,7 +39,19 @@ public class file extends vars{
 		else
 			return false;
 	}
-	
+
+        public static String filterFileSeperator(String filename) {
+            String newName = filename;
+
+            if ( java.io.File.separator.equals("/")) {
+                newName.replaceAll("\\\\","/");
+            } else {
+                newName.replaceAll("/", "\\\\");
+            }
+
+            return newName;
+        }
+        
 	public static void CreateDirectory(String path) {
 		File d = new File(path);
 		if ( ! d.exists()) {
@@ -134,100 +149,159 @@ public class file extends vars{
 
 	}
 
-	public static HashMap<String, List<Object>> GroupByPath(List<Object> MediaFiles, String fspos) {
+        public static void DeleteBackupFiles() {
+                String backupDir = Configuration.GetServerProperty("ortus/backup/folder", ortus.api.GetOrtusBasePath() + java.io.File.separator + "backups");
+                long backupDays = Long.parseLong(Configuration.GetServerProperty("ortus/backup/limit", "30"));
+                File dir = new File(backupDir);
+                if ( ! dir.exists()) {
+                    ortus.api.DebugLogError("DeleteBackupFiles: Path not found: " + backupDir);
+                    return;
+                }
+
+                String[] files = dir.list(new backupFilter());
+                ortus.api.DebugLogTrace("DeleteBackupFiles: Scanning directory: " + backupDir + " for files over " + backupDays + " days old");
+
+                for ( String file : files ){
+                     File g = new File(backupDir + java.io.File.separator + file);
+                     long fileage = (System.currentTimeMillis() - g.lastModified())/86400000;
+                     ortus.api.DebugLogTrace("DeleteBackupFile: checking file: " + g.getAbsolutePath() + " age: " + fileage);
+                     if ( fileage > backupDays) {
+                        ortus.api.DebugLogTrace(("DeleteBackupFiles: Deleting file: " + g.getAbsolutePath()));
+//                        g.delete();
+                     } else {
+                        ortus.api.DebugLogTrace("DeleteBackupFiles: Bypassing file: " + g.getAbsolutePath());
+                    }
+                 }
+        }
+
+	public static LinkedHashMap<String, LinkedList<Object>> GroupByPath(List<Object> MediaFiles, String fspos) {
 //                 ortus.api.DebugLog(TRACE, "GroupByPath Starting");
-		HashMap<String, List<Object>> medialist = new HashMap<String, List<Object>>();
-		File[] VLP = Configuration.GetVideoLibraryImportPaths();
-		for (Object x : MediaFiles) {
-       			if ( x == null)
-				continue;
+                boolean webGrouping=false;
 
-                        Object obj = null;
-                        if ( x instanceof OrtusMedia)
-                            obj = MediaFileAPI.GetMediaFileForID(((OrtusMedia)x).GetMediaID());
-                        else
-                            obj = x;
-			String ShowTitle = "";
-			try {
-				ShowTitle = GetRelativePath(VLP, obj);
-			} catch (Exception e) {
-				ortus.api.DebugLog(LogLevel.Error, "GroupByPath: Exception: " + e);
-				ortus.api.DebugLog(LogLevel.Error,"Processing: " + obj);
-			}
-			if (ShowTitle == null) {
-				ShowTitle = "";
-			}
-//                        ortus.api.DebugLog(LogLevel.Trace,"GroupByPath: " + ShowTitle );
-			if (ShowTitle.startsWith(fspos)) {
-                                String RelativePath=null;
-                                if ( fspos.isEmpty())
-                                    RelativePath = ShowTitle.substring(fspos.length());
-                                else
-                                    RelativePath = ShowTitle.substring(fspos.length()+1);
+     //           if ( fspos.endsWith(java.io.File.separator))  {
+     //               int index = fspos.lastIndexOf(java.io.File.separator);
+     //               fspos=fspos.substring(0, index - 1);
+     //           }
 
-//                                ortus.api.DebugLog(LogLevel.Trace,"RelativePath: " + RelativePath);
-				if (RelativePath.indexOf(java.io.File.separator) > 0) {
-					String Folder = RelativePath.substring(0, RelativePath.indexOf(java.io.File.separator));
-					if ( RelativePath.substring(RelativePath.indexOf(java.io.File.separator)+1).startsWith("VIDEO_TS") ||
-					     RelativePath.substring(RelativePath.indexOf(java.io.File.separator)+1).startsWith("video_ts") ||
-					     RelativePath.substring(RelativePath.indexOf(java.io.File.separator)+1).startsWith("BDMV")) {
-						String MediaTitle = ortus.api.GetMediaTitle(obj);
-						if (medialist.get(MediaTitle) != null) {
-							int dupindex = 2;
-							while( true ) {
-								if ( medialist.get(MediaTitle+" copy no " + dupindex) == null) {
-									List<Object> ma = new ArrayList<Object>();
-									ma.add(obj);
-//									ortus.api.DebugLog(LogLevel.Trace,"Adding1: " + MediaTitle);
-									medialist.put(MediaTitle+" copy no " + dupindex, ma);
-									break;
-								} else
-									dupindex++;
-							}					
-						} else {
-							List<Object> ma = new ArrayList<Object>();
-							ma.add(obj);
-//							ortus.api.DebugLog(LogLevel.Trace,"Adding2: " + MediaTitle);
-							medialist.put(MediaTitle, ma);
-						}
-					} else {
-						if (medialist.get(Folder) != null) {
-							List<Object> ma = medialist.get(Folder);
-//							ortus.api.DebugLog(LogLevel.Trace,"Adding3: " + Folder);
-							ma.add(obj);
-						} else {
-							List<Object> ma = new ArrayList<Object>();
-							ma.add(obj);
-//							ortus.api.DebugLog(LogLevel.Trace,"Adding4: " + Folder);
-							medialist.put(Folder, ma);
-						}
-					}
-				} else {
-//					String MediaTitle = MediaFileAPI.GetMediaTitle(obj);
-					String MediaTitle = ortus.api.GetMediaTitle(obj);
-					if (medialist.get(MediaTitle) != null) {
-						int dupindex = 2;
-						while( true ) {
-							if ( medialist.get(MediaTitle+" copy no " + dupindex) == null) {
-								List<Object> ma = new ArrayList<Object>();
-								ma.add(obj);
-//								ortus.api.DebugLog(LogLevel.Trace,"Adding5: " + MediaTitle);
-								medialist.put(MediaTitle+" copy no " + dupindex, ma);
-								break;
-							} else
-								dupindex++;
-						}
-					} else {
-						List<Object> ma = new ArrayList<Object>();
-						ma.add(obj);
-//						ortus.api.DebugLog(LogLevel.Trace,"Adding6: " + MediaTitle);
-						medialist.put(MediaTitle, ma);
-					}
-				}
-			}
-		}
 
-		return medialist;
+                try {
+                    LinkedHashMap<String, LinkedList<Object>> medialist = new LinkedHashMap<String, LinkedList<Object>>();
+                    File[] VLP = Configuration.GetVideoLibraryImportPaths();
+                    for (Object x : MediaFiles) {
+                            if ( x == null)
+                                    continue;
+
+                            Object obj = null;
+                            if ( x instanceof OrtusMedia)
+                                obj = MediaFileAPI.GetMediaFileForID(((OrtusMedia)x).GetMediaID());
+                            else if ( x instanceof HashMap) {
+                                webGrouping = true;
+                                obj = MediaFileAPI.GetMediaFileForID((Integer)((HashMap)x).get("mediaid"));
+                            } else
+                                obj = x;
+                            String ShowTitle = "";
+                            try {
+                                    ShowTitle = GetRelativePath(VLP, obj);
+                            } catch (Exception e) {
+                                    ortus.api.DebugLog(LogLevel.Error, "GroupByPath: Exception: " + e);
+                                    ortus.api.DebugLog(LogLevel.Error,"Processing: " + obj);
+                            }
+                            if (ShowTitle == null) {
+                                    ShowTitle = "";
+                            }
+  //                          ortus.api.DebugLog(LogLevel.Trace,"GroupByPath: " + ShowTitle );
+                            if (ShowTitle.startsWith(fspos)) {
+                                    String RelativePath=null;
+                                    if ( fspos.isEmpty())
+                                        RelativePath = ShowTitle.substring(fspos.length());
+                                    else
+                                        RelativePath = ShowTitle.substring(fspos.length()+1);
+
+//                                    ortus.api.DebugLog(LogLevel.Trace,"RelativePath: " + RelativePath);
+                                    if (RelativePath.indexOf(java.io.File.separator) > 0) {
+                                            String Folder = RelativePath.substring(0, RelativePath.indexOf(java.io.File.separator));
+                                            if ( RelativePath.substring(RelativePath.indexOf(java.io.File.separator)+1).startsWith("VIDEO_TS") ||
+                                                 RelativePath.substring(RelativePath.indexOf(java.io.File.separator)+1).startsWith("video_ts") ||
+                                                 RelativePath.substring(RelativePath.indexOf(java.io.File.separator)+1).startsWith("BDMV")) {
+                                                    String MediaTitle = ortus.api.GetMediaTitle(obj);
+                                                    if (medialist.get(MediaTitle) != null) {
+                                                            int dupindex = 2;
+                                                            while( true ) {
+                                                                    if ( medialist.get(MediaTitle+" copy no " + dupindex) == null) {
+                                                                            LinkedList<Object> ma = new LinkedList<Object>();
+                                                                            if ( webGrouping )
+                                                                                ma.add(x);
+                                                                            else
+                                                                                ma.add(obj);
+//        								    ortus.api.DebugLog(LogLevel.Trace,"Adding1: " + MediaTitle);
+                                                                            medialist.put(MediaTitle+" copy no " + dupindex, ma);
+                                                                            break;
+                                                                    } else
+                                                                            dupindex++;
+                                                            }
+                                                    } else {
+                                                            LinkedList<Object> ma = new LinkedList<Object>();
+                                                            if ( webGrouping )
+                                                                ma.add(x);
+                                                            else
+                                                                ma.add(obj);
+ //       						    ortus.api.DebugLog(LogLevel.Trace,"Adding2: " + MediaTitle);
+                                                            medialist.put(MediaTitle, ma);
+                                                    }
+                                            } else {
+                                                    if (medialist.get(Folder) != null) {
+                                                            LinkedList<Object> ma = medialist.get(Folder);
+   // 							    ortus.api.DebugLog(LogLevel.Trace,"Adding3: " + Folder);
+                                                            if ( webGrouping )
+                                                                ma.add(x);
+                                                            else
+                                                                ma.add(obj);
+                                                    } else {
+                                                            LinkedList<Object> ma = new LinkedList<Object>();
+                                                            if ( webGrouping )
+                                                                ma.add(x);
+                                                            else
+                                                                ma.add(obj);
+    //							    ortus.api.DebugLog(LogLevel.Trace,"Adding4: " + Folder);
+                                                            medialist.put(Folder, ma);
+                                                    }
+                                            }
+                                    } else {
+    //					String MediaTitle = MediaFileAPI.GetMediaTitle(obj);
+                                            String MediaTitle = ortus.api.GetMediaTitle(obj);
+                                            if (medialist.get(MediaTitle) != null) {
+                                                    int dupindex = 2;
+                                                    while( true ) {
+                                                            if ( medialist.get(MediaTitle+" copy no " + dupindex) == null) {
+                                                                    LinkedList<Object> ma = new LinkedList<Object>();
+                                                                    if ( webGrouping )
+                                                                        ma.add(x);
+                                                                    else
+                                                                        ma.add(obj);
+    //								ortus.api.DebugLog(LogLevel.Trace,"Adding5: " + MediaTitle);
+                                                                    medialist.put(MediaTitle+" copy no " + dupindex, ma);
+                                                                    break;
+                                                            } else
+                                                                    dupindex++;
+                                                    }
+                                            } else {
+                                                    LinkedList<Object> ma = new LinkedList<Object>();
+                                                    if ( webGrouping )
+                                                        ma.add(x);
+                                                    else
+                                                        ma.add(obj);
+    //						ortus.api.DebugLog(LogLevel.Trace,"Adding6: " + MediaTitle);
+                                                    medialist.put(MediaTitle, ma);
+                                            }
+                                    }
+                            }
+                    }
+
+                    return medialist;
+            } catch ( Exception e) {
+                ortus.api.DebugLog(LogLevel.Error,"GroupByPath: Exception",e);
+                return null;
+            }
 	}
 
 	public static String GetRelativePath(File[] importfolders, Object mediaobject) {
@@ -257,8 +331,14 @@ public class file extends vars{
         		HashMap<Object,List<Object>> mfl = new HashMap<Object,List<Object>>();
 
                         for ( Object x : mediafiles) {
+                                List<String> workgenre;
 //                                ortus.api.DebugLogTrace("GroupByGenre: " + x);
-                                List<String> workgenre = ortus.api.GetMediaGenre(x);
+                                if ( x instanceof HashMap) {
+                                    workgenre = (List)((HashMap)x).get("genre");
+                                } else {
+                                    workgenre = ortus.api.GetMediaGenre(x);
+                                }
+                                
                                 for ( String wg : workgenre) {
                                     if ( mfl.get(wg) == null) {
                                             List<Object> gl = new ArrayList<Object>();
@@ -277,7 +357,12 @@ public class file extends vars{
 
                         for ( Object x : mediafiles) {
 //                                ortus.api.DebugLogTrace("GroupByGenre: " + x);
-                                List<String> workgenre = ortus.api.GetMediaGenre(x);
+                                List<String> workgenre;
+                                if ( x instanceof HashMap) {
+                                    workgenre = (List)((HashMap)x).get("genre");
+                                } else {
+                                    workgenre = ortus.api.GetMediaGenre(x);
+                                }
                                 for ( String wg : workgenre) {
                                     if ( filepos.equalsIgnoreCase(wg)) {
                                             String title = ortus.api.GetMediaTitle(x);
@@ -288,5 +373,7 @@ public class file extends vars{
 
                         return mfl;
                 }
-	}
+	}       
 }
+
+

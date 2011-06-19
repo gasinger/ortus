@@ -13,12 +13,10 @@ import java.lang.Object;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import ortus.media.metadata.item.Episode;
 import ortus.media.metadata.item.Fanart;
 import ortus.media.metadata.item.Media;
 import ortus.media.metadata.item.Series;
@@ -44,7 +42,7 @@ public class OrtusFanart extends ortus.vars implements IFanartProvider {
 		String fanartfolder = Configuration.GetProperty("ortus/fanart/folder", "None");
 
 		if (fanartfolder.equalsIgnoreCase("none")) {
-			fanartfolder = configurationEngine.getInstance().getBasePath() + seperator + "Fanart";
+			fanartfolder = Ortus.getInstance().getBasePath() + java.io.File.separator +  "Fanart";
 			File df = new File(fanartfolder);
 			if (!df.exists()) {
 				df.mkdir();
@@ -103,8 +101,8 @@ public class OrtusFanart extends ortus.vars implements IFanartProvider {
         }
    
 
-        private String GetFanart(Object mediafile, String fanarttype, int imagetype) {
-//                ortus.api.DebugLogTrace("Parms: Object: " + mediafile + " type: " + fanarttype + " ImageType: " + imagetype);
+        private String GetFanart(Object mediafile, String fanarttype, String imagetype) {
+                ortus.api.DebugLogTrace("Parms: Object: " + mediafile + " type: " + fanarttype + " ImageType: " + imagetype);
                 List results = null;
                 if ( mediafile instanceof OrtusMedia ) {
                     if ( ((OrtusMedia)mediafile).IsMediaFile()) {
@@ -112,25 +110,31 @@ public class OrtusFanart extends ortus.vars implements IFanartProvider {
                     } else if (((OrtusMedia) mediafile).IsSeries()) {
                         results = ((Series)ortus.cache.cacheEngine.getInstance().GetCache(((OrtusMedia)mediafile).GetKey())).GetFanart(fanarttype,imagetype);
                     } else if (((OrtusMedia)mediafile).IsEpisode()) {
-                        int seriesid = ((Episode)ortus.cache.cacheEngine.getInstance().GetCache(((OrtusMedia)mediafile).GetKey())).getSeriesid();
-                        results = ((Series)ortus.cache.cacheEngine.getInstance().GetCache("SR" + seriesid)).GetFanart(fanarttype,imagetype);
+//                        int seriesid = ((Episode)ortus.cache.cacheEngine.getInstance().GetCache(((OrtusMedia)mediafile).GetKey())).getSeriesid();
+                        results = ((Media)ortus.cache.cacheEngine.getInstance().GetCache("MD" + ((OrtusMedia)mediafile).GetMediaID())).GetFanart(fanarttype,imagetype);
                     }
                 } else if ( mediafile instanceof Integer ) {
                     results = ((Media)ortus.cache.cacheEngine.getInstance().GetCache("MD" + mediafile)).GetFanart(fanarttype,imagetype);
                 } else {
                     results = ((Media)ortus.cache.cacheEngine.getInstance().GetCache("MD" + MediaFileAPI.GetMediaFileID(mediafile))).GetFanart(fanarttype,imagetype);
                 }
+                ortus.api.DebugLogTrace("results: size: " + results.size());
                 if (results.size() > 0) {
-                    ortus.api.DebugLogTrace("Return: Fanart: " + ortus.api.GetFanartFolder() + java.io.File.separator + ((Fanart)results.get(0)).getFile());
-                    return ortus.api.GetFanartFolder() + java.io.File.separator + ((Fanart)results.get(0)).getFile();
+                    for ( int x = 0; x < results.size();x++) {
+                        ortus.api.DebugLogTrace("results: " + x + " file: " + ((Fanart)results.get(x)).getFile());
+                        if ( ((Fanart)results.get(x)).getFile() != null) {                            
+                            if ( ! ((Fanart)results.get(x)).getFile().equalsIgnoreCase("null") ) {
+                                 ortus.api.DebugLogTrace("Return: Fanart: " + ortus.api.GetFanartFolder() + java.io.File.separator + ((Fanart)results.get(x)).getFile());
+                                 return ortus.api.GetFanartFolder() + java.io.File.separator + ((Fanart)results.get(x)).getFile();
+                            }
+                        }
+                    }
+                    return null;
                 } else {
                   return GetFanartPosterFile(mediafile);
-//                ortus.api.DebugLogTrace("Return: null");
-
-//                    return null;
       		}
 	}
-	private List<Object> GetFanartAll(Object mediafile, String fanarttype, int imagetype) {
+	private List<Object> GetFanartAll(Object mediafile, String fanarttype, String imagetype) {
               List results = null;
                 if ( mediafile instanceof OrtusMedia ) {
                     if ( ((OrtusMedia)mediafile).IsMediaFile()) {
@@ -138,8 +142,8 @@ public class OrtusFanart extends ortus.vars implements IFanartProvider {
                     } else if (((OrtusMedia) mediafile).IsSeries()) {
                         results = ((Series)ortus.cache.cacheEngine.getInstance().GetCache(((OrtusMedia)mediafile).GetKey())).GetFanart(fanarttype,imagetype);
                     } else if (((OrtusMedia)mediafile).IsEpisode()) {
-                        int seriesid = ((Episode)ortus.cache.cacheEngine.getInstance().GetCache(((OrtusMedia)mediafile).GetKey())).getSeriesid();
-                        results = ((Series)ortus.cache.cacheEngine.getInstance().GetCache("SR" + seriesid)).GetFanart(fanarttype,imagetype);
+//                        int seriesid = ((Episode)ortus.cache.cacheEngine.getInstance().GetCache(((OrtusMedia)mediafile).GetKey())).getSeriesid();
+                        results = ((Series)ortus.cache.cacheEngine.getInstance().GetCache("MD" + ((OrtusMedia)mediafile).GetMediaID())).GetFanart(fanarttype,imagetype);
                     }
                 } else {
                     results = ((Media)ortus.cache.cacheEngine.getInstance().GetCache("MD" + MediaFileAPI.GetMediaFileID(mediafile))).GetFanart(fanarttype,imagetype);
@@ -147,7 +151,13 @@ public class OrtusFanart extends ortus.vars implements IFanartProvider {
                 if (results.size() > 0) {
                     List<Object> ret = new ArrayList<Object>();
                     for ( Object o : results) {
-			ret.add(ortus.api.GetFanartFolder() + java.io.File.separator + ((Fanart)o).getFile());
+                        if ( ((Fanart)o).getFile() != null) {
+                            if ( ! ((Fanart)o).getFile().equalsIgnoreCase("null")) {
+                                ret.add(ortus.api.GetFanartFolder() + java.io.File.separator + ((Fanart)o).getFile());
+                                ortus.api.DebugLogTrace("Adding Fanart: " + ((Fanart)o).getId() + " File: " + ((Fanart)o).getFile());
+                            }
+                        }
+
                     }
                     return ret;
                 } else {
@@ -156,77 +166,269 @@ public class OrtusFanart extends ortus.vars implements IFanartProvider {
       		}
 	}
 
+        /*
+         * Default Medium Calls
+         */
         public String GetFanartPoster(Object mediafile) {
-            return GetFanart(mediafile, "Posters",2);
+            return GetFanartPosterMedium(mediafile);
         }
-        public List<Object> GetFanartPosters(Object mediafile) {
-            return GetFanartAll(mediafile, "Posters",2);
+        public List<Object> GetFanartPosterAll(Object mediafile) {
+            return GetFanartPosterMediumAll(mediafile);
         }
-
-	public String GetFanartPosterThumb(Object mediafile) {
-            return GetFanart(mediafile,"Posters",1);
+        public Object GetFanartPosterRandom(Object mediafile) {
+            return GetFanartPosterMediumRandom(mediafile);
+        }
+         public String GetFanartBackground(Object mediafile) {
+            return GetFanartBackgroundMedium(mediafile);
+        }
+        public List<Object> GetFanartBackgroundAll(Object mediafile) {
+            return GetFanartBackgroundMediumAll(mediafile);
+        }
+        public Object GetFanartBackgroundRandom(Object mediafile) {
+            return GetFanartBackgroundMediumRandom(mediafile);
+        }
+         public String GetFanartBanner(Object mediafile) {
+            return GetFanartPosterMedium(mediafile);
+        }
+        public List<Object> GetFanartBannerAll(Object mediafile) {
+            return GetFanartPosterMediumAll(mediafile);
+        }
+        public Object GetFanartBannerRandom(Object mediafile) {
+            return GetFanartPosterMediumRandom(mediafile);
+        }
+        /*
+         * Low Resolution Poster Calls
+         */
+	public String GetFanartPosterLow(Object mediafile) {
+            return GetFanart(mediafile,"Posters","low");
+	}
+        public List<Object> GetFanartPosterLowAll(Object mediafile) {
+            return GetFanartAll(mediafile,"Posters","low");
+        }
+        public Object GetFanartPosterLowRandom(Object mediafile) {
+            return GetRandom(GetFanartAll(mediafile,"Posters","low"));
+	}
+        /*
+         * Medium Resolution Poster Calls
+         */
+        public String GetFanartPosterMedium(Object mediafile) {
+            return GetFanart(mediafile,"Posters","medium");
+	}
+        public List<Object> GetFanartPosterMediumAll(Object mediafile) {
+            return GetFanartAll(mediafile,"Posters","medium");
+        }
+        public Object GetFanartPosterMediumRandom(Object mediafile) {
+            return GetRandom(GetFanartAll(mediafile,"Posters","medium"));
+	}
+        /*
+         * High Resolution Poster Calls
+         */
+        public String GetFanartPosterHigh(Object mediafile) {
+            return GetFanart(mediafile,"Posters","high");
+	}
+        public List<Object> GetFanartPosterHighAll(Object mediafile) {
+            return GetFanartAll(mediafile,"Posters","high");
+        }
+        public Object GetFanartPosterHighRandom(Object mediafile) {
+            return GetRandom(GetFanartAll(mediafile,"Posters","high"));
+	}
+        /*
+         * Low Resolution Background Calls
+         */
+	public String GetFanartBackgroundLow(Object mediafile) {
+            return GetFanart(mediafile,"Backgrounds","low");
+	}
+        public List<Object> GetFanartBackgroundLowAll(Object mediafile) {
+            return GetFanartAll(mediafile,"Backgrounds","low");
+        }
+        public Object GetFanartBackgroundLowRandom(Object mediafile) {
+            return GetRandom(GetFanartAll(mediafile,"Backgrounds","low"));
+	}
+        /*
+         * Medium Resolution Background Calls
+         */
+        public String GetFanartBackgroundMedium(Object mediafile) {
+            return GetFanart(mediafile,"Backgrounds","medium");
+	}
+        public List<Object> GetFanartBackgroundMediumAll(Object mediafile) {
+            return GetFanartAll(mediafile,"Backgrounds","medium");
+        }
+        public Object GetFanartBackgroundMediumRandom(Object mediafile) {
+            return GetRandom(GetFanartAll(mediafile,"Backgrounds","medium"));
+	}
+        /*
+         * High Resolution Background Calls
+         */
+        public String GetFanartBackgroundHigh(Object mediafile) {
+            return GetFanart(mediafile,"Backgrounds","high");
+	}
+        public List<Object> GetFanartBackgroundHighAll(Object mediafile) {
+            return GetFanartAll(mediafile,"Backgrounds","high");
+        }
+        public Object GetFanartBackgroundHighRandom(Object mediafile) {
+            return GetRandom(GetFanartAll(mediafile,"Backgrounds","high"));
+	}
+                /*
+         * Low Resolution Banner Calls
+         */
+	public String GetFanartBannerLow(Object mediafile) {
+            return GetFanart(mediafile,"Banners","low");
+	}
+        public List<Object> GetFanartBannerLowAll(Object mediafile) {
+            return GetFanartAll(mediafile,"Banners","low");
+        }
+        public Object GetFanartBannerLowRandom(Object mediafile) {
+            return GetRandom(GetFanartAll(mediafile,"Banners","low"));
+	}
+        /*
+         * Medium Resolution Banner Calls
+         */
+        public String GetFanartBannerMedium(Object mediafile) {
+            return GetFanart(mediafile,"Banners","medium");
+	}
+        public List<Object> GetFanartBannerMediumAll(Object mediafile) {
+            return GetFanartAll(mediafile,"Banners","medium");
+        }
+        public Object GetFanartBannerMediumRandom(Object mediafile) {
+            return GetRandom(GetFanartAll(mediafile,"Banners","medium"));
+	}
+        /*
+         * High Resolution Banner Calls
+         */
+        public String GetFanartBannerHigh(Object mediafile) {
+            return GetFanart(mediafile,"Banners","high");
+	}
+        public List<Object> GetFanartBannerHighAll(Object mediafile) {
+            return GetFanartAll(mediafile,"Banners","high");
+        }
+        public Object GetFanartBannerHighRandom(Object mediafile) {
+            return GetRandom(GetFanartAll(mediafile,"Banners","high"));
 	}
 
-	public String GetFanartPosterCover(Object mediafile) {
-            return GetFanart(mediafile,"Posters",2);
+        /* Low Resolution Banner Calls
+         */
+	public String GetFanartEpisodeLow(Object mediafile) {
+
+            return GetFanart(mediafile,"Episode-" + ortus.api.GetEpisodeID(mediafile) + "-Posters","low");
+	}
+        public List<Object> GetFanartEpisodeLowAll(Object mediafile) {
+            return GetFanartAll(mediafile,"Episode-" + ortus.api.GetEpisodeID(mediafile) + "-Posters","low");
+        }
+        public Object GetFanartEpisodeLowRandom(Object mediafile) {
+            return GetRandom(GetFanartAll(mediafile,"Episode-" + ortus.api.GetEpisodeID(mediafile) + "-Posters","low"));
+	}
+        /*
+         * Medium Resolution Banner Calls
+         */
+        public String GetFanartEpisodeMedium(Object mediafile) {
+            return GetFanart(mediafile,"Episode-" + ortus.api.GetEpisodeID(mediafile) + "-Posters","medium");
+	}
+        public List<Object> GetFanartEpisodeMediumAll(Object mediafile) {
+            return GetFanartAll(mediafile,"Episode-" + ortus.api.GetEpisodeID(mediafile) + "-Posters","medium");
+        }
+        public Object GetFanartEpisodeMediumRandom(Object mediafile) {
+            return GetRandom(GetFanartAll(mediafile,"Episode-" + ortus.api.GetEpisodeID(mediafile) + "-Posters","medium"));
+	}
+        /*
+         * High Resolution Banner Calls
+         */
+        public String GetFanartEpisodeHigh(Object mediafile) {
+            return GetFanart(mediafile,"Episode-" + ortus.api.GetEpisodeID(mediafile) + "-Posters","high");
+	}
+        public List<Object> GetFanartEpisodeHighAll(Object mediafile) {
+            return GetFanartAll(mediafile,"Episode-" + ortus.api.GetEpisodeID(mediafile) + "-Posters","high");
+        }
+        public Object GetFanartEpisodeHighRandom(Object mediafile) {
+            return GetRandom(GetFanartAll(mediafile,"Episode-" + ortus.api.GetEpisodeID(mediafile) + "-Posters","high"));
 	}
 
-	public String GetFanartPosterHigh(Object mediafile) {
-            return GetFanart(mediafile,"Posters",3);
-	}
-
-	public String GetFanartBackgroundHighRandom() {
-//		List<Object> result = ortus.api.executeSQLQuery("select * from sage.fanart where mediaid >= ( select rand() * max(mediaid) from sage.fanart where file is not null and imagetype  = 3 and type = 'Backgrounds') limit 1");
-//		if (result.size() > 0) {
-//			return ortus.api.GetFanartFolder() + java.io.File.separator + (String) result.get(0);
-//		} else {
-			return null;
-//		}
-
-	}
-
-	public String GetFanartBanner(Object mediafile) {
-            return GetFanart(mediafile,"Banners",3);
-	}
-
-	public List<Object> GetFanartBanners(Object mediafile) {
-            return GetFanartAll(mediafile,"Banners",3);
-	}
-
-	public String GetFanartBackground(Object mediafile) {
-            return GetFanart(mediafile,"Backgrounds",2);
-	}
-	public String GetFanartBackgroundThumb(Object mediafile) {
-            return GetFanart(mediafile,"Backgrounds",1);
-	}
-
-	public String GetFanartBackgroundCover(Object mediafile) {
-            return GetFanart(mediafile,"Backgrounds",2);
-	}
-
-	public String GetFanartBackgroundHigh(Object mediafile) {
-            return GetFanart(mediafile,"Backgrounds",3);
-	}
-
-	public List<Object> GetFanartBackgrounds(Object mediafile) {
-            return GetFanartAll(mediafile,"Backgrounds",2);
-	}
-
-	public List<Object> GetFanartRandom(List<Object> fanart) {
-		Collections.shuffle(fanart);
-		return fanart;
-	}
-
-	public String GetCastFanartPoster(String castname) {
-		ortus.api.DebugLog(LogLevel.Trace2, " GetCastFanartPoster: fanart for: " + castname);
-		List<List> result = ortus.api.executeSQLQueryArray("select file from sage.fanart where type = 'Cast-" + castname + "'");
-		if ( result.size() > 1)
+        public Object GetRandom(List<Object> fanart) {
+            if ( fanart == null)
+                return null;
+            if ( fanart.size() == 0)
+                return null;
+            int Min = 0;
+            int Max = fanart.size() - 1;
+            int x = Min + (int)(Math.random() * ((Max - Min) + 1));
+            return fanart.get(x);
+        }
+        public Object GetFanartForID(int id, String resolution) {
+		ortus.api.DebugLog(LogLevel.Trace2, " GetFanartForID: fanart for: " + id + " with resolution: " + resolution);
+                String fileField = resolution + "_file";
+		List<List> result = ortus.api.executeSQLQueryArray("select " + fileField + " from sage.fanart where id = " + id);
+		if ( result.size() > 0)
 			return ortus.api.GetFanartFolder() + java.io.File.separator + (String)result.get(0).get(0);
 		else
 			return null;
 	}
 
-	public String GetSeasonFanartPoster(Object mediafile) {
+	public Object GetCastFanartLow(String castname) {
+		ortus.api.DebugLog(LogLevel.Trace2, " GetCastFanartLow: fanart for: " + castname);
+		List<List> result = ortus.api.executeSQLQueryArray("select low_file from sage.fanart where type = 'Cast-" + castname + "'");
+		if ( result.size() > 0)
+			return ortus.api.GetFanartFolder() + java.io.File.separator + (String)result.get(0).get(0);
+		else
+			return null;
+	}
+      	public Object GetCastFanartMedium(String castname) {
+		ortus.api.DebugLog(LogLevel.Trace2, " GetCastFanartMedium: fanart for: " + castname);
+		List<List> result = ortus.api.executeSQLQueryArray("select medium_file from sage.fanart where type = 'Cast-" + castname + "'");
+		if ( result.size() > 0)
+			return ortus.api.GetFanartFolder() + java.io.File.separator + (String)result.get(0).get(0);
+		else
+			return null;
+	}
+	public Object GetCastFanartHigh(String castname) {
+		ortus.api.DebugLog(LogLevel.Trace2, " GetCastFanartHigh: fanart for: " + castname);
+		List<List> result = ortus.api.executeSQLQueryArray("select high_file from sage.fanart where type = 'Cast-" + castname + "'");
+		if ( result.size() > 0)
+			return ortus.api.GetFanartFolder() + java.io.File.separator + (String)result.get(0).get(0);
+		else
+			return null;
+	}
+
+	public Object GetTVFanart(String seriesid, String type, String quality) {
+                String SQL = null;
+		List<HashMap> sqlresult = ortus.api.executeSQLQueryHashCache("select * from sage.fanart where low_file is not null and idtype= 'SR' and mediaid = " + seriesid + " and type = '" + type + "'");
+		if (sqlresult.size() < 1) {
+			return null;
+		}
+
+                if ( quality.equalsIgnoreCase("high")) {
+                    return ortus.api.GetFanartFolder() + java.io.File.separator + (String) sqlresult.get(0).get("HIGH_FILE");
+                } else if ( quality.equalsIgnoreCase("medium")) {
+                    return ortus.api.GetFanartFolder() + java.io.File.separator + (String) sqlresult.get(0).get("MEDIUM_FILE");
+                } else {
+                    return ortus.api.GetFanartFolder() + java.io.File.separator + (String) sqlresult.get(0).get("LOW_FILE");
+                }		
+	}
+
+       	public List<Object> GetTVFanartAll(String seriesid, String type, String quality) {
+                String SQL = null;
+                List<Object>results = new ArrayList<Object>();
+		List<HashMap> sqlresult = ortus.api.executeSQLQueryHashCache("select * from sage.fanart where low_file is not null and idtype= 'SR' and mediaid = " + seriesid + " and type = '" + type + "'");
+		if (sqlresult.size() < 1) {
+			return null;
+		}
+
+                for ( HashMap x : sqlresult) {
+                    if ( quality.equalsIgnoreCase("high")) {
+                        results.add(ortus.api.GetFanartFolder() + java.io.File.separator + (String) x.get("HIGH_FILE"));
+                    } else if ( quality.equalsIgnoreCase("medium")) {
+                        results.add(ortus.api.GetFanartFolder() + java.io.File.separator + (String) x.get("MEDIUM_FILE"));
+                    } else {
+                        results.add(ortus.api.GetFanartFolder() + java.io.File.separator + (String) x.get("LOW_FILE"));
+                    }
+                }
+
+                return results;
+	}
+
+	public Object GetTVFanartRandom(String seriesid, String type, String quality) {
+		return GetRandom(GetTVFanartAll(seriesid, type, quality));
+   	}
+
+	public Object GetSeasonFanartPoster(Object mediafile) {
                 String SQL = null;
                 int SageMediaID = 0;
                 if ( mediafile instanceof OrtusMedia) {
@@ -245,7 +447,7 @@ public class OrtusFanart extends ortus.vars implements IFanartProvider {
 		if (sqlresult.size() < 1) {
 			return null;
 		}
-		List<Object> result = (List) ((Media)ortus.cache.cacheEngine.getInstance().GetCache("MD" + SageMediaID)).GetFanart("Season-" + sqlresult.get(0) + "-Posters",3);
+		List<Object> result = (List) ((Media)ortus.cache.cacheEngine.getInstance().GetCache("MD" + SageMediaID)).GetFanart("Season-" + sqlresult.get(0) + "-Posters","medium");
 
 		if (result == null || result.size() == 0) {
                         return GetFanartPoster(SageMediaID);
@@ -254,7 +456,7 @@ public class OrtusFanart extends ortus.vars implements IFanartProvider {
 		}
 	}
 
-	public List<Object> GetSeasonFanartPosters(Object mediafile) {
+	public List<Object> GetSeasonFanartPosterAll(Object mediafile) {
                 String SQL = null;
                 int SageMediaID = 0;
                 if ( mediafile instanceof OrtusMedia) {
@@ -275,12 +477,12 @@ public class OrtusFanart extends ortus.vars implements IFanartProvider {
 			return null;
 		}
 
-		List<Object> result = (List) ((Media)ortus.cache.cacheEngine.getInstance().GetCache("MD" + SageMediaID)).GetFanart("Season-" + sqlresult.get(0) + "-Posters",3 );
+		List<Object> result = (List) ((Media)ortus.cache.cacheEngine.getInstance().GetCache("MD" + SageMediaID)).GetFanart("Season-" + sqlresult.get(0) + "-Posters","medium");
 
 		return result;
 	}
 
-	public String GetSeasonFanartBanner(Object mediafile) {
+	public Object GetSeasonFanartBanner(Object mediafile) {
                 String SQL = null;
                 int SageMediaID = 0;
                 if ( mediafile instanceof OrtusMedia) {
@@ -301,7 +503,7 @@ public class OrtusFanart extends ortus.vars implements IFanartProvider {
 			return null;
 		}
 
-		List<Object> result = (List) ((Media)ortus.cache.cacheEngine.getInstance().GetCache("MD"+SageMediaID)).GetFanart("Season-" + sqlresult.get(0) + "-Banners",3);
+		List<Object> result = (List) ((Media)ortus.cache.cacheEngine.getInstance().GetCache("MD"+SageMediaID)).GetFanart("Season-" + sqlresult.get(0) + "-Banners","medium");
 
 		if (result == null) {
 			return null;
@@ -310,7 +512,7 @@ public class OrtusFanart extends ortus.vars implements IFanartProvider {
 		}
 	}
 
-	public List<Object> GetSeasonFanartBanners(Object mediafile) {
+	public List<Object> GetSeasonFanartBannerAll(Object mediafile) {
                 String SQL = null;
                 int SageMediaID = 0;
                 if ( mediafile instanceof OrtusMedia) {
@@ -331,7 +533,7 @@ public class OrtusFanart extends ortus.vars implements IFanartProvider {
 			return null;
 		}
 
-		List<Object> result = (List) ((Media)ortus.cache.cacheEngine.getInstance().GetCache("MD"+SageMediaID)).GetFanart("Season-" + sqlresult.get(0) + "-Banners",3);
+		List<Object> result = (List) ((Media)ortus.cache.cacheEngine.getInstance().GetCache("MD"+SageMediaID)).GetFanart("Season-" + sqlresult.get(0) + "-Banners","medium");
 
 		return result;
 	}

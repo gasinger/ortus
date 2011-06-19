@@ -5,11 +5,13 @@
 
 package ortus.ui.menu;
 
+import java.io.Serializable;
+
 /**
  *
  * @author jphipps
  */
-public class MenuItemElement {
+public class MenuItemElement implements Serializable {
     private MenuItemElementType menuitemtype;
     private String Title = "";
     private String Name = "";

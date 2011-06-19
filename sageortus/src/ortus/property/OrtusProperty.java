@@ -64,8 +64,9 @@ public class OrtusProperty extends vars implements IProperty {
 	 * @param PropertyName OrtusProperty name
 	 * @return Value of property name
 	 */
-	public String GetProperty(String PropertyName, String defaultvalue) {
-		return Props.getProperty(PropertyName,defaultvalue);
+	public String GetProperty(String PropertyName, Object defaultvalue) {
+//                ortus.api.DebugLogTrace(("GetProperty: for key: " + PropertyName + " Value: " + Props.getProperty(PropertyName,String.valueOf(defaultvalue))));
+		return Props.getProperty(PropertyName,String.valueOf(defaultvalue));
 
 	}
 	
@@ -119,4 +120,19 @@ public class OrtusProperty extends vars implements IProperty {
 		
 		return;
 	}
+
+    @Override
+    public void StoreProperty() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void Load() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void Load(Object userid) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

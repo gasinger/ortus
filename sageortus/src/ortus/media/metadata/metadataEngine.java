@@ -37,7 +37,7 @@ public class metadataEngine {
     }
 
     public void RegisterMetadataProvider(String providername, IMetadataProvider mdp) {
-	    ortus.api.DebugLog(LogLevel.Info, "metadataEngine: Registering provider: " + providername + " using class: " + mdp.getClass().getName());
+	    ortus.api.DebugLog(LogLevel.Debug, "metadataEngine: Registering provider: " + providername + " using class: " + mdp.getClass().getName());
 	    metadata.put(providername, mdp);
     }
 

@@ -10,6 +10,8 @@ import java.util.Vector;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -116,5 +118,22 @@ public class array extends vars
 
             return result;
 
+        }
+
+        public static HashMap GroupArray(List<HashMap> maps, Object key) {
+            LinkedHashMap<Object,List> result = new LinkedHashMap<Object,List>();
+
+            for ( HashMap x : maps) {
+                if ( x.get(key) != null) {
+                    if ( result.get(x.get(key)) == null) {
+                        List y = new ArrayList();
+                        y.add(x);
+                        result.put(x.get(key), y);
+                    } else {
+                        result.get(x.get(key)).add(x);
+                    }
+                }
+            }
+            return result;
         }
 }

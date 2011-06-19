@@ -15,11 +15,13 @@ public interface IMetadataProvider
 {
         //Search
         public Object Search(String filter);
-        public HashMap GetMetadata(Object mediafile);
+        public HashMap GetMetadata(Object mediafile);   
         public HashMap GetMetadataFull(Object mediafile);
+        public String GetMetadataFullXML(Object mediafile);
         public ortus.media.metadata.item.Media GetMetadataMedia(Object mediafile);
         public ortus.media.metadata.item.Episode GetMetadataEpisode(Object mediafile);
         public ortus.media.metadata.item.Series GetMetadataSeries(Object mediafile);
+        public List<HashMap> GetMetadataCast(Object mediafile);
         public int GetMediaID(Object mediafile);
         public int GetEpisodeID(Object mediafile);
         public int GetSeriesID(Object mediafile);
@@ -33,7 +35,7 @@ public interface IMetadataProvider
 
 	//MediaType
 	public int GetMediaType(Object mediafile);
-        public void SetMediaType(Object mediafile, Object mediatype);
+        public void SetMediaType(Object mediafile, int mediatype);
 	public int GetMediaGroup(Object mediafile);
         public Object GetMediaForOrtusMedia(Object mediafile);
         public boolean IsOrtusMediaObject(Object mediafile);
@@ -59,10 +61,12 @@ public interface IMetadataProvider
         public String GetAllmediaData(Object mediafile, String column);
 	public String GetMediaTitle(Object mediafile);
 	public void SetMediaTitle(Object mediafile, String newtitle);
+        public void SetEpisodeTitle(Object mediafile, String newtitle);
 	public String GetMediaFileID(Object mediafile);
 	public String GetDescription(Object mediafile);
         public void SetDescription(Object mediafile, String title);
 	public List<String> GetGenre(Object mediafile);
+        public void SetGenre(Object mediafile, List genre);
 	public String GetImportDate(Object mediafile);
 	public String GetPath(Object mediafile);
 	public String GetMediaEncoding(Object mediafile);

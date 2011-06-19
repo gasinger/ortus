@@ -6,8 +6,9 @@ package ortus.events;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import ortus.Ortus;
-import ortus.configurationEngine;
 import ortus.mq.EventListener;
 import ortus.mq.OrtusEvent;
 import ortus.vars.LogLevel;
@@ -59,7 +60,7 @@ public class LocalEvents extends EventListener {
 
 	@OrtusEvent("STVPanelRefresh")
 	public void doSTVPanelRefresh(String panelname) {
-		Object[] ctx = configurationEngine.getInstance().getAllContext();
+		Object[] ctx = Ortus.getInstance().getAllContext();
 		for ( Object x : ctx) {
 			if (! ((String)x).equalsIgnoreCase("background")) {
 				ortus.api.DebugLog(LogLevel.Trace,"doSTVPanelRefresh: Coontext: " + x + " Panel: " + panelname);
@@ -86,19 +87,45 @@ public class LocalEvents extends EventListener {
 	}
 	@OrtusEvent("MediaFileRemoved")
 	public void doMediaFileRemoved(Map eventval) {
-		ortus.onlinescrapper.api.cleanMediaObject(MediaFileAPI.GetMediaFileForID((Integer)eventval.get("MediaFile")));
+//                ortus.api.DebugLogTrace("MediaFileRemoved: Recieved by Ortus");
+//                for( Object x : eventval.keySet().toArray()) {
+//                    ortus.api.DebugLogTrace("Recieved: Key: " + x + " Value: " + eventval.get(x));
+//                }
+//
+//                if( eventval.get("MediaFile") instanceof Integer) {
+//                    ortus.api.DebugLogTrace("MediaFile is an int");
+//                } else {
+//                    ortus.api.DebugLogTrace("MediaFile is a " + eventval.get("MediaFile").getClass().toString());
+//                }
+		ortus.onlinescrapper.api.cleanMediaObject(eventval.get("MediaFile"));
 	}
 
 	@OrtusEvent("PlaybackStopped")
 	public void doPlaybackStopped(Map eventval) {
+                Pattern pattern = Pattern.compile(".*/.*");
+		Matcher matcher = pattern.matcher((String)eventval.get("UIContext"));
+		if (matcher.find()) {
+                    ortus.api.DebugLogTrace("playback stopped: found server playback event for: " + eventval.get("UIContext") + ", skipping");
+                    return;
+		}
+
 		ortus.api.DebugLog(LogLevel.Debug, "playback stopped: mediafile : " + eventval.get("MediaFile") + " UI: " + eventval.get("UIContext"));
-		ortus.configurationEngine.getInstance().getIdentity((String)eventval.get("UIContext")).SetUserWatchPosition(eventval);
+		ortus.Ortus.getInstance().getIdentity((String)eventval.get("UIContext")).SetUserWatchPosition(eventval);
 	}
+
+//        @OrtusEvent("ClientDisconnected")
+//	public void doDisconnection(Map eventval) {
+//                for ( Object x : eventval.keySet().toArray()) {
+//                    ortus.api.DebugLogTrace(" Event: Parm: " + x + " Value: " + eventval.get(x));
+//                }
+//
+//                ortus.api.StoreUserProperty();
+//	}
 
         @OrtusEvent("RemoveClient")
         public void doRemoveClient(String MACaddress) {
                 ortus.api.DebugLog(LogLevel.Debug, "ClientDisconnected: " + MACaddress);
-                configurationEngine.getInstance().unloadconnection(MACaddress);
+                Ortus.getInstance().unloadconnection(MACaddress);
         }
 
         @OrtusEvent("LoadTasks")
@@ -110,4 +137,14 @@ public class LocalEvents extends EventListener {
         public void doCreateTask(String taskid, String description, String taskname, String tasktime, long interval, Object[] params) {
             ortus.api.CreateTask(taskid, description, taskname, tasktime, interval, params);
         }
+
+        @OrtusEvent("UserPropertyReload")
+        public void doUserPropertyReload(Object userid) {
+            ortus.api.ReloadUserProperty(userid);
+        }
+
+        @OrtusEvent("UserMenuReload")
+        public void doUserMenuReload(Object userid) {
+            ortus.api.ReloadUserMenu((Integer)userid);
+        }    
 }

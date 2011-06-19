@@ -11,6 +11,8 @@ import java.util.Map;
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.MapListHandler;
+import ortus.media.OrtusMedia;
+import sagex.api.MediaFileAPI;
 
 /**
  *
@@ -38,4 +40,72 @@ public class utils {
         
         return null;
     }
+
+    public static int GetMediaID(Object mediafile) {
+        int mediaid = 0;
+        if (mediafile instanceof Integer) {
+            mediaid = (Integer) mediafile;
+        } else if ( mediafile instanceof String) {
+            try { mediaid = Integer.parseInt((String)mediafile); } catch ( Exception e) {}
+        } else if (mediafile instanceof OrtusMedia) {
+            if (((OrtusMedia) mediafile).IsMediaFile() || ((OrtusMedia) mediafile).IsEpisode()) {
+                mediaid = ((OrtusMedia) mediafile).GetMediaID();
+            }
+        } else if (MediaFileAPI.IsMediaFileObject(mediafile)) {
+            mediaid = MediaFileAPI.GetMediaFileID(mediafile);
+        }
+
+        return mediaid;
+    }
+
+    public static int GetEpisodeID(Object mediafile) {
+        int episodeid = 0;
+        int mediaid = 0;
+        if (mediafile instanceof Integer) {
+            episodeid = (Integer) mediafile;
+        } else if (mediafile instanceof OrtusMedia) {
+            if (((OrtusMedia) mediafile).IsMediaFile() || ((OrtusMedia) mediafile).IsEpisode()) {
+                mediaid = ((OrtusMedia) mediafile).GetMediaID();
+            } else if (((OrtusMedia) mediafile).IsEpisode()) {
+                episodeid = ((OrtusMedia) mediafile).GetID();
+            }
+        } else if (MediaFileAPI.IsMediaFileObject(mediafile)) {
+            mediaid = MediaFileAPI.GetMediaFileID(mediafile);
+        }
+
+        if (mediaid > 0) {
+            List qr = ortus.api.executeSQLQuery("select episodeid from sage.episode where mediaid = " + mediaid);
+            if (qr.size() > 0) {
+                episodeid = Integer.parseInt((String) qr.get(0));
+            }
+        }
+
+        return episodeid;
+    }
+
+    public static int GetSeriesID(Object mediafile) {
+        int seriesid = 0;
+        int mediaid = 0;
+        if (mediafile instanceof Integer) {
+            seriesid = (Integer) mediafile;
+        } else if (mediafile instanceof OrtusMedia) {
+            if (((OrtusMedia) mediafile).IsMediaFile() || ((OrtusMedia) mediafile).IsEpisode()) {
+                mediaid = ((OrtusMedia) mediafile).GetMediaID();
+            } else if (((OrtusMedia) mediafile).IsSeries()) {
+                seriesid = ((OrtusMedia) mediafile).GetID();
+            }
+        } else if (MediaFileAPI.IsMediaFileObject(mediafile)) {
+            mediaid = MediaFileAPI.GetMediaFileID(mediafile);
+        }
+
+        if (mediaid > 0) {
+            List qr = ortus.api.executeSQLQuery("select seriesid from sage.episode where mediaid = " + mediaid);
+            if (qr.size() > 0) {
+                seriesid = Integer.parseInt((String) qr.get(0));
+            }
+        }
+
+        return seriesid;
+    }
+
 }

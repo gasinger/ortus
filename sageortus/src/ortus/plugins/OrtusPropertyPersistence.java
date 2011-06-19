@@ -20,7 +20,7 @@ public class OrtusPropertyPersistence implements IPropertyPersistence {
 
 	@Override
 	public String get(String property, String defvalue) {
-		return ortus.api.GetProperty(property, defvalue);
+		return (String)ortus.api.GetProperty(property, defvalue);
 	}
 
 }

@@ -48,7 +48,7 @@ public class logger extends vars {
                 }
                 PropertyConfigurator.configure(logprop);
 
-		int LogLevelInt = Integer.parseInt(Configuration.GetServerProperty("ortus/log/level", "4"));
+		int LogLevelInt = Integer.parseInt(Configuration.GetServerProperty("ortus/log/level", "6"));
 
 		switch(LogLevelInt) {
 			case 0: log.setLevel(Level.OFF); break;

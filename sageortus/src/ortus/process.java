@@ -93,7 +93,7 @@ public class process extends vars {
 
 	public static Object executeRemote(String methd, Object[] args) {
 	    if ( ortus.api.IsRemoteHost() ) {
-                return ortus.daemon.api.executecCMD(ortus.api.GetProperty("remotehost", null), methd, args);
+                return ortus.daemon.api.executecCMD((String)ortus.api.GetProperty("remotehost", null), methd, args);
 	    } else {
                 return execute(methd, args);
             }

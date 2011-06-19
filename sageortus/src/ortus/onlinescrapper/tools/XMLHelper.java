@@ -12,6 +12,7 @@ import java.net.URL;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
+import ortus.Ortus;
 
 /**
  *
@@ -61,7 +62,11 @@ public class XMLHelper extends ortus.vars {
         InputStream in = new FileInputStream(new File(pathfilename));
         return XMLInputFactory.newInstance().createXMLEventReader(in);
     }
-    
+
+    public static XMLEventReader getEventReaderJar(String pathfilename) throws IOException, XMLStreamException {
+        InputStream in = Ortus.getInstance().getJarStream(pathfilename);
+        return XMLInputFactory.newInstance().createXMLEventReader(in);
+    }
     public static void closeEventReader(XMLEventReader reader) {
         if (reader != null) {
             try {

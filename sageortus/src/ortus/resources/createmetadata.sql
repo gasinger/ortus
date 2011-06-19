@@ -8,7 +8,7 @@ create table sage.metadata (
     alternate_name varchar,
     url varchar,
     votes int,
-    rating float,
+    rating int,
     tagline varchar,
     certification varchar,
     releasedate date,

@@ -21,6 +21,10 @@ public class OrtusMedia implements Comparable {
     public OrtusMedia() {
     }
 
+    public OrtusMedia(String title) {
+        this.title = title;
+    }
+
     public OrtusMedia(int ID, OrtusMediaType omt) {
         this.ID = ID;
         this.MediaType = omt;
@@ -29,8 +33,11 @@ public class OrtusMedia implements Comparable {
     public OrtusMedia(Object mo) {
         if ( mo instanceof Integer)
             ID = (Integer)mo;
+        else if ( mo instanceof String)
+            ID = Integer.parseInt((String)mo);
         else
             ID = MediaFileAPI.GetMediaFileID(mo);
+        SetMediaID(mo);
     }
 
     public OrtusMedia(Object mo, OrtusMediaType omt) {
@@ -82,6 +89,8 @@ public class OrtusMedia implements Comparable {
     public void SetMediaID(Object Media) {
         if ( Media instanceof Integer) {
             this.SageMediaID = (Integer)Media;
+        } else if ( Media instanceof String) {
+            this.SageMediaID = Integer.parseInt((String)Media);
         } else {
             this.SageMediaID = MediaFileAPI.GetMediaFileID(Media);
         }

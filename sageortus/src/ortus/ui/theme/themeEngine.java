@@ -34,7 +34,7 @@ public class themeEngine extends EventListener {
 	public themeEngine() {
 		super();
 		
-		ThemePath = configurationEngine.getInstance().getBasePath() + java.io.File.separator + "Themes";
+		ThemePath = Ortus.getInstance().getBasePath() + java.io.File.separator + "Themes";
 		
 //		LoadTheme("Default");
 	
@@ -74,6 +74,8 @@ public class themeEngine extends EventListener {
                     if ( ! java.io.File.separator.equals("/")) {
                         fs = "\\" + java.io.File.separator;
                         propvalue = propertyvalue.replaceAll("/", fs );
+                    } else {
+                        propvalue = propertyvalue;
                     }
                 } catch ( Exception e ) {
                     ortus.api.DebugLog(LogLevel.Error, "GetThemePropertyImage exception: " + e);
@@ -145,7 +147,7 @@ public class themeEngine extends EventListener {
 		for ( Enumeration<Object> x = DefaultProps.keys(); x.hasMoreElements();) {
 			String tp = (String)x.nextElement();
 			if ( tp.toLowerCase().endsWith("path")) {
-				ortus.api.DebugLog(LogLevel.Trace, "Theme: loading property: " + tp + " STV var: " + "g" + tp.replaceAll("/","") + " Value: " + ThemePath + java.io.File.separator + "Default" + java.io.File.separator + DefaultProps.getProperty(tp));
+				ortus.api.DebugLog(LogLevel.Trace, "Theme: loading property: " + tp + " STV var: " + "g" + tp.replaceAll("/","") + " Value: " + ThemePath + java.io.File.separator + "Default" + java.io.File.separator + ortus.util.file.filterFileSeperator(DefaultProps.getProperty(tp)));
 				Global.AddGlobalContext(ctx, "g" + tp.replaceAll("/",""), ThemePath + java.io.File.separator + "Default" + java.io.File.separator + DefaultProps.getProperty(tp));
 			} else {
 				ortus.api.DebugLog(LogLevel.Trace, "Theme: loading property: " + tp + " STV var: " + "g" + tp.replaceAll("/","") + " Value: " + DefaultProps.getProperty(tp) );
@@ -157,7 +159,7 @@ public class themeEngine extends EventListener {
 		for ( Enumeration<Object> x = ThemeProps.keys(); x.hasMoreElements();) {
 			String tp = (String)x.nextElement();
 			if ( tp.toLowerCase().endsWith("path")) {
-				ortus.api.DebugLog(LogLevel.Trace, "Theme: loading property: " + tp + " STV var: " + "g" + tp.replaceAll("/","") + " Value: " + ThemePath + java.io.File.separator + theme + java.io.File.separator + ThemeProps.getProperty(tp));
+				ortus.api.DebugLog(LogLevel.Trace, "Theme: loading property: " + tp + " STV var: " + "g" + tp.replaceAll("/","") + " Value: " + ThemePath + java.io.File.separator + theme + java.io.File.separator + ortus.util.file.filterFileSeperator(ThemeProps.getProperty(tp)));
 				Global.AddGlobalContext(ctx, "g" + tp.replaceAll("/",""), ThemePath + java.io.File.separator + theme + java.io.File.separator + ThemeProps.getProperty(tp));
 			} else {
 				ortus.api.DebugLog(LogLevel.Trace, "Theme: loading property: " + tp + " STV var: " + "g" + tp.replaceAll("/","") + " Value: " + ThemeProps.getProperty(tp) );

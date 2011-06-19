@@ -10,7 +10,8 @@ public class Banner {
     public static final String TYPE_SEASON = "season";
     public static final String TYPE_POSTER = "poster";
     public static final String TYPE_FANART = "fanart";
-    
+
+    private String id;
     private String url;
     private String vignette;
     private String thumb;
@@ -73,6 +74,20 @@ public class Banner {
 
     public void setBannerType2(String bannerType2) {
         this.bannerType2 = bannerType2;
+    }
+
+    /**
+     * @return the id
+     */
+    public String getId() {
+        return id;
+    }
+
+    /**
+     * @param id the id to set
+     */
+    public void setId(String id) {
+        this.id = id;
     }
     
 }

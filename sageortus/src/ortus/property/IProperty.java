@@ -16,8 +16,12 @@ public interface IProperty {
 	 * @param PropertyName OrtusProperty name
 	 * @return Value of property name
 	 */
-	String GetProperty(String PropertyName, String defaultvalue);
+	Object GetProperty(String PropertyName, Object defaultvalue);
 
+        void Load();
+
+        void Load(Object userid);
+        
 	void Reload(Object newpath);
 
 	/**
@@ -37,5 +41,7 @@ public interface IProperty {
 	 * Shutdown procedure for the propeties file to store memory properteies to the ortus.properties file
 	 */
 	void Shutdown();
+
+        void StoreProperty();
 
 }

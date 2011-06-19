@@ -28,7 +28,7 @@ public class Series implements Serializable,IItem {
     private String status;
     private String description;
     private String network;
-    private float userrating;
+    private int userrating;
     private String mpaarated;
     private long runtime;
     HashMap<String,List<Fanart>> fanart = new HashMap<String,List<Fanart>>();
@@ -38,7 +38,7 @@ public class Series implements Serializable,IItem {
     public Series() {
     }
     
-    public Series(int seriesid, String imdbid, String zap2itid, String title, String firstair, String airday, String airtime, String status, String description, String network, float userrating, String mpaarated, long runtime) {
+    public Series(int seriesid, String imdbid, String zap2itid, String title, String firstair, String airday, String airtime, String status, String description, String network, int userrating, String mpaarated, long runtime) {
         this.seriesid = seriesid;
         this.imdbid = imdbid;
         this.zap2itid = zap2itid;
@@ -259,14 +259,14 @@ public class Series implements Serializable,IItem {
     /**
      * @return the userrating
      */
-    public float getUserrating() {
+    public int getUserrating() {
         return userrating;
     }
 
     /**
      * @param userrating the userrating to set
      */
-    public void setUserrating(float userrating) {
+    public void setUserrating(int userrating) {
         this.userrating = userrating;
     }
 
@@ -331,13 +331,18 @@ public class Series implements Serializable,IItem {
 
     }
 
-    public List<Fanart> GetFanart(String fanarttype, int imagetype) {
+    public List<Fanart> GetFanart(String fanarttype, String imagetype) {
             List<Fanart> results = new ArrayList<Fanart>();
             for( Fanart cif : fanart.get(fanarttype)) {
-                if ( cif.getImagetype() == imagetype)
+                if ( cif.getImagetype().equalsIgnoreCase(imagetype))
                     results.add(cif);
             }
             return results;
+    }
+
+    @Override
+    public String toXML() {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
 }

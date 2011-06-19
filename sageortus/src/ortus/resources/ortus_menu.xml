@@ -1,1 +1,197 @@
-<?xml version="1.0"?><Menu><MenuItem Action="None" MenuType="general" Position="8" Title="Plugins" XPos="0" YPos="0"><Image Title="MenuImage" Name="Background" Value="plugins"></Image><SubMenuItem Action="Plugin List" Title="Installed Server" Position="2"><Global Title="Global Context" Name="newPluginListMode" Value="xPluginModeInstalledServer"></Global></SubMenuItem><SubMenuItem Action="Plugin List" Title="All Plugins" Position="1"><Global Title="Global Context" Name="newPluginListMode" Value="xPluginModeAll"></Global></SubMenuItem><SubMenuItem Action="Plugin List" Title="Installed Client" Position="3"><Global Title="Global Context" Name="newPluginListMode" Value="xPluginModeInstalledClient"></Global></SubMenuItem></MenuItem><MenuItem Action="Weather" MenuType="general" Position="9" Title="Weather" XPos="0" YPos="0"><Image Title="MenuImage" Name="Background" Value="weather_streamed"></Image><Static Title="Static Context" Name="Recent" Value="Weather"></Static></MenuItem><MenuItem Action="Search - All Media Types" MenuType="general" Position="6" Title="Search" XPos="0" YPos="0"><Image Title="MenuImage" Name="Background" Value="videos_streamed"></Image><SubMenuItem Action="Search - All Media Types" Title="Photos" Position="5"><Global Title="Global Context" Name="SearchMediaType" Value="xPhoto"></Global></SubMenuItem><SubMenuItem Action="Search - All Media Types" Title="Videos" Position="2"><Global Title="Global Context" Name="SearchMediaType" Value="xVideo"></Global></SubMenuItem><SubMenuItem Action="Browser - Files" Title="Browse File System" Position="6"></SubMenuItem><SubMenuItem Action="Online Video Search Keyboard" Title="Online" Position="4"><Global Title="Global Context" Name="OnlineVideoSearchType" Value="xSearchGoogle"></Global><Global Title="Global Context" Name="InitialSearchString" Value=""></Global><Global Title="Global Context" Name="OnlineVideoType" Value="xGoogle"></Global></SubMenuItem><SubMenuItem Action="Search - All Media Types" Title="Music" Position="3"><Global Title="Global Context" Name="SearchMediaType" Value="xMusic"></Global></SubMenuItem><SubMenuItem Action="Search - All Media Types" Title="TV Airings" Position="1"><Global Title="Global Context" Name="SearchMediaType" Value="xTV"></Global></SubMenuItem></MenuItem><MenuItem Action="Browser - Photos" MenuType="general" Position="7" Title="Photos" XPos="0" YPos="0"><Image Title="MenuImage" Name="Background" Value="photos_streamed"></Image></MenuItem><MenuItem Action="None" MenuType="general" Position="5" Title="Schedule" XPos="0" YPos="0"><Image Title="MenuImage" Name="Background" Value="music_streamed"></Image><SubMenuItem Action="Timed Recording Creation" Title="Create Timed Recording" Position="2"></SubMenuItem><SubMenuItem Action="Conflicting Recordings" Title="Resolve Confilcts" Position="4"></SubMenuItem><SubMenuItem Action="Scheduled Recordings" Title="Interleaved" Position="5"><Global Title="Global Context" Name="ScheduleViewFilterStyle" Value="xInterleaved"></Global></SubMenuItem><SubMenuItem Action="Scheduled Recordings" Title="Recordings Parallel" Position="7"><Global Title="Global Context" Name="ScheduleViewFilterStyle" Value="xParallel"></Global></SubMenuItem><SubMenuItem Action="Favorites Manager" Title="Favorites" Position="1"></SubMenuItem><SubMenuItem Action="BrowseByCategoryTitle by CSM - New" Title="Browse By Category" Position="3"></SubMenuItem><SubMenuItem Action="Scheduled Recordings" Title="Recordings By Day" Position="6"><Global Title="Global Context" Name="ScheduleViewFilterStyle" Value="xByDay"></Global></SubMenuItem></MenuItem><MenuItem Action="Browser - Videos" MenuType="general" Position="3" Title="Movies" XPos="0" YPos="0"><Image Title="MenuImage" Name="Background" Value="dvd"></Image><SubMenuItem Action="None" Title="Recently Added" Position="1"><Static Title="Static Context" Name="Recent" Value="filter: mediatype = 2 and mediagroup = 1; sort: MEDIAIMPORTTIME desc;limit:10"></Static></SubMenuItem><SubMenuItem Action="Browser - Videos" Title="By Title" Position="3"><Global Title="Global Context" Name="newVideoBrowserStyle" Value="xTitle"></Global></SubMenuItem><SubMenuItem Action="Browser - Videos" Title="By Folder" Position="7"><Global Title="Global Context" Name="newVideoBrowserStyle" Value="xFolder"></Global></SubMenuItem><SubMenuItem Action="Browser - Videos" Title="By Category" Position="5"><Global Title="Global Context" Name="newVideoBrowserStyle" Value="xCategory"></Global></SubMenuItem><SubMenuItem Action="Browser - Videos" Title="By Playlist" Position="6"><Global Title="Global Context" Name="newVideoBrowserStyle" Value="xPlaylist"></Global></SubMenuItem><SubMenuItem Action="Browser - Videos" Title="By DVD / BluRay" Position="4"><Global Title="Global Context" Name="newVideoBrowserStyle" Value="xDVD"></Global></SubMenuItem><SubMenuItem Action="SageRecordings Video Conversions" Title="Video Conversions" Position="2"></SubMenuItem></MenuItem><MenuItem Action="None" MenuType="general" Position="1" Title="PG Movies" XPos="0" YPos="0"><Image Title="MenuImage" Name="Background" Value="Animation"></Image><Static Title="Static Context" Name="Recent" Value="filter: mediatype = 2 and mediagroup = 1 and MPAARATED = 'G'; sort: SHOWTITLE desc;limit:100"></Static></MenuItem><MenuItem Action="Online Services Menu" MenuType="general" Position="2" Title="Online" XPos="0" YPos="0"><Image Title="MenuImage" Name="Background" Value="online_2"></Image><SubMenuItem Action="None" Title="Channels.Com" Position="3"><Static Title="Static Context" Name="SageReferences" Value="ChannelsCom"></Static></SubMenuItem><SubMenuItem Action="None" Title="Hulu (Get App)" Position="4"><Static Title="Static Context" Name="SageReferences" Value="HuluGetApp"></Static></SubMenuItem><SubMenuItem Action="None" Title="Hulu" Position="1"><Static Title="Static Context" Name="SageReferences" Value="Hulu"></Static></SubMenuItem><SubMenuItem Action="None" Title="YouTube" Position="2"><Static Title="Static Context" Name="SageReferences" Value="YouTube"></Static></SubMenuItem></MenuItem><MenuItem Action="Browser - Music" MenuType="general" Position="12" Title="Music" XPos="0" YPos="0"><Image Title="MenuImage" Name="Background" Value="music_streamed_2"></Image><SubMenuItem Action="Browser - Music" Title="By Artists" Position="2"><Global Title="Global Context" Name="newMusicBrowserStyle" Value="xArtist"></Global></SubMenuItem><SubMenuItem Action="Browser - Music" Title="By Albums" Position="1"><Global Title="Global Context" Name="newMusicBrowserStyle" Value="xAlbum"></Global></SubMenuItem><SubMenuItem Action="Browser - Music" Title="By Folder" Position="7"><Global Title="Global Context" Name="newMusicBrowserStyle" Value="xFolder"></Global></SubMenuItem><SubMenuItem Action="Browser - Music" Title="By Playlist" Position="6"><Global Title="Global Context" Name="newMusicBrowserStyle" Value="xPlaylist"></Global></SubMenuItem><SubMenuItem Action="Browser - Music" Title="By Genre" Position="5"><Global Title="Global Context" Name="newMusicBrowserStyle" Value="xGenre"></Global></SubMenuItem><SubMenuItem Action="Browser - Music" Title="By Songs" Position="3"><Global Title="Global Context" Name="newMusicBrowserStyle" Value="xTitle"></Global></SubMenuItem><SubMenuItem Action="Browser - Music" Title="By Year" Position="4"><Global Title="Global Context" Name="newMusicBrowserStyle" Value="xYear"></Global></SubMenuItem></MenuItem><MenuItem Action="None" MenuType="general" Position="11" Title="Setup" XPos="0" YPos="0"><Image Title="MenuImage" Name="Background" Value="settings"></Image><SubMenuItem Action="None" Title="Start A Library Scan" Position="1"><Static Title="Static Context" Name="SageReferences" Value="LibraryScan"></Static></SubMenuItem><SubMenuItem Action="Setup Wizard - Summary Page" Title="Video Sources" Position="5"></SubMenuItem><SubMenuItem Action="System Information" Title="System Information" Position="2"></SubMenuItem><SubMenuItem Action="None" Title="System Messages" Position="3"><Static Title="Static Context" Name="SageReferences" Value="SystemMessages"></Static></SubMenuItem><SubMenuItem Action="Detailed Setup" Title="Detailed Setup" Position="4"></SubMenuItem><SubMenuItem Action="Configuration Wizard - Home" Title="Configuration Wizard" Position="7"></SubMenuItem><SubMenuItem Action="None" Title="Parental Controls" Position="6"><Static Title="Static Context" Name="SageReferences" Value="ParentalControls"></Static></SubMenuItem></MenuItem><MenuItem Action="SageRecordings w/ Optional Preview &amp; AutoCategories" MenuType="general" Position="4" Title="Watch TV" XPos="0" YPos="0"><Image Title="MenuImage" Name="Background" Value="tv_streamed"></Image><SubMenuItem Action="None" Title="TV Series" Position="5"><Static Title="Static Context" Name="Recent" Value="filter: mediatype = 3; sort: RELEASEDATE desc;limit:10"></Static></SubMenuItem><SubMenuItem Action="SageRecordings w/ Optional Preview &amp; AutoCategories" Title="Recordings" Position="2"><Static Title="Static Context" Name="Recent" Value="filter: mediagroup = 0; sort: AIRINGSTARTTIME desc;limit:1000"></Static></SubMenuItem><SubMenuItem Action="LiveTVGuide w/ Optional Preview" Title="TV Guide" Position="3"></SubMenuItem><SubMenuItem Action="TV Show Highlight List" Title="TV Show Editorials" Position="1"></SubMenuItem><SubMenuItem Action="None" Title="Live TV" Position="4"><SageCommand Title="Sage Command" Name="Watch Live TV" Value="Live TV"></SageCommand></SubMenuItem></MenuItem></Menu>
+<?xml version="1.0"?>
+<Menu>
+  <MenuItem Action="None" MenuType="general" Position="1" Title="Plugins" XPos="0" YPos="0">
+    <Image Title="MenuImage" Name="Background" Value="plugins"/>
+    <Static Title="Static Context" Name="SageData" Value="PluginsAll"/>
+    <SubMenuItem Action="Plugin List" Title="Installed Server" Position="2">
+      <Image Title="MenuImage" Name="Background" Value="plugins"/>
+      <Static Title="Static Context" Name="SageData" Value="PluginsInstalled"/>
+      <Global Title="Global Context" Name="newPluginListMode" Value="xPluginModeInstalledServer"/>
+    </SubMenuItem>
+    <SubMenuItem Action="Plugin List" Title="All Plugins" Position="1">
+      <Static Title="Static Context" Name="SageData" Value="PluginsAll"/>
+      <Global Title="Global Context" Name="newPluginListMode" Value="xPluginModeAll"/>
+    </SubMenuItem>
+    <SubMenuItem Action="Plugin List" Title="Installed Client" Position="3">
+      <Static Title="Static Context" Name="SageData" Value="PluginsClientInstalled"/>
+      <Global Title="Global Context" Name="newPluginListMode" Value="xPluginModeInstalledClient"/>
+    </SubMenuItem>
+  </MenuItem>
+  <MenuItem Action="Weather" MenuType="general" Position="2" Title="Weather" XPos="0" YPos="0">
+    <Image Title="MenuImage" Name="Background" Value="weather_streamed"/>
+    <Static Title="Static Context" Name="SageData" Value="Weather"/>
+  </MenuItem>
+  <MenuItem Action="Search - All Media Types" MenuType="general" Position="11" Title="Search" XPos="0" YPos="0">
+    <Image Title="MenuImage" Name="Background" Value="videos_streamed"/>
+    <SubMenuItem Action="Search - All Media Types" Title="Photos" Position="5">
+      <Global Title="Global Context" Name="SearchMediaType" Value="xPhoto"/>
+    </SubMenuItem>
+    <SubMenuItem Action="Search - All Media Types" Title="Videos" Position="2">
+      <Global Title="Global Context" Name="SearchMediaType" Value="xVideo"/>
+    </SubMenuItem>
+    <SubMenuItem Action="Browser - Files" Title="Browse File System" Position="6"/>
+    <SubMenuItem Action="Online Video Search Keyboard" Title="Online" Position="4">
+      <Global Title="Global Context" Name="OnlineVideoSearchType" Value="xSearchGoogle"/>
+      <Global Title="Global Context" Name="InitialSearchString" Value=""/>
+      <Global Title="Global Context" Name="OnlineVideoType" Value="xGoogle"/>
+    </SubMenuItem>
+    <SubMenuItem Action="Search - All Media Types" Title="Music" Position="3">
+      <Global Title="Global Context" Name="SearchMediaType" Value="xMusic"/>
+    </SubMenuItem>
+    <SubMenuItem Action="Search - All Media Types" Title="TV Airings" Position="1">
+      <Image Title="MenuImage" Name="Background" Value="Animation"/>
+      <Global Title="Global Context" Name="SearchMediaType" Value="xTV"/>
+    </SubMenuItem>
+  </MenuItem>
+  <MenuItem Action="Browser - Photos" MenuType="general" Position="8" Title="Photos" XPos="0" YPos="0">
+    <Image Title="MenuImage" Name="Background" Value="photos_streamed"/>
+    <Static Title="Static Context" Name="SageData" Value="Photos"/>
+  </MenuItem>
+  <MenuItem Action="None" MenuType="general" Position="7" Title="Schedule" XPos="0" YPos="0">
+    <Image Title="MenuImage" Name="Background" Value="schedules"/>
+    <Static Title="Static Context" Name="SageData" Value="Schedule"/>
+    <SubMenuItem Action="Timed Recording Creation" Title="Create Timed Recording" Position="2"/>
+    <SubMenuItem Action="Conflicting Recordings" Title="Resolve Confilcts" Position="4"/>
+    <SubMenuItem Action="Scheduled Recordings" Title="Interleaved" Position="5">
+      <Global Title="Global Context" Name="ScheduleViewFilterStyle" Value="xInterleaved"/>
+    </SubMenuItem>
+    <SubMenuItem Action="Scheduled Recordings" Title="Recordings Parallel" Position="7">
+      <Global Title="Global Context" Name="ScheduleViewFilterStyle" Value="xParallel"/>
+    </SubMenuItem>
+    <SubMenuItem Action="Favorites Manager" Title="Favorites" Position="1"/>
+    <SubMenuItem Action="BrowseByCategoryTitle by CSM - New" Title="Browse By Category" Position="3"/>
+    <SubMenuItem Action="Scheduled Recordings" Title="Recordings By Day" Position="6">
+      <Global Title="Global Context" Name="ScheduleViewFilterStyle" Value="xByDay"/>
+    </SubMenuItem>
+  </MenuItem>
+  <MenuItem Action="None" MenuType="general" Position="10" Title="Settings" XPos="0" YPos="0">
+    <Image Title="MenuImage" Name="Background" Value="settings"/>
+    <Static Title="Static Context" Name="SageData" Value="Settings"/>
+    <SubMenuItem Action="None" Title="Start A Library Scan" Position="1">
+      <Static Title="Static Context" Name="SageReferences" Value="LibraryScan"/>
+    </SubMenuItem>
+    <SubMenuItem Action="Setup Wizard - Summary Page" Title="Video Sources" Position="5"/>
+    <SubMenuItem Action="System Information" Title="System Information" Position="2"/>
+    <SubMenuItem Action="None" Title="System Messages" Position="3">
+      <Static Title="Static Context" Name="SageReferences" Value="SystemMessages"/>
+    </SubMenuItem>
+    <SubMenuItem Action="Detailed Setup" Title="Detailed Setup" Position="4"/>
+    <SubMenuItem Action="Configuration Wizard - Home" Title="Configuration Wizard" Position="7"/>
+    <SubMenuItem Action="None" Title="Parental Controls" Position="6">
+      <Static Title="Static Context" Name="SageReferences" Value="ParentalControls"/>
+    </SubMenuItem>
+  </MenuItem>
+  <MenuItem Action="Browser - Videos" MenuType="general" Position="4" Title="Movies" XPos="0" YPos="0">
+    <Image Title="MenuImage" Name="Background" Value="dvd"/>
+    <Static Title="Static Context" Name="OrtusData" Value="filter: mediatype = 2 and mediagroup = 1; sort: MEDIAIMPORTTIME desc;limit:10"/>
+    <SubMenuItem Action="None" Title="Recently Added" Position="1">
+      <Static Title="Static Context" Name="OrtusData" Value="filter: mediatype = 2 and mediagroup = 1; sort: MEDIAIMPORTTIME desc;limit:10"/>
+    </SubMenuItem>
+    <SubMenuItem Action="Browser - Videos" Title="By Title" Position="3">
+      <Global Title="Global Context" Name="newVideoBrowserStyle" Value="xTitle"/>
+    </SubMenuItem>
+    <SubMenuItem Action="Browser - Videos" Title="By Folder" Position="7">
+      <Global Title="Global Context" Name="newVideoBrowserStyle" Value="xFolder"/>
+    </SubMenuItem>
+    <SubMenuItem Action="Browser - Videos" Title="By Category" Position="5">
+      <Global Title="Global Context" Name="newVideoBrowserStyle" Value="xCategory"/>
+    </SubMenuItem>
+    <SubMenuItem Action="Browser - Videos" Title="By Playlist" Position="6">
+      <Global Title="Global Context" Name="newVideoBrowserStyle" Value="xPlaylist"/>
+    </SubMenuItem>
+    <SubMenuItem Action="Browser - Videos" Title="By DVD / BluRay" Position="4">
+      <Global Title="Global Context" Name="newVideoBrowserStyle" Value="xDVD"/>
+    </SubMenuItem>
+    <SubMenuItem Action="SageRecordings Video Conversions" Title="Video Conversions" Position="2"/>
+  </MenuItem>
+  <MenuItem Action="Online Services Menu" MenuType="general" Position="9" Title="Online" XPos="0" YPos="0">
+    <Image Title="MenuImage" Name="Background" Value="online_2"/>
+    <SubMenuItem Action="None" Title="Channels.Com" Position="3">
+      <Static Title="Static Context" Name="SageReferences" Value="ChannelsCom"/>
+    </SubMenuItem>
+    <SubMenuItem Action="None" Title="Hulu (Get App)" Position="4">
+      <Static Title="Static Context" Name="SageReferences" Value="HuluGetApp"/>
+    </SubMenuItem>
+    <SubMenuItem Action="None" Title="Hulu" Position="1">
+      <Image Title="MenuImage" Name="Background" Value="hulu"/>
+      <Static Title="Static Context" Name="SageReferences" Value="Hulu"/>
+    </SubMenuItem>
+    <SubMenuItem Action="None" Title="YouTube" Position="2">
+      <Static Title="Static Context" Name="SageReferences" Value="YouTube"/>
+    </SubMenuItem>
+  </MenuItem>
+  <MenuItem Action="Browser - Music" MenuType="general" Position="3" Title="Music" XPos="0" YPos="0">
+    <Image Title="MenuImage" Name="Background" Value="music"/>
+    <Static Title="Static Context" Name="SageData" Value="Music"/>
+    <SubMenuItem Action="Browser - Music" Title="By Artists" Position="2">
+      <Global Title="Global Context" Name="newMusicBrowserStyle" Value="xArtist"/>
+    </SubMenuItem>
+    <SubMenuItem Action="Browser - Music" Title="By Albums" Position="1">
+      <Static Title="Static Context" Name="SageData" Value="Music"/>
+      <Global Title="Global Context" Name="newMusicBrowserStyle" Value="xAlbum"/>
+    </SubMenuItem>
+    <SubMenuItem Action="Browser - Music" Title="By Folder" Position="7">
+      <Global Title="Global Context" Name="newMusicBrowserStyle" Value="xFolder"/>
+    </SubMenuItem>
+    <SubMenuItem Action="Browser - Music" Title="By Playlist" Position="6">
+      <Global Title="Global Context" Name="newMusicBrowserStyle" Value="xPlaylist"/>
+    </SubMenuItem>
+    <SubMenuItem Action="Browser - Music" Title="By Genre" Position="5">
+      <Global Title="Global Context" Name="newMusicBrowserStyle" Value="xGenre"/>
+    </SubMenuItem>
+    <SubMenuItem Action="Browser - Music" Title="By Songs" Position="3">
+      <Global Title="Global Context" Name="newMusicBrowserStyle" Value="xTitle"/>
+    </SubMenuItem>
+    <SubMenuItem Action="Browser - Music" Title="By Year" Position="4">
+      <Global Title="Global Context" Name="newMusicBrowserStyle" Value="xYear"/>
+    </SubMenuItem>
+  </MenuItem>
+  <MenuItem Action="Ortus Browser - Movies" MenuType="general" Position="6" Title="Premieres" XPos="0" YPos="0">
+    <Image Title="MenuImage" Name="Background" Value="videos"/>
+    <Static Title="Static Context" Name="OrtusData" Value=" filter:  (mediatype = 2) ; sort: mediaimporttime desc"/>
+    <SubMenuItem Action="Ortus Browser - Movies" Title="Action" Position="1">
+      <Static Title="Static Context" Name="OrtusData" Value="table: allmediagenre ;  filter:  mediagroup = 1 and mediatype = 2 and (name = 'Animation') ; sort: releasedate desc ; limit: 10"/>
+    </SubMenuItem>
+    <SubMenuItem Action="Ortus Browser - Movies" Title="Fantasy" Position="4">
+      <Static Title="Static Context" Name="OrtusData" Value="table: allmediagenre ;  filter: (mediagroup = 0or mediagroup = 1) and (mediatype = 2) and (name = 'Fantasy') and (mpaarated = 'G' or mpaarated = 'PG') ; sort: mediaimporttime desc ; limit: 10"/>
+    </SubMenuItem>
+    <SubMenuItem Action="Ortus Browser - Movies" Title="Animation" Position="2">
+      <Static Title="Static Context" Name="OrtusData" Value=" table:ALLMEDIAGENRE ; filter: mediatype = 2 and mediagroup = 1 and NAME = 'Animation'; sort: MEDIAIMPORTTIME desc;limit:10 "/>
+    </SubMenuItem>
+    <SubMenuItem Action="None" Title="PG Movies" Position="5">
+      <Static Title="Static Context" Name="OrtusData" Value=" filter: mediatype = 2 and mediagroup = 1 and MPAARATED = 'PG'; sort: MEDIAIMPORTTIME desc;limit:10 "/>
+    </SubMenuItem>
+    <SubMenuItem Action="None" Title="Sci-Fi" Position="6">
+      <Static Title="Static Context" Name="OrtusData" Value=" table:ALLMEDIAGENRE ; filter: mediatype = 2 and mediagroup = 1 and NAME = 'Science Fiction'; sort: MEDIAIMPORTTIME desc;limit:10 "/>
+    </SubMenuItem>
+    <SubMenuItem Action="None" Title="Thriller" Position="7">
+      <Static Title="Static Context" Name="OrtusData" Value=" table:ALLMEDIAGENRE ; filter: mediatype = 2 and mediagroup = 1 and NAME = 'Thriller'; sort: MEDIAIMPORTTIME desc;limit:10 "/>
+    </SubMenuItem>
+    <SubMenuItem Action="Ortus Browser - Movies" Title="Drama" Position="3">
+      <Static Title="Static Context" Name="OrtusData" Value="table: allmediagenre ;  filter: (mediagroup = 1) and (mediatype = 2) and (name = 'Drama') ; sort: mediaimporttime desc;limit:10 "/>
+    </SubMenuItem>
+  </MenuItem>
+  <MenuItem Action="SageRecordings w/ Optional Preview &amp; AutoCategories" MenuType="general" Position="5" Title="Watch TV" XPos="0" YPos="0">
+    <Image Title="MenuImage" Name="Background" Value="tv_streamed"/>
+    <Static Title="Static Context" Name="SageData" Value="Guide"/>
+    <SubMenuItem Action="RecordingSchedule - SHORTCUTS" Title="Schedule" Position="3">
+      <Static Title="Static Context" Name="SageData" Value="Schedule"/>
+    </SubMenuItem>
+    <SubMenuItem Action="Ortus Browser - TV Series" Title="TV Series" Position="4">
+      <Static Title="Static Context" Name="OrtusData" Value=" filter:  mediagroup = 1 and mediatype = 3 ; sort: releasedate desc;limit:10 "/>
+    </SubMenuItem>
+    <SubMenuItem Action="SageRecordings w/ Optional Preview &amp; AutoCategories" Title="Recordings" Position="1">
+      <Static Title="Static Context" Name="SageData" Value="Recordings"/>
+    </SubMenuItem>
+    <SubMenuItem Action="LiveTVGuide w/ Optional Preview" Title="TV Guide" Position="2">
+      <Static Title="Static Context" Name="SageData" Value="Guide"/>
+    </SubMenuItem>
+    <SubMenuItem Action="TV Show Highlight List" Title="TV Show Editorials" Position="7"/>
+    <SubMenuItem Action="None" Title="Live TV" Position="6">
+      <SageCommand Title="Sage Command" Name="Watch Live TV" Value="Live TV"/>
+    </SubMenuItem>
+    <SubMenuItem Action="None" Title="TV Movies On Now" Position="5">
+      <Static Title="Static Context" Name="SageData" Value="TVMovies"/>
+    </SubMenuItem>
+  </MenuItem>
+</Menu>
