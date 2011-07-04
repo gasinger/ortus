@@ -19,6 +19,7 @@ import sagex.api.MediaFileAPI;
  * @author jphipps
  */
 public class ImageItem extends ortus.vars implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     private int id = 0;
     private String idtype;

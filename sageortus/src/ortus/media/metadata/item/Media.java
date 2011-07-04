@@ -24,6 +24,7 @@ import sagex.api.ShowAPI;
  * @author jphipps
  */
 public class Media extends ortus.vars implements Serializable,IItem {
+	private static final long serialVersionUID = 1L;
         boolean isValid = false;
 	int mediaid = 0;
 	String mediatitle ="";

@@ -24,7 +24,7 @@ create table sage.series (
   status varchar,
   description varchar,
   network varchar,
-  userrating float, 
+  userrating int,
   mpaarated varchar, 
   runtime bigint);
 create table sage.seriescast ( 
@@ -47,7 +47,7 @@ create table sage.episode (
   title varchar,
   description varchar,
   originalairdate date,
-  userrating float,
+  userrating int,
   thumbpath varchar);
 create table sage.episodemedia (
   mediaid int,
@@ -62,7 +62,7 @@ create table sage.customepisode (
   title varchar,
   description varchar,
   originalairdate date,
-  userrating float,
+  userrating int,
   thumbpath varchar);
 
 create index sage.episode_idx on sage.episode(seriesid, episodeid);

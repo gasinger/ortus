@@ -12,6 +12,7 @@ import java.io.Serializable;
  * @author jphipps
  */
 public class Fanart implements Serializable {
+    private static final long serialVersionUID = 1L;
     private int id;
     private String metadataid;
     private int default_ind;

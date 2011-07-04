@@ -4,7 +4,7 @@ create table sage.mediavideos (
     mediayear char(6),
     description varchar,
     releasedate date,
-    userrating float,
+    userrating int,
     mpaarated varchar, 
     metadatasource varchar,
     tmdbid int, 

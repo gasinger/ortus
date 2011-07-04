@@ -13,6 +13,7 @@ import java.util.List;
  * @author jphipps
  */
 public class SerializedObject implements Serializable {
+    private static final long serialVersionUID = 1L;
     private Object so;
     private String ss;
     private boolean sb;

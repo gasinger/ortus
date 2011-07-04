@@ -24,7 +24,8 @@ import org.apache.commons.dbutils.QueryRunner;
  * @author jphipps
  */
 public class CastItem extends ortus.vars implements Serializable {
-
+	private static final long serialVersionUID = 1L;
+	
 	int id = 0;
 	private String name;
 	private String job;

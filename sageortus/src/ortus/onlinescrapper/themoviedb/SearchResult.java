@@ -23,7 +23,7 @@ public class SearchResult {
     private int id;
     private String imdb_id;
     private String url;
-    private float rating;
+    private int rating;
     private String certification;
     private String description = "Not Available";
     private String date = null;
@@ -187,7 +187,7 @@ public class SearchResult {
     /**
      * @param rating the rating to set
      */
-    public void setRating(float rating) {
+    public void setRating(int rating) {
         this.rating = rating;
     }
 

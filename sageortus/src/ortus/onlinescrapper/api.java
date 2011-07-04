@@ -837,6 +837,10 @@ public class api extends ortus.vars {
                     mo.setLikely_tv(true);
                     title = ShowAPI.GetShowTitle(mo.getMedia());
                     episodetitle= ShowAPI.GetShowEpisode(mo.getMedia());
+		    if (ShowAPI.GetShowSeasonNumber(mo.getMedia())>0 )
+			seasonno = String.valueOf(ShowAPI.GetShowSeasonNumber(mo.getMedia()));
+                    if ( ShowAPI.GetShowEpisodeNumber(mo.getMedia()) > 0)
+                    	episodeno = String.valueOf(ShowAPI.GetShowEpisodeNumber(mo.getMedia()));
             }
             /*
              *   movie title(2009).mkv
@@ -919,7 +923,7 @@ public class api extends ortus.vars {
 //                title = matcher.group(1);
 //            }
 
-            pattern = Pattern.compile(".*"+fs+"(.*)\\((.*)\\).*"+fs+"(.*)$");
+            pattern = Pattern.compile(".*"+fs+"(.*)\\((\\d{4}?)\\).*"+fs+"(.*)$");
             matcher = pattern.matcher(name);
 
             if( matcher.matches()) {

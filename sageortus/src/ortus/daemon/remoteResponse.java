@@ -12,6 +12,7 @@ import java.io.Serializable;
  * @author jphipps
  */
 public class remoteResponse extends ortus.vars implements Serializable {
+	private static final long serialVersionUID = 1L;
 	Object response = null;
 	public remoteResponse(Object response) {
 //		DebugLog(TRACE2,"remoteResponse: build with " + response);

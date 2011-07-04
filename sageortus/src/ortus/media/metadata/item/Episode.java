@@ -14,6 +14,7 @@ import java.util.List;
  * @author jphipps
  */
 public class Episode implements Serializable,IItem  {
+    private static final long serialVersionUID = 1L;
     private boolean isValid = false;
     private int episodeid;
     private int seriesid;
@@ -24,7 +25,7 @@ public class Episode implements Serializable,IItem  {
     private String title;
     private String description;
     private String originalairdate;
-    private float userrating;
+    private int userrating;
     private String thumbpath;
     private String fanart;
     private List<Cast> cast = new ArrayList<Cast>();
@@ -32,7 +33,7 @@ public class Episode implements Serializable,IItem  {
     public Episode() {
     }
 
-    public Episode(int episodeid, int seriesid, int episodeno, int seasonid, int seasonno, int mediaid, String title, String description, String originalairdate, float userrating, String thumbpath) {
+    public Episode(int episodeid, int seriesid, int episodeno, int seasonid, int seasonno, int mediaid, String title, String description, String originalairdate, int userrating, String thumbpath) {
         this.episodeid = episodeid;
         this.seriesid = seriesid;
         this.episodeno = episodeno;
@@ -219,14 +220,14 @@ public class Episode implements Serializable,IItem  {
     /**
      * @return the userrating
      */
-    public float getUserrating() {
+    public int getUserrating() {
         return userrating;
     }
 
     /**
      * @param userrating the userrating to set
      */
-    public void setUserrating(float userrating) {
+    public void setUserrating(int userrating) {
         this.userrating = userrating;
     }
 

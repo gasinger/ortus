@@ -17,6 +17,7 @@ import java.util.List;
  * @author jphipps
  */
 public class Series implements Serializable,IItem {
+    private static final long serialVersionUID = 1L;
     boolean isValid = false;
     private int seriesid;
     private String imdbid;
