@@ -17,6 +17,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang.StringEscapeUtils;
 import ortus.media.metadata.item.Fanart;
 import ortus.media.metadata.item.Media;
 import ortus.media.metadata.item.Series;
@@ -115,8 +116,22 @@ public class OrtusFanart extends ortus.vars implements IFanartProvider {
                     }
                 } else if ( mediafile instanceof Integer ) {
                     results = ((Media)ortus.cache.cacheEngine.getInstance().GetCache("MD" + mediafile)).GetFanart(fanarttype,imagetype);
-                } else {
+                } else if ( mediafile instanceof String) {
+                    List<List> x = ortus.api.executeSQLQueryArray("select 's', seriesid from sage.series where title = '" + StringEscapeUtils.escapeSql((String)mediafile)  +"' union select 'm',mediaid from sage.media where mediatitle = '" + StringEscapeUtils.escapeSql((String)mediafile) +"'");
+                    if ( x.size() > 0) {
+                        if (((String)x.get(0).get(0)).equalsIgnoreCase("m")) {
+                            results = ((Media)ortus.cache.cacheEngine.getInstance().GetCache("MD" + x.get(0).get(1))).GetFanart(fanarttype,imagetype);
+                        } else {
+                            results = ((Media)ortus.cache.cacheEngine.getInstance().GetCache("SR" + x.get(0).get(1))).GetFanart(fanarttype,imagetype);
+                        }
+                    }
+                }else {
                     results = ((Media)ortus.cache.cacheEngine.getInstance().GetCache("MD" + MediaFileAPI.GetMediaFileID(mediafile))).GetFanart(fanarttype,imagetype);
+                }
+
+                if ( results == null) {
+                    ortus.api.DebugLogTrace("fanart not found for: " + mediafile);
+                    return null;
                 }
                 ortus.api.DebugLogTrace("results: size: " + results.size());
                 if (results.size() > 0) {
@@ -145,7 +160,16 @@ public class OrtusFanart extends ortus.vars implements IFanartProvider {
 //                        int seriesid = ((Episode)ortus.cache.cacheEngine.getInstance().GetCache(((OrtusMedia)mediafile).GetKey())).getSeriesid();
                         results = ((Series)ortus.cache.cacheEngine.getInstance().GetCache("MD" + ((OrtusMedia)mediafile).GetMediaID())).GetFanart(fanarttype,imagetype);
                     }
-                } else {
+                } else if ( mediafile instanceof String) {
+                    List<List> x = ortus.api.executeSQLQueryArray("select 's', seriesid from sage.series where title = '" + StringEscapeUtils.escapeSql((String) mediafile) +"' union select 'm',mediaid from sage.media where mediatitle = '" + StringEscapeUtils.escapeSql((String) mediafile) +"'");
+                    if ( x.size() > 0) {
+                        if (((String)x.get(0).get(0)).equalsIgnoreCase("m")) {
+                            results = ((Media)ortus.cache.cacheEngine.getInstance().GetCache("MD" + x.get(0).get(1))).GetFanart(fanarttype,imagetype);
+                        } else {
+                            results = ((Media)ortus.cache.cacheEngine.getInstance().GetCache("SR" + x.get(0).get(1))).GetFanart(fanarttype,imagetype);
+                        }
+                    }
+                } else  {
                     results = ((Media)ortus.cache.cacheEngine.getInstance().GetCache("MD" + MediaFileAPI.GetMediaFileID(mediafile))).GetFanart(fanarttype,imagetype);
                 }
                 if (results.size() > 0) {

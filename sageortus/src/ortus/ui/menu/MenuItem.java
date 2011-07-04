@@ -18,7 +18,9 @@ import sagex.UIContext;
  * @author jphipps
  *
  */
-class MenuItem extends ortus.vars implements Serializable {
+public class MenuItem extends ortus.vars implements Serializable {
+	private static final long serialVersionUID = 1L;
+	
 	private HashMap<String,SubMenuItem> SubMenuItems = new HashMap<String,SubMenuItem>();
 	private HashMap<String,HashMap<String,MenuItemElement>> MenuItemElements = new HashMap<String,HashMap<String,MenuItemElement>>();
 	private String Title;

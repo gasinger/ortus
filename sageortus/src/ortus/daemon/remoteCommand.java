@@ -12,6 +12,7 @@ import java.io.Serializable;
  * @author jphipps
  */
 public class remoteCommand implements Serializable {
+	private static final long serialVersionUID = 1L;
 	public int length = 0;
         String methd = null;
 	Object[] rcmd = null;

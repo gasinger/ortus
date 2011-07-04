@@ -20,6 +20,7 @@ import sagex.api.ShowAPI;
  * @author jphipps
  */
 public class Movie implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String metadataid;
     private int mediaid;
     private String Type;
@@ -30,7 +31,7 @@ public class Movie implements Serializable {
     private String alternatename;
     private String url;
     private Integer votes;
-    private float rating;
+    private int rating;
     private String tagline;
     private String certification = "Unknown";
     private String releasedate;
@@ -182,11 +183,11 @@ public class Movie implements Serializable {
         this.votes = votes;
     }
 
-    public float getRating() {
+    public int getRating() {
         return rating;
     }
 
-    public void setRating(float rating) {
+    public void setRating(int rating) {
         this.rating = rating;
     }
 

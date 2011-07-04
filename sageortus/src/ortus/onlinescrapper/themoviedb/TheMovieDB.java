@@ -218,7 +218,7 @@ public static Movie parseNextMovie(XMLEventReader xmlReader) throws XMLStreamExc
 		} else if (tag.equalsIgnoreCase("revenue")) {
 		    movie.setRevenue(XMLHelper.getCDataLong(xmlReader));
 		} else if (tag.equalsIgnoreCase("rating")) {
-		    movie.setRating(XMLHelper.getCDataFloat(xmlReader));
+		    movie.setRating(XMLHelper.getCDataInt(xmlReader));
 		} else if (tag.equalsIgnoreCase("released")) {
 		    movie.setReleasedate(XMLHelper.getCData(xmlReader));
 		} else if (tag.equalsIgnoreCase("runtime")) {

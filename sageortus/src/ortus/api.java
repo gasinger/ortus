@@ -470,6 +470,12 @@ public class api extends vars {
                     Ortus.getInstance().getIdentity((String)x).GetUserProperty().Reload(userid);
                 }               
         }
+	
+//	public static ArrayList<HashMap> getMenus() {
+		
+//		List<Object> users = ortus.api.GetUsers();
+		
+//	}
 
         public static void ReloadUserMenu(Object userid) {
              for ( Object x : Ortus.getInstance().getAllContext()) {
@@ -3032,6 +3038,14 @@ public class api extends vars {
 	 */
 	public static int GetMediaType(Object mediafile) {
 		return metadataEngine.getInstance().getProvider().GetMediaType(mediafile);
+	}
+	/**
+	 *
+	 * @param mediafile
+	 * @return
+	 */
+	public static int GetMediaGroup(Object mediafile) {
+		return metadataEngine.getInstance().getProvider().GetMediaGroup(mediafile);
 	}
 	/**
 	 *

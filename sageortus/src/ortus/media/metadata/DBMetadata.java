@@ -173,7 +173,7 @@ public class DBMetadata extends ortus.vars implements IMetadataProvider {
                 if (rec.get("mediaid") != null) {
                     workid = (Integer) rec.get("mediaid");
                 }
-                ortus.media.metadata.item.Episode ci = new Episode((Integer) rec.get("episodeid"), (Integer) rec.get("seriesid"), (Integer) rec.get("episodeno"), (Integer) rec.get("seasonid"), (Integer) rec.get("seasonno"), workid, (String) rec.get("title"), (String) rec.get("description"), ((java.sql.Date) rec.get("originalairdate")).toString(), ((Double) rec.get("userrating")).floatValue(), (String) rec.get("thumbpath"));
+                ortus.media.metadata.item.Episode ci = new Episode((Integer) rec.get("episodeid"), (Integer) rec.get("seriesid"), (Integer) rec.get("episodeno"), (Integer) rec.get("seasonid"), (Integer) rec.get("seasonno"), workid, (String) rec.get("title"), (String) rec.get("description"), ((java.sql.Date) rec.get("originalairdate")).toString(), (Integer)rec.get("userrating"), (String) rec.get("thumbpath"));
                 //                            records = qr.query(conn,"select ec.episodeid, ec.personid, ec.name, ec.job, ec.character from sage.seriescast as ec where ec.seriesid  = ?", ((cacheItemEpisode)ci).getSeriesid(),new MapListHandler());
                 //                            for ( Map<String,Object> castrec : records) {
                 //                                ((cacheItemEpisode)ci).addCast(new cacheItemCast(Integer.parseInt((String)castrec.get("episodeid")), Integer.parseInt((String)castrec.get("personid")), (String)castrec.get("name"),(String)castrec.get("job"),(String)castrec.get("character")));
@@ -704,9 +704,9 @@ public class DBMetadata extends ortus.vars implements IMetadataProvider {
 
    public void SetUserRating(Object mediafile, String newuserrating) {
             int mediaid = GetMediaID(mediafile);
-	    float userrating = 5;
+	    int userrating = 5;
 	    try {
-		    userrating = Float.parseFloat(newuserrating);
+		    userrating = Integer.parseInt(newuserrating);
 	    } catch(Exception e) {
 		    userrating = 5;
 	    }

@@ -124,8 +124,8 @@ public class database extends ortus.vars {
     public static void WriteEpisodetoDB(Episode Episode,String SeriesTitle){
         String Description =  StringEscapeUtils.escapeSql(Episode.getOverview());
         String EpisodeName = StringEscapeUtils.escapeSql(Episode.getEpisodeName());
-        float workrating = 0;
-        try { workrating = Float.parseFloat(Episode.getRating()); } catch(Exception e) {}
+        int workrating = 0;
+        try { workrating = Integer.parseInt(Episode.getRating()); } catch(Exception e) {}
         if ( workrating == 0) workrating = 5;
 
         String SQL ="UPDATE sage.episode SET title ='" +EpisodeName +"',description ='" +
@@ -167,8 +167,8 @@ public class database extends ortus.vars {
     public static void UpdateEpisodeDB(Episode Episode){
         String Description =  StringEscapeUtils.escapeSql(Episode.getOverview());
         String EpisodeName = StringEscapeUtils.escapeSql(Episode.getEpisodeName());
-        float workrating = 0;
-        try { workrating = Float.parseFloat(Episode.getRating()); } catch(Exception e) {}
+        int workrating = 0;
+        try { workrating = Integer.parseInt(Episode.getRating()); } catch(Exception e) {}
         if ( workrating == 0) workrating = 5;
 
         String SQL ="UPDATE sage.episode SET title ='" +EpisodeName +"',description ='" +
@@ -226,8 +226,8 @@ public class database extends ortus.vars {
         String Description =  StringEscapeUtils.escapeSql(Series.getOverview());
         // get ' our of episode title
         String Name = StringEscapeUtils.escapeSql(Series.getSeriesName());
-        float workrating = 0;
-        try { workrating = Float.parseFloat(Series.getRating()); } catch(Exception e) {}
+        int workrating = 0;
+        try { workrating = Integer.parseInt(Series.getRating()); } catch(Exception e) {}
         if ( workrating == 0) workrating = 5;
         String runtime = Series.getRuntime();
         if ( runtime.isEmpty())
@@ -263,8 +263,8 @@ public class database extends ortus.vars {
         String Description =  StringEscapeUtils.escapeSql(Series.getOverview());
         // get ' our of episode title
         String Name = StringEscapeUtils.escapeSql(Series.getSeriesName());
-        float workrating = 0;
-        try { workrating = Float.parseFloat(Series.getRating()); } catch(Exception e) {}
+        int workrating = 0;
+        try { workrating = Integer.parseInt(Series.getRating()); } catch(Exception e) {}
         if ( workrating == 0) workrating = 5;
         String runtime = Series.getRuntime();
         if ( runtime.isEmpty())
