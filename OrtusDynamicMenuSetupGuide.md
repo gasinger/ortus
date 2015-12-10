@@ -1,0 +1,144 @@
+Welcom to the setup guide for Ortus dynamic menus. Please be sure to read through this page thoughly before posting questions in the SageTV forums.
+
+## Introduction ##
+
+Ortus Dynamic Menus will allow you to customize your main menu for you and your familys needs. It's features include, adding/removing main/sub menu items, renaming main/submenus, attaching Sage commands to menus, creae personalised menu layouts for each SageTV user, add custom content filters to main/sub menus, attach images to each main/sub menu item and much more.
+
+## Requirements ##
+
+  * SageTV version 7.0.23 or greater
+  * Ortus database with internet connection (required for custom menu filter)
+
+### Before You Get Started ###
+
+Before you start creating your own menus take a few moments to see how the default menus work and think about what you would like your personalised menus to look like. Ortus dynamic menus uses two different types of data, SageData and OrtusData. What you want displayed on screen will depend on these two different data types, how to use these data types are explained in the guides below.
+
+### How To Guides ###
+
+  * #### <a href='http://code.google.com/p/ortus/wiki/OrtusDynamicMenuSetupGuideSageData?'> Sage Data Guide</h4>
+  * #### <a href='http://code.google.com/p/ortus/wiki/OrtusDynamicMenuSetupGuideOrtusData?'> Ortus Data Guide</h4>
+  * #### <a href='http://code.google.com/p/ortus/wiki/OrtusDynamicMenuSetupGuideOptions?'> Options Guide</h4>
+
+### A Quick Overview Of The Menus ###
+
+#### Movies ####
+
+Movies can be filtered and sorted into any grouping you like, maybe you want to create a custom menu for your children which filters out inapropriate material and use an alternative menu for the more mature memebers of your family, also remember these menus can be asigned to individual users. A more detailed explanation of how to create your own filtered movie menus can be found below.
+
+  * Basic Movie Screensot
+
+<a href='http://img534.imageshack.us/img534/9198/basicmovies.jpg'><img src='http://img534.imageshack.us/img534/9198/basicmovies.th.jpg' border='0' /></a>
+
+  * Filtered Movie Screensot
+
+<a href='http://img705.imageshack.us/img705/1327/filteredmovies.jpg'><img src='http://img705.imageshack.us/img705/1327/filteredmovies.th.jpg' border='0' /></a>
+
+#### General TV ####
+
+Obviously this is a dynamic menu plugin so you don't have to have your menus setup like the example screenshots below but for demonstration purposes it gives you a good idea of what can be achieved. You may also notice that Schedule is also located on the main menu bar, again this is not a requirement but the default Sage schedule has alot of default options which you may prefer in a seperate menu item.
+
+  * Recordings Example Screenshot
+
+<a href='http://img683.imageshack.us/img683/8060/recordingexample.jpg'><img src='http://img683.imageshack.us/img683/8060/recordingexample.th.jpg' border='0' /></a>
+
+  * TV Guide Example Screenshot
+
+<a href='http://img401.imageshack.us/img401/7756/tvguideexample.jpg'><img src='http://img401.imageshack.us/img401/7756/tvguideexample.th.jpg' border='0' /></a>
+
+  * Basic Schedule Example Screenshot
+
+<a href='http://img263.imageshack.us/img263/1301/basicschedule.jpg'><img src='http://img263.imageshack.us/img263/1301/basicschedule.th.jpg' border='0' /></a>
+
+  * Alternative Schedule Example Screenshot
+
+<a href='http://img42.imageshack.us/img42/9001/alternativeschedule.jpg'><img src='http://img42.imageshack.us/img42/9001/alternativeschedule.th.jpg' border='0' /></a>
+
+  * TV Series Example Screenshot
+
+<a href='http://img808.imageshack.us/img808/3985/tvseries.jpg'><img src='http://img808.imageshack.us/img808/3985/tvseries.th.jpg' border='0' /></a>
+
+  * TV Movies On Now Example Screenshot
+
+<a href='http://img543.imageshack.us/img543/8409/tvmoviesonnow.jpg'><img src='http://img543.imageshack.us/img543/8409/tvmoviesonnow.th.jpg' border='0' /></a>
+
+#### Music ####
+
+Currently music can only be display in alphabetical order, once we have finalised the layout of the music section in the Ortus database this will be changed to display the most recently added albums. If you want fanart backgrounds to be displayed for your music you will need to manually add a folder to your fanart directory named as Music e.g Ortus\Fanart\Music. Fanart is pulled in via the albums artist name for example Ortus\Fanart\Music\U2..... the actual images can be named however you want.
+
+  * Music Example Screenshot
+<a href='http://img375.imageshack.us/img375/3418/standardmusic.jpg'><img src='http://img375.imageshack.us/img375/3418/standardmusic.th.jpg' border='0' /></a>
+
+#### Plugins ####
+
+The Plugins menu can show you recently added plugins and what plugins you have installed on your server or client machine.
+
+  * Plugin Example Screenshot
+<a href='http://img600.imageshack.us/img600/6076/standardplugins.jpg'><img src='http://img600.imageshack.us/img600/6076/standardplugins.th.jpg' border='0' /></a>
+
+#### Photos ####
+
+The photos menu item can display a list of all your photos by import date (if you wish) and as with most Ortus menus, screen items can be enabled or disabled. You may find these extra details give your custom layout a bit more punch if you were to have your layout setup like Photo Detailed Example.
+
+  * Photo Example Screenshot
+<a href='http://img32.imageshack.us/img32/4262/standardphotos.jpg'><img src='http://img32.imageshack.us/img32/4262/standardphotos.th.jpg' border='0' /></a>
+
+  * Photo Detailed Example Screenshot
+<a href='http://img88.imageshack.us/img88/1679/standardphotos2.jpg'><img src='http://img88.imageshack.us/img88/1679/standardphotos2.th.jpg' border='0' /></a>
+
+
+#### Weather ####
+
+Ortus weather uses animated weather icons to display the current conditions and a four day forecast, animations can be disabled if you would prefer. You can also download a current weather background pack which will display different backgrounds depending on your current conditions. If your current condition folder contains more than one image you can also set these images to scroll through.
+
+  * Standard Weather Background Example Screenshot
+<a href='http://img141.imageshack.us/img141/6305/standardweatherbackgrou.jpg'><img src='http://img141.imageshack.us/img141/6305/standardweatherbackgrou.th.jpg' border='0' /></a>
+
+  * Current Weather Background Example Screenshot
+<a href='http://img703.imageshack.us/img703/5160/currentweatherbackgroun.jpg'><img src='http://img703.imageshack.us/img703/5160/currentweatherbackgroun.th.jpg' border='0' /></a>
+
+
+# Editing The Menus #
+
+
+## Before We Get Started ##
+
+Before you start creating your own menus take a few moments to see how the default menus work and think about what you would like your personalised menus to look like.
+
+## Lets Start With The Basics ##
+
+Ortus dynamic menus uses two types of data feeds, SageData and OrtusData. SageData connot be fully customized but OrtusData can and will allow you to add simple or complex filtering methods to your menu items.
+
+To add a SageData item you first need to add your main or sub menu item, once you have done this open the options menu and navigate to "Static Contexts". The first entry you make must be named as "SageData" (without the quotes), the second entry you make can be anyone of the follow depending on what type of data you require:
+
+  * PluginsServerInstalled
+  * PluginsClientInstalled
+  * PluginsInstalled
+  * PluginsAll
+  * Recordings
+  * Settings
+  * TVMovies
+  * Schedule
+  * Weather
+  * Photos
+  * Music
+  * Guide
+
+Once you have entered your desired content type navigate away from that menu item and return to it to see the results. These SagaDate types are always sorted as newest first (most recent).
+
+## Now Let add an OrtusData type ##
+
+Create your menu item as you did above and navigate to the "Static Context" option but this time enter "OrtusData" (without the quotes", in the following text entry enter something that will standout as you will need to find this in your menu.xml file. So if you enter something like "Add Ortus Movie Code here" it will be easier to find than leaving it blank.
+
+Once you have done this you need to close you Sage client session and open the menu.xml file which can be found at "SageTV\SageTV\STVs\Ortus\0". Now locate your "Add Ortus Movie Code here" within the menu.xml file and replace the "Add Ortus Movie Code here" with a basic the basic filter:
+
+"filter: mediatype = 2 and mediagroup = 1; sort: MEDIAIMPORTTIME desc;limit:10"
+
+Your overall line will look like:
+
+
+
+&lt;Static Title="Static Context" Name="OrtusData" Value="filter: mediatype = 2 and mediagroup = 1; sort: MEDIAIMPORTTIME desc;limit:10"/&gt;
+
+
+
+What this basically does is look for all Media Types that are tagged as Movies, imported into Sage and sorts them via the date/time they were imported with a limit of 10 media items. For a more detailed explanation of the SQL commands and the Ortus database see >>>Add Page Here<<<

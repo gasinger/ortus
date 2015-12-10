@@ -1,0 +1,21 @@
+# Introduction #
+
+Add your content here.
+
+
+# Details #
+
+To add a SageData? item you first need to add your main or sub menu item, once you have done this open the options menu and navigate to "Static Contexts". The first entry you make must be named as "SageData?" (without the quotes), the second entry you make can be anyone of the follow depending on what type of data you require:
+
+> • PluginsServerInstalled?
+> • PluginsClientInstalled?
+> • PluginsInstalled?
+> • PluginsAll?
+> • Recordings
+> • Settings
+> • TVMovies
+> • Schedule
+> • Weather
+> • Photos
+> • Music
+> • Guide

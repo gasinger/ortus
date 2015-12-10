@@ -1,0 +1,17 @@
+## A Weather browser plugin for your SageTV system ##
+
+
+
+## About ##
+
+This is the homepage for Ortus Weather Browser which will allow you to view weather reports for your set location.
+
+#### Features include: ####
+
+Fully animated weather icons.
+Dynamic backgrounds based on your current weather conditions.
+
+## Screenshots ##
+
+<a href='http://img821.imageshack.us/img821/6019/weatherplugina.jpg'><img src='http://img821.imageshack.us/img821/6019/weatherplugina.th.jpg' border='0' /></a>
+<a href='http://img178.imageshack.us/img178/2949/weatherpluginb.jpg'><img src='http://img178.imageshack.us/img178/2949/weatherpluginb.th.jpg' border='0' /></a>
